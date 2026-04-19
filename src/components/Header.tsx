@@ -72,13 +72,13 @@ export function Header() {
     (user?.user_metadata?.full_name as string | undefined) || user?.email || "";
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header className="sticky top-0 z-40 w-full bg-primary text-primary-foreground border-b border-primary/30">
       <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
         <Link to="/" className="flex items-center gap-2">
           {s?.logo_url ? (
             <img src={s.logo_url} alt={storeName} className="h-9 w-9 rounded-lg object-cover" />
           ) : (
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/15 text-primary-foreground font-bold">
               {storeName.charAt(0).toUpperCase()}
             </div>
           )}
@@ -90,8 +90,8 @@ export function Header() {
             <Link
               key={l.to}
               to={l.to as string}
-              className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-              activeProps={{ className: "rounded-md px-3 py-2 text-sm font-medium text-primary bg-accent" }}
+              className="rounded-md px-3 py-2 text-sm font-medium text-primary-foreground/80 transition-colors hover:bg-white/15 hover:text-primary-foreground"
+              activeProps={{ className: "rounded-md px-3 py-2 text-sm font-medium text-primary-foreground bg-white/20" }}
               activeOptions={{ exact: l.to === "/" }}
             >
               {l.label}
@@ -102,10 +102,10 @@ export function Header() {
         <div className="flex items-center gap-1">
           <LangSwitcher />
           <Link to="/cart">
-            <Button variant="ghost" size="icon" className="relative">
+            <Button variant="ghost" size="icon" className="relative hover:bg-white/15 hover:text-primary-foreground">
               <ShoppingCart className="h-5 w-5" />
               {count > 0 && (
-                <Badge className="absolute -end-1 -top-1 h-5 min-w-5 rounded-full px-1 text-xs">
+                <Badge className="absolute -end-1 -top-1 h-5 min-w-5 rounded-full px-1 text-xs bg-white text-primary hover:bg-white">
                   {count}
                 </Badge>
               )}
@@ -115,9 +115,9 @@ export function Header() {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
+                <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/15 hover:text-primary-foreground">
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+                    <AvatarFallback className="bg-white/20 text-primary-foreground text-xs font-semibold">
                       {initials}
                     </AvatarFallback>
                   </Avatar>
@@ -149,7 +149,7 @@ export function Header() {
             </DropdownMenu>
           ) : (
             <Link to="/login" className="hidden sm:inline-flex">
-              <Button variant="ghost" size="sm" className="gap-2">
+              <Button variant="ghost" size="sm" className="gap-2 hover:bg-white/15 hover:text-primary-foreground">
                 <LogIn className="h-4 w-4" />
                 <span>{tr("login")}</span>
               </Button>
@@ -159,7 +159,7 @@ export function Header() {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="md:hidden hover:bg-white/15 hover:text-primary-foreground"
             onClick={() => setOpen((o) => !o)}
             aria-label="Menu"
           >
