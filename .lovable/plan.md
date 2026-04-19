@@ -1,45 +1,42 @@
 
 
-## Plan: Modernize homepage with card-style hero slider
+## Plan: Compact, responsive Contact page
 
-Refresh the homepage with a cleaner, more modern look. The hero slider becomes a **rounded "big card"** floating with breathing space on the sides (not edge-to-edge). Sections get tighter rhythm, softer surfaces, and more polished hover/transition states.
+Tighten the Contact page into a focused two-column layout on desktop (form + info side-by-side) that stacks cleanly on mobile. Reduce vertical bulk, smaller cards, better hierarchy.
 
-### 1. Hero slider — card-style
-Edit `src/routes/index.tsx`:
-- Wrap the slider in a `container` with side padding so it floats inside the page instead of going full-bleed.
-- Apply `rounded-3xl`, `overflow-hidden`, `shadow-[var(--shadow-card)]`, and a subtle border so it reads as a single elevated card.
-- Reduce height to `h-[60vh] min-h-[440px] md:h-[70vh] max-h-[640px]` for a more balanced canvas.
-- Move arrows inside the card with smaller, frosted pill buttons (`h-10 w-10`, `bg-background/80 backdrop-blur-md`).
-- Dots: pill-style indicator group inside a frosted bar at the bottom-center.
-- Text: tighten the gradient to `from-black/60 via-black/20 to-transparent` for a softer wash; cap headline at `text-5xl lg:text-6xl` for a more refined scale.
-- Add a top spacing (`pt-6 md:pt-8`) so the card has air above it.
+### 1. Layout restructure — `src/routes/contact.tsx`
+- Widen container from `max-w-2xl` to `max-w-5xl` so two columns fit comfortably.
+- Use a `grid lg:grid-cols-5 gap-6` split:
+  - **Left (lg:col-span-3)**: the message form card
+  - **Right (lg:col-span-2)**: stacked compact info tiles + socials
+- Page header tightened: `py-8 md:py-12`, smaller h1 (`text-3xl md:text-4xl`), short subtitle line under it.
 
-### 2. Features strip — refined cards
-- Switch to a centered icon-on-top layout with `rounded-2xl border bg-card/50 backdrop-blur` and a hover lift (`hover:-translate-y-0.5 hover:shadow-[var(--shadow-soft)] transition-all`).
-- Add a short description line under each feature label (in 3 languages).
-- Use a subtle 1px border + slightly larger icon tile.
+### 2. Form card — slimmer
+- Reduce padding (`p-5 md:p-6`) and spacing (`space-y-3` instead of `space-y-4`).
+- Keep Name full-width; Phone + Email already in 2-col grid (good).
+- Textarea rows reduced to `4`.
+- Submit button: keep full-width on mobile, auto-width on desktop (`sm:w-auto sm:px-8`).
 
-### 3. Categories — modern tiles
-- Replace bordered boxes with image-first tiles: square image with `rounded-2xl` and an overlay gradient + name on the bottom-left of the image (no separate label box).
-- Hover: image zoom + ring-2 ring-primary/30 transition.
-- Keep the 6-column desktop grid; gap upgraded to `gap-5`.
+### 3. Contact info — compact tiles
+- Replace large `p-5` rounded cards with smaller tiles (`p-3.5`, `gap-3`, icon box `h-9 w-9`, `rounded-lg`).
+- Group WhatsApp/Phone/Email/Address/Hours into a single `space-y-2` stack inside one bordered container — gives a cleaner "info panel" look instead of 5 separate floating cards.
+- Labels shrunk to `text-[11px] uppercase tracking-wide`.
 
-### 4. Featured products — section polish
-- Section header: small uppercase eyebrow ("Hand-picked") above the H2 for a more editorial feel.
-- Wrap "View all" in a pill button (`variant="ghost"` with arrow icon) instead of a plain text link.
-- Increase spacing: `py-16 md:py-20` between sections.
+### 4. Map — smaller and integrated
+- Reduce iframe height from `360px` to `220px md:280px`.
+- Place the map directly under the info panel on the right column (desktop), or after the form on mobile.
 
-### 5. Add a soft section divider
-- Subtle `bg-muted/40` band wrapping the Categories section to create visual rhythm between Hero → Features → Categories → Featured.
+### 5. Socials + WhatsApp CTA
+- Move social icons into a compact row inside the right column (under the map).
+- Remove the redundant bottom "Send WhatsApp" button (the WhatsApp tile at the top of the info panel already covers this) — keeps the page focused.
 
-### 6. i18n — small additions
-Add to `src/lib/i18n.ts`:
-- `easyOrderingDesc`, `fastDeliveryDesc`, `whatsappSupportDesc` — the new feature subtitles in en/fa/ps.
-- `handPicked` — eyebrow label for the featured section.
+### 6. Mobile specifics
+- Single column stack order: header → form → info panel → map → socials.
+- Ensure all touch targets stay ≥40px tall.
+- Form card gets `mx-0` (no extra side margin) since container already pads.
 
 ### Files touched
-- Edit: `src/routes/index.tsx` (entire homepage layout refresh)
-- Edit: `src/lib/i18n.ts` (4 new keys × 3 languages)
+- Edit: `src/routes/contact.tsx` (layout + sizing only — no logic, no schema, no i18n changes)
 
-No new dependencies, no DB changes, no new components.
+No new dependencies, no DB changes, no new keys.
 
