@@ -35,7 +35,9 @@ export function buildOrderMessage(opts: {
   lines.push(`*${labels.items}:*`);
   for (const i of items) {
     const name = pickLang(i, "name", lang);
-    lines.push(`• ${name} × ${i.quantity} = ${(i.price * i.quantity).toFixed(2)}`);
+    const variantName = pickLang(i, "variantName", lang);
+    const display = variantName ? `${name} — ${variantName}` : name;
+    lines.push(`• ${display} × ${i.quantity} = ${(i.price * i.quantity).toFixed(2)}`);
   }
   lines.push("");
   lines.push(`💰 *${labels.total}: ${total.toFixed(2)}*`);
@@ -46,12 +48,14 @@ export function buildQuickOrderMessage(opts: {
   lang: Lang;
   productName: string;
   price: number;
+  variantName?: string;
 }): string {
-  const { lang, productName, price } = opts;
+  const { lang, productName, price, variantName } = opts;
+  const fullName = variantName ? `${productName} (${variantName})` : productName;
   const tpl = {
-    en: `Hi! I'd like to order:\n\n• ${productName} — ${price.toFixed(2)}\n\nPlease confirm availability.`,
-    fa: `سلام! می‌خواهم این محصول را سفارش دهم:\n\n• ${productName} — ${price.toFixed(2)}\n\nلطفاً موجودی را تأیید کنید.`,
-    ps: `سلام! غواړم دا توکی فرمایش کړم:\n\n• ${productName} — ${price.toFixed(2)}\n\nمهرباني وکړئ شتون تایید کړئ.`,
+    en: `Hi! I'd like to order:\n\n• ${fullName} — ${price.toFixed(2)}\n\nPlease confirm availability.`,
+    fa: `سلام! می‌خواهم این محصول را سفارش دهم:\n\n• ${fullName} — ${price.toFixed(2)}\n\nلطفاً موجودی را تأیید کنید.`,
+    ps: `سلام! غواړم دا توکی فرمایش کړم:\n\n• ${fullName} — ${price.toFixed(2)}\n\nمهرباني وکړئ شتون تایید کړئ.`,
   };
   return tpl[lang];
 }
