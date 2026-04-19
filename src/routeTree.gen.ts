@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ShopRouteImport } from './routes/shop'
+import { Route as RssDotxmlRouteImport } from './routes/rss[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -19,12 +20,14 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as CartRouteImport } from './routes/cart'
+import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ProductsSlugRouteImport } from './routes/products.$slug'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminSlidesRouteImport } from './routes/admin.slides'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
@@ -34,6 +37,7 @@ import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
+import { Route as AdminBlogRouteImport } from './routes/admin.blog'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -48,6 +52,11 @@ const SignupRoute = SignupRouteImport.update({
 const ShopRoute = ShopRouteImport.update({
   id: '/shop',
   path: '/shop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RssDotxmlRoute = RssDotxmlRouteImport.update({
+  id: '/rss.xml',
+  path: '/rss.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -85,6 +94,11 @@ const CartRoute = CartRouteImport.update({
   path: '/cart',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -114,6 +128,11 @@ const PSlugRoute = PSlugRouteImport.update({
   id: '/p/$slug',
   path: '/p/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => BlogRoute,
 } as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
@@ -160,11 +179,17 @@ const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
   path: '/categories',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminBlogRoute = AdminBlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
+  '/blog': typeof BlogRouteWithChildren
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
@@ -172,9 +197,11 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/rss.xml': typeof RssDotxmlRoute
   '/shop': typeof ShopRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin/blog': typeof AdminBlogRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -184,6 +211,7 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/slides': typeof AdminSlidesRoute
   '/admin/users': typeof AdminUsersRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/p/$slug': typeof PSlugRoute
   '/products/$slug': typeof ProductsSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -191,6 +219,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/blog': typeof BlogRouteWithChildren
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
@@ -198,9 +227,11 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/rss.xml': typeof RssDotxmlRoute
   '/shop': typeof ShopRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin/blog': typeof AdminBlogRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -210,6 +241,7 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/slides': typeof AdminSlidesRoute
   '/admin/users': typeof AdminUsersRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/p/$slug': typeof PSlugRoute
   '/products/$slug': typeof ProductsSlugRoute
   '/admin': typeof AdminIndexRoute
@@ -219,6 +251,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
+  '/blog': typeof BlogRouteWithChildren
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
@@ -226,9 +259,11 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/rss.xml': typeof RssDotxmlRoute
   '/shop': typeof ShopRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin/blog': typeof AdminBlogRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -238,6 +273,7 @@ export interface FileRoutesById {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/slides': typeof AdminSlidesRoute
   '/admin/users': typeof AdminUsersRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/p/$slug': typeof PSlugRoute
   '/products/$slug': typeof ProductsSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -248,6 +284,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/admin'
+    | '/blog'
     | '/cart'
     | '/categories'
     | '/checkout'
@@ -255,9 +292,11 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/reset-password'
+    | '/rss.xml'
     | '/shop'
     | '/signup'
     | '/sitemap.xml'
+    | '/admin/blog'
     | '/admin/categories'
     | '/admin/login'
     | '/admin/messages'
@@ -267,6 +306,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/slides'
     | '/admin/users'
+    | '/blog/$slug'
     | '/p/$slug'
     | '/products/$slug'
     | '/admin/'
@@ -274,6 +314,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/blog'
     | '/cart'
     | '/categories'
     | '/checkout'
@@ -281,9 +322,11 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/reset-password'
+    | '/rss.xml'
     | '/shop'
     | '/signup'
     | '/sitemap.xml'
+    | '/admin/blog'
     | '/admin/categories'
     | '/admin/login'
     | '/admin/messages'
@@ -293,6 +336,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/slides'
     | '/admin/users'
+    | '/blog/$slug'
     | '/p/$slug'
     | '/products/$slug'
     | '/admin'
@@ -301,6 +345,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/admin'
+    | '/blog'
     | '/cart'
     | '/categories'
     | '/checkout'
@@ -308,9 +353,11 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/reset-password'
+    | '/rss.xml'
     | '/shop'
     | '/signup'
     | '/sitemap.xml'
+    | '/admin/blog'
     | '/admin/categories'
     | '/admin/login'
     | '/admin/messages'
@@ -320,6 +367,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/slides'
     | '/admin/users'
+    | '/blog/$slug'
     | '/p/$slug'
     | '/products/$slug'
     | '/admin/'
@@ -329,6 +377,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRouteWithChildren
+  BlogRoute: typeof BlogRouteWithChildren
   CartRoute: typeof CartRoute
   CategoriesRoute: typeof CategoriesRoute
   CheckoutRoute: typeof CheckoutRoute
@@ -336,6 +385,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RssDotxmlRoute: typeof RssDotxmlRoute
   ShopRoute: typeof ShopRoute
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -364,6 +414,13 @@ declare module '@tanstack/react-router' {
       path: '/shop'
       fullPath: '/shop'
       preLoaderRoute: typeof ShopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rss.xml': {
+      id: '/rss.xml'
+      path: '/rss.xml'
+      fullPath: '/rss.xml'
+      preLoaderRoute: typeof RssDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -415,6 +472,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CartRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -456,6 +520,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/p/$slug'
       preLoaderRoute: typeof PSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof BlogRoute
     }
     '/admin/users': {
       id: '/admin/users'
@@ -520,10 +591,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCategoriesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/blog': {
+      id: '/admin/blog'
+      path: '/blog'
+      fullPath: '/admin/blog'
+      preLoaderRoute: typeof AdminBlogRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminBlogRoute: typeof AdminBlogRoute
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
@@ -537,6 +616,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminBlogRoute: AdminBlogRoute,
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminMessagesRoute: AdminMessagesRoute,
@@ -551,10 +631,21 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface BlogRouteChildren {
+  BlogSlugRoute: typeof BlogSlugRoute
+}
+
+const BlogRouteChildren: BlogRouteChildren = {
+  BlogSlugRoute: BlogSlugRoute,
+}
+
+const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AdminRoute: AdminRouteWithChildren,
+  BlogRoute: BlogRouteWithChildren,
   CartRoute: CartRoute,
   CategoriesRoute: CategoriesRoute,
   CheckoutRoute: CheckoutRoute,
@@ -562,6 +653,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RssDotxmlRoute: RssDotxmlRoute,
   ShopRoute: ShopRoute,
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

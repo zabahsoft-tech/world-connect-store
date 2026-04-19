@@ -57,6 +57,7 @@ export const Route = createRootRoute({
           rel: "stylesheet",
           href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Vazirmatn:wght@400;600;700&display=swap",
         },
+        { rel: "alternate", type: "application/rss+xml", title: "World Connect Store Blog", href: `${SITE_URL}/rss.xml` },
         ...buildHreflangLinks("/"),
       ],
       scripts: [

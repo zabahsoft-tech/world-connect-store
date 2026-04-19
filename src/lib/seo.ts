@@ -123,7 +123,76 @@ export const SEO_PAGES: Record<string, SeoCopy> = {
       keywords: `اړیکه، واټس اپ افغانستان، ${COMMON_KEYWORDS.ps}`,
     },
   },
+  blog: {
+    en: {
+      title: "Blog — News, Tips & Updates | World Connect Store Afghanistan",
+      description: "Read the latest articles, shopping tips, product updates, and news from World Connect Store. Stay informed about online shopping in Afghanistan.",
+      keywords: `blog, news, articles, ${COMMON_KEYWORDS.en}`,
+    },
+    fa: {
+      title: "وبلاگ — اخبار، نکات و به‌روزرسانی‌ها | ورلد کانکت افغانستان",
+      description: "آخرین مقالات، نکات خرید، به‌روزرسانی محصولات و اخبار فروشگاه ورلد کانکت را بخوانید. درباره خرید آنلاین در افغانستان آگاه باشید.",
+      keywords: `وبلاگ، اخبار، مقالات، ${COMMON_KEYWORDS.fa}`,
+    },
+    ps: {
+      title: "بلاګ — خبرونه، نکتې او تازه معلومات | ورلډ کنیکټ افغانستان",
+      description: "د ورلډ کنیکټ پلورنځي وروستي مقالې، د پیرودلو نکتې، د توکو تازه معلومات او خبرونه ولولئ. په افغانستان کې د آنلاین پیرود په اړه خبر اوسئ.",
+      keywords: `بلاګ، خبرونه، مقالې، ${COMMON_KEYWORDS.ps}`,
+    },
+  },
 };
+
+export interface BlogPostingArgs {
+  title: string;
+  description: string;
+  image?: string;
+  url: string;
+  datePublished: string;
+  dateModified?: string;
+  authorName?: string;
+}
+
+export function buildBlogPostingJsonLd(args: BlogPostingArgs) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: args.title,
+    description: args.description,
+    ...(args.image && { image: args.image }),
+    datePublished: args.datePublished,
+    dateModified: args.dateModified || args.datePublished,
+    author: {
+      "@type": args.authorName ? "Person" : "Organization",
+      name: args.authorName || STORE_NAME.en,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: STORE_NAME.en,
+      url: SITE_URL,
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": args.url,
+    },
+  };
+}
+
+export function buildBlogJsonLd(posts: Array<{ title: string; url: string; datePublished: string; description: string; image?: string }>) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    name: `${STORE_NAME.en} Blog`,
+    url: `${SITE_URL}/blog`,
+    blogPost: posts.map((p) => ({
+      "@type": "BlogPosting",
+      headline: p.title,
+      url: p.url,
+      datePublished: p.datePublished,
+      description: p.description,
+      ...(p.image && { image: p.image }),
+    })),
+  };
+}
 
 interface BuildMetaArgs {
   title: string;

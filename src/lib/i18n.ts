@@ -92,6 +92,16 @@ export const t: Dict = {
   fastDeliveryDesc: { en: "Quick shipping to your door", fa: "ارسال سریع به درب منزل", ps: "ستاسو وره ته ګړندی لېږد" },
   whatsappSupportDesc: { en: "Chat with us anytime", fa: "هر زمان با ما گپ بزنید", ps: "هر وخت موږ سره خبرې وکړئ" },
   handPicked: { en: "Hand-picked", fa: "دست‌چین شده", ps: "غوره شوي" },
+  blog: { en: "Blog", fa: "وبلاگ", ps: "بلاګ" },
+  readMore: { en: "Read more", fa: "ادامه مطلب", ps: "نور ولولئ" },
+  latestPosts: { en: "Latest posts", fa: "آخرین مطالب", ps: "وروستي لیکنې" },
+  relatedPosts: { en: "Related posts", fa: "مطالب مرتبط", ps: "اړوندې لیکنې" },
+  publishedOn: { en: "Published on", fa: "منتشر شده در", ps: "خپور شوی په" },
+  noPostsYet: { en: "No posts yet", fa: "هنوز مطلبی منتشر نشده", ps: "تر اوسه لیکنه نشته" },
+  tags: { en: "Tags", fa: "برچسب‌ها", ps: "ټاګونه" },
+  allPosts: { en: "All posts", fa: "همه مطالب", ps: "ټولې لیکنې" },
+  excerpt: { en: "Excerpt", fa: "خلاصه", ps: "لنډیز" },
+  coverImage: { en: "Cover image", fa: "تصویر کاور", ps: "پوښ انځور" },
 };
 
 export function tr(key: keyof typeof t, lang: Lang): string {
