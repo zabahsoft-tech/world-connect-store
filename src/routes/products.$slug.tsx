@@ -103,21 +103,11 @@ export const Route = createFileRoute("/products/$slug")({
 });
 
 function ProductPage() {
-  const { slug } = Route.useParams();
+  const { product: p } = Route.useLoaderData();
   const { tr, lang } = useLang();
   const { add } = useCart();
   const [qty, setQty] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
-
-  const product = useQuery({
-    queryKey: ["product", slug],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("products").select("*").eq("slug", slug).maybeSingle();
-      if (error) throw error;
-      if (!data) throw notFound();
-      return data;
-    },
-  });
 
   const settings = useQuery({
     queryKey: ["settings"],
@@ -127,22 +117,6 @@ function ProductPage() {
     },
   });
 
-  if (product.isLoading) {
-    return (
-      <SiteLayout>
-        <div className="container mx-auto grid gap-8 px-4 py-8 md:grid-cols-2">
-          <div className="aspect-square animate-pulse rounded-xl bg-muted" />
-          <div className="space-y-4">
-            <div className="h-8 w-2/3 animate-pulse rounded bg-muted" />
-            <div className="h-6 w-1/3 animate-pulse rounded bg-muted" />
-            <div className="h-24 animate-pulse rounded bg-muted" />
-          </div>
-        </div>
-      </SiteLayout>
-    );
-  }
-
-  const p = product.data;
   if (!p) return null;
 
   const name = pickLang(p, "name", lang);
