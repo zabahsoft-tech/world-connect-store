@@ -149,6 +149,66 @@ export type Database = {
         }
         Relationships: []
       }
+      pages: {
+        Row: {
+          content_en: string
+          content_fa: string
+          content_ps: string
+          created_at: string
+          hero_image: string | null
+          id: string
+          is_published: boolean
+          is_system: boolean
+          meta_description_en: string | null
+          meta_description_fa: string | null
+          meta_description_ps: string | null
+          slug: string
+          sort_order: number
+          title_en: string
+          title_fa: string
+          title_ps: string
+          updated_at: string
+        }
+        Insert: {
+          content_en?: string
+          content_fa?: string
+          content_ps?: string
+          created_at?: string
+          hero_image?: string | null
+          id?: string
+          is_published?: boolean
+          is_system?: boolean
+          meta_description_en?: string | null
+          meta_description_fa?: string | null
+          meta_description_ps?: string | null
+          slug: string
+          sort_order?: number
+          title_en?: string
+          title_fa?: string
+          title_ps?: string
+          updated_at?: string
+        }
+        Update: {
+          content_en?: string
+          content_fa?: string
+          content_ps?: string
+          created_at?: string
+          hero_image?: string | null
+          id?: string
+          is_published?: boolean
+          is_system?: boolean
+          meta_description_en?: string | null
+          meta_description_fa?: string | null
+          meta_description_ps?: string | null
+          slug?: string
+          sort_order?: number
+          title_en?: string
+          title_fa?: string
+          title_ps?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           attributes: Json
