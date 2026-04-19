@@ -17,6 +17,20 @@ export function Footer() {
   });
   const s = settingsQ.data;
 
+  const pagesQ = useQuery({
+    queryKey: ["pages-public"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pages")
+        .select("slug, title_en, title_fa, title_ps, is_system, sort_order")
+        .eq("is_published", true)
+        .order("sort_order");
+      return data ?? [];
+    },
+  });
+  // Custom (non-system) pages live under /p/:slug; "about" and "contact" already have their own routes
+  const customPages = (pagesQ.data ?? []).filter((p) => !p.is_system);
+
   const storeName = s ? pickLang(s, "store_name", lang) || "Store" : "Store";
   const footerText = s ? pickLang(s, "footer_text", lang) : "";
   const tagline = footerText || tr("heroSubtitle");
@@ -75,6 +89,16 @@ export function Footer() {
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li><Link to="/about" className="hover:text-primary">{tr("about")}</Link></li>
             <li><Link to="/contact" className="hover:text-primary">{tr("contact")}</Link></li>
+            {customPages.map((p) => {
+              const title = pickLang(p, "title", lang) || p.slug;
+              return (
+                <li key={p.slug}>
+                  <Link to="/p/$slug" params={{ slug: p.slug }} className="hover:text-primary">
+                    {title}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </div>
         <div>
