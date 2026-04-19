@@ -149,7 +149,7 @@ export function Header() {
             </DropdownMenu>
           ) : (
             <Link to="/login" className="hidden sm:inline-flex">
-              <Button variant="ghost" size="sm" className="gap-2">
+              <Button variant="ghost" size="sm" className="gap-2 hover:bg-white/15 hover:text-primary-foreground">
                 <LogIn className="h-4 w-4" />
                 <span>{tr("login")}</span>
               </Button>
@@ -159,7 +159,7 @@ export function Header() {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="md:hidden hover:bg-white/15 hover:text-primary-foreground"
             onClick={() => setOpen((o) => !o)}
             aria-label="Menu"
           >
