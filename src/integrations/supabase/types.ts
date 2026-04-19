@@ -50,6 +50,63 @@ export type Database = {
         }
         Relationships: []
       }
+      hero_slides: {
+        Row: {
+          active: boolean
+          created_at: string
+          cta_label_en: string | null
+          cta_label_fa: string | null
+          cta_label_ps: string | null
+          cta_link: string | null
+          id: string
+          image: string
+          sort_order: number
+          subtitle_en: string
+          subtitle_fa: string
+          subtitle_ps: string
+          title_en: string
+          title_fa: string
+          title_ps: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          cta_label_en?: string | null
+          cta_label_fa?: string | null
+          cta_label_ps?: string | null
+          cta_link?: string | null
+          id?: string
+          image: string
+          sort_order?: number
+          subtitle_en?: string
+          subtitle_fa?: string
+          subtitle_ps?: string
+          title_en?: string
+          title_fa?: string
+          title_ps?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          cta_label_en?: string | null
+          cta_label_fa?: string | null
+          cta_label_ps?: string | null
+          cta_link?: string | null
+          id?: string
+          image?: string
+          sort_order?: number
+          subtitle_en?: string
+          subtitle_fa?: string
+          subtitle_ps?: string
+          title_en?: string
+          title_fa?: string
+          title_ps?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           address: string | null
