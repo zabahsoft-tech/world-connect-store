@@ -7,7 +7,7 @@
     "dev": "vite dev",
     "build": "vite build",
     "build:dev": "vite build --mode development",
-    "build:node": "cross-env-shell BUILD_TARGET=node vite build || BUILD_TARGET=node vite build",
+    "build:node": "node -e \"process.env.BUILD_TARGET='node';require('child_process').spawnSync(process.platform==='win32'?'npx.cmd':'npx',['vite','build'],{stdio:'inherit',env:process.env});\"",
     "start": "node server.mjs",
     "package:cpanel": "node scripts/package-cpanel.mjs",
     "preview": "vite preview",
