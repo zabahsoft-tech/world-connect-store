@@ -1,62 +1,64 @@
 
 
-The user wants admin-editable pages. Currently `about.tsx` already pulls from `settings.about_*`, but `contact.tsx`, `index.tsx` (hero/featured sections aside from slides), and other static copy are hardcoded. Let me design a flexible "Pages" CMS.
+## Plan: Contact message form with admin inbox
 
-## Plan: Dynamic Pages CMS
+Add a Name + Phone + Email + Message form to the Contact page. Each submission saves to the database, opens a pre-filled WhatsApp deep link to your number, and appears in a new "Messages" inbox in the admin panel.
 
-### 1. Database — new `pages` table
+### 1. Database — new `contact_messages` table
+
 ```sql
-create table public.pages (
+create table public.contact_messages (
   id uuid primary key default gen_random_uuid(),
-  slug text unique not null,           -- 'about', 'contact', 'shipping', 'privacy', etc.
-  title_en text not null default '',
-  title_fa text not null default '',
-  title_ps text not null default '',
-  content_en text not null default '', -- rich HTML
-  content_fa text not null default '',
-  content_ps text not null default '',
-  meta_description_en text,
-  meta_description_fa text,
-  meta_description_ps text,
-  hero_image text,
-  is_published boolean not null default true,
-  is_system boolean not null default false,  -- 'about'/'contact' = true, can't delete
-  sort_order int not null default 0,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  name text not null,
+  email text,
+  phone text,
+  message text not null,
+  language text not null default 'en',
+  status text not null default 'new',  -- 'new' | 'read' | 'archived'
+  created_at timestamptz not null default now()
 );
--- RLS: public SELECT where is_published, admin ALL
--- Seed: about, contact, shipping, privacy, terms (system pages)
+alter table public.contact_messages enable row level security;
+-- Anyone can insert (public form)
+create policy "Public can submit messages" on public.contact_messages
+  for insert to public with check (true);
+-- Admins can read/update/delete
+create policy "Admins read messages" on public.contact_messages
+  for select to authenticated using (has_role(auth.uid(), 'admin'));
+create policy "Admins update messages" on public.contact_messages
+  for update to authenticated using (has_role(auth.uid(), 'admin'));
+create policy "Admins delete messages" on public.contact_messages
+  for delete to authenticated using (has_role(auth.uid(), 'admin'));
 ```
 
-### 2. Admin — new `src/routes/admin.pages.tsx`
-- List view: all pages with slug, title, published toggle, edit/delete (delete disabled for `is_system`)
-- "New page" button → dialog with: slug (auto from EN title, locked for system pages), title (3 langs), `RichTextEditor` for content (3 langs), hero image (`ImageUpload`), meta description (3 langs), publish toggle
-- Add nav link in `admin.tsx` sidebar
+### 2. Public form — edit `src/routes/contact.tsx`
+Add a form card above the existing contact-info cards with:
+- Name (required, 2–100 chars)
+- Phone (optional, 6–30 chars, digits/spaces/+ only)
+- Email (optional, valid email)
+- Message (required, 5–1000 chars)
+- Submit button → zod-validate → insert into `contact_messages` → on success: toast + open WhatsApp deep link pre-filled with `"New message from {name} ({phone}): {message}"` so the customer can also send it directly.
 
-### 3. Public dynamic page route — new `src/routes/p.$slug.tsx`
-Generic renderer for any non-system page (shipping, privacy, terms, custom). Loader fetches by slug, 404 if missing/unpublished, renders title + hero + HTML content with `prose` styling. Uses `head()` for per-page SEO.
+### 3. Admin inbox — new `src/routes/admin.messages.tsx`
+- List view (newest first) showing name, phone/email, snippet, status badge, time
+- Click row → side dialog with full message + customer contact info + buttons:
+  - "Open in WhatsApp" (uses customer's phone)
+  - "Email reply" (mailto:)
+  - "Mark as read" / "Archive" / "Delete"
+- Filter chips: All / New / Read / Archived
+- Unread count badge on the sidebar nav item
 
-### 4. Migrate existing pages to be DB-driven
-- **`about.tsx`**: keep route, but read from `pages` table where slug='about' instead of `settings.about_*`. Falls back to settings.about for backward compat during transition.
-- **`contact.tsx`**: add an editable intro/body block from `pages` where slug='contact', kept above the existing contact form + WhatsApp/phone (those stay driven by `settings`).
-- Both keep their dedicated routes (better SEO than generic `/p/contact`).
+### 4. Wire admin nav — edit `src/routes/admin.tsx`
+Add `{ to: "/admin/messages", label: "Messages", icon: MessageSquare }` to NAV. Show the unread count badge next to the label.
 
-### 5. Footer — auto-list published non-system pages
-In `Footer.tsx`, query published pages and render links under a "Pages" column so admin-created pages appear automatically.
-
-### 6. i18n
-Add keys: "Pages", "New page", "Page slug", "Page content", "Published", "System page", "Hero image (optional)".
+### 5. i18n — edit `src/lib/i18n.ts`
+Add keys: `messages`, `yourName`, `yourEmail`, `yourMessage`, `sendMessage`, `messageSent`, `messageError`, `markAsRead`, `archive`, `noMessages`, `newMessage`.
 
 ### Files
-- New migration: `pages` table + RLS + seed rows for about/contact/shipping/privacy/terms
-- New: `src/routes/admin.pages.tsx`
-- New: `src/routes/p.$slug.tsx`
-- Edit: `src/routes/admin.tsx` — add Pages nav link
-- Edit: `src/routes/about.tsx` — read from `pages` table
-- Edit: `src/routes/contact.tsx` — render editable intro from `pages`
-- Edit: `src/components/Footer.tsx` — list dynamic pages
-- Edit: `src/lib/i18n.ts` — new keys
+- New migration: `contact_messages` table + RLS
+- New: `src/routes/admin.messages.tsx`
+- Edit: `src/routes/contact.tsx` (add form section)
+- Edit: `src/routes/admin.tsx` (nav entry + unread badge)
+- Edit: `src/lib/i18n.ts` (new keys)
 
-No new dependencies.
+No new dependencies, no edge functions needed (insert goes through Supabase client + RLS).
 
