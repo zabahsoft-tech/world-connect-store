@@ -6,7 +6,4 @@
 // You can pass additional config via defineConfig({ vite: { ... } }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-// SPA mode: prerender only the shell, hydrate everything client-side for instant nav
-export default defineConfig({
-  spa: { enabled: true },
-});
+export default defineConfig();
