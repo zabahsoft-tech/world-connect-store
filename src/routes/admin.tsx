@@ -3,6 +3,7 @@ import { LayoutDashboard, Package, FolderTree, ShoppingBag, Settings, LogOut, Ho
 import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { FullScreenLoader } from "@/components/Loader";
 import {
   Sidebar,
   SidebarContent,
@@ -47,7 +48,7 @@ function AdminLayout() {
   if (isLogin) return <Outlet />;
 
   if (loading || !user) {
-    return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading...</div>;
+    return <FullScreenLoader label="Checking your session..." />;
   }
 
   if (!isAdmin) {
