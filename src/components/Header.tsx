@@ -1,18 +1,29 @@
 import { Link } from "@tanstack/react-router";
-import { ShoppingCart, Menu, X } from "lucide-react";
+import { ShoppingCart, Menu, X, User as UserIcon, LogOut, LayoutDashboard, LogIn } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLang } from "@/contexts/LangContext";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { LangSwitcher } from "./LangSwitcher";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { pickLang } from "@/lib/i18n";
 
 export function Header() {
   const { tr, lang } = useLang();
   const { count } = useCart();
+  const { user, isAdmin, signOut } = useAuth();
   const [open, setOpen] = useState(false);
 
   const settingsQ = useQuery({
@@ -32,6 +43,10 @@ export function Header() {
     { to: "/about", label: tr("about") },
     { to: "/contact", label: tr("contact") },
   ] as const;
+
+  const initials = (user?.email ?? "?").charAt(0).toUpperCase();
+  const displayName =
+    (user?.user_metadata?.full_name as string | undefined) || user?.email || "";
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -73,6 +88,51 @@ export function Header() {
               )}
             </Button>
           </Link>
+
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none truncate">{displayName}</p>
+                    {user.email && displayName !== user.email && (
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    )}
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {isAdmin && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin">
+                      <LayoutDashboard className="me-2 h-4 w-4" />
+                      Admin dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={() => signOut()}>
+                  <LogOut className="me-2 h-4 w-4" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link to="/login" className="hidden sm:inline-flex">
+              <Button variant="ghost" size="sm" className="gap-2">
+                <LogIn className="h-4 w-4" />
+                <span>{tr("login")}</span>
+              </Button>
+            </Link>
+          )}
+
           <Button
             variant="ghost"
             size="icon"
@@ -100,6 +160,16 @@ export function Header() {
                 {l.label}
               </Link>
             ))}
+            {!user && (
+              <Link
+                to="/login"
+                onClick={() => setOpen(false)}
+                className="rounded-md px-3 py-2 text-sm font-medium text-primary hover:bg-accent"
+              >
+                <UserIcon className="me-2 inline h-4 w-4" />
+                {tr("login")}
+              </Link>
+            )}
           </div>
         </nav>
       )}
