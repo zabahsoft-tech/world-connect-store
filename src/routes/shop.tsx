@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { z } from "zod";
-import { zodValidator } from "@tanstack/zod-adapter";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
 import { pickLang } from "@/lib/i18n";
@@ -18,7 +17,7 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/shop")({
-  validateSearch: zodValidator(searchSchema),
+  validateSearch: searchSchema,
   component: ShopPage,
 });
 
