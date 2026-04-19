@@ -315,7 +315,19 @@ function AdminProducts() {
                           <Input
                             dir={lng === "en" ? "ltr" : "rtl"}
                             value={editing[`name_${lng}`]}
-                            onChange={(e) => setEditing({ ...editing, [`name_${lng}`]: e.target.value })}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (lng === "en") {
+                                const autoSlug = !editing.id && (editing.slug === "" || editing.slug === slugify(editing.name_en));
+                                setEditing({
+                                  ...editing,
+                                  name_en: val,
+                                  slug: autoSlug ? slugify(val) : editing.slug,
+                                });
+                              } else {
+                                setEditing({ ...editing, [`name_${lng}`]: val });
+                              }
+                            }}
                             required
                           />
                         </Field>
