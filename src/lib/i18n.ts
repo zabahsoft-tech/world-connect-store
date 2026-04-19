@@ -64,6 +64,13 @@ export const t: Dict = {
   variant: { en: "Variant", fa: "نوع", ps: "ډول" },
   selectVariant: { en: "Select a variant", fa: "یک نوع را انتخاب کنید", ps: "یو ډول وټاکئ" },
   watchVideo: { en: "Watch video", fa: "تماشای ویدیو", ps: "ویډیو وګورئ" },
+  pages: { en: "Pages", fa: "صفحات", ps: "پاڼې" },
+  newPage: { en: "New page", fa: "صفحه جدید", ps: "نوې پاڼه" },
+  pageSlug: { en: "Page slug", fa: "نامک صفحه", ps: "د پاڼې سلګ" },
+  pageContent: { en: "Page content", fa: "محتوای صفحه", ps: "د پاڼې منځپانګه" },
+  published: { en: "Published", fa: "منتشر شده", ps: "خپور شوی" },
+  systemPage: { en: "System page", fa: "صفحه سیستمی", ps: "سیسټم پاڼه" },
+  heroImageOptional: { en: "Hero image (optional)", fa: "تصویر اصلی (اختیاری)", ps: "اصلي انځور (اختیاري)" },
 };
 
 export function tr(key: keyof typeof t, lang: Lang): string {

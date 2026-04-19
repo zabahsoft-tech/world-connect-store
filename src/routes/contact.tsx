@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Mail, Phone, MapPin, MessageCircle, Clock, Facebook, Instagram, Twitter, Youtube, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
+import { pickLang } from "@/lib/i18n";
 import { SiteLayout } from "@/components/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { openWhatsApp } from "@/lib/whatsapp";
@@ -49,10 +50,27 @@ function ContactPage() {
     },
   });
 
+  const pageQ = useQuery({
+    queryKey: ["page", "contact"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pages")
+        .select("*")
+        .eq("slug", "contact")
+        .eq("is_published", true)
+        .maybeSingle();
+      return data;
+    },
+  });
+
   const s = settings.data;
+  const page = pageQ.data;
   const wa = s?.whatsapp_number;
   const wa2 = s?.whatsapp_number_2;
   const greeting = { en: "Hi! I have a question.", fa: "سلام! یک سوال دارم.", ps: "سلام! یوه پوښتنه لرم." }[lang];
+
+  const pageTitle = page ? pickLang(page, "title", lang) : tr("contactUs");
+  const pageContent = page ? pickLang(page, "content", lang) : "";
 
   const socials: { url: string | null | undefined; icon: typeof Facebook; label: string }[] = [
     { url: s?.facebook_url, icon: Facebook, label: "Facebook" },
@@ -66,7 +84,13 @@ function ContactPage() {
   return (
     <SiteLayout>
       <section className="container mx-auto max-w-2xl px-4 py-12">
-        <h1 className="mb-8 text-4xl font-bold">{tr("contactUs")}</h1>
+        <h1 className="mb-4 text-4xl font-bold">{pageTitle}</h1>
+        {pageContent && (
+          <div
+            className="prose prose-lg mb-8 max-w-none prose-headings:font-semibold prose-a:text-primary"
+            dangerouslySetInnerHTML={{ __html: pageContent }}
+          />
+        )}
         <div className="space-y-4">
           {wa && (
             <a href={`https://wa.me/${wa.replace(/[^\d]/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 rounded-xl border bg-card p-5 hover:border-primary">
