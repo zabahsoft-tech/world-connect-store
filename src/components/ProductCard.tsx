@@ -25,20 +25,23 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <Card className="group flex flex-col overflow-hidden border transition-all hover:shadow-[var(--shadow-soft)]">
-      <Link to="/products/$slug" params={{ slug: product.slug }} className="block">
-        <div className="aspect-square overflow-hidden bg-muted">
-          {product.image_url ? (
-            <img
-              src={product.image_url}
-              alt={name}
-              loading="lazy"
-              decoding="async"
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-muted-foreground">No image</div>
-          )}
-        </div>
+      <Link
+        to="/products/$slug"
+        params={{ slug: product.slug }}
+        className="block aspect-square w-full overflow-hidden bg-muted"
+        aria-label={name}
+      >
+        {product.image_url ? (
+          <img
+            src={product.image_url}
+            alt={name}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-muted-foreground">No image</div>
+        )}
       </Link>
       <div className="flex flex-1 flex-col gap-2 p-4">
         <Link to="/products/$slug" params={{ slug: product.slug }}>
