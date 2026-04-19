@@ -11,21 +11,21 @@ import { SiteLayout } from "@/components/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { buildQuickOrderMessage, openWhatsApp } from "@/lib/whatsapp";
+import { NotFoundState, ErrorState } from "@/components/ErrorState";
 
 export const Route = createFileRoute("/products/$slug")({
   component: ProductPage,
   notFoundComponent: () => (
     <SiteLayout>
-      <div className="container mx-auto px-4 py-16 text-center">
-        <h1 className="text-3xl font-bold">404</h1>
-        <p className="mt-2 text-muted-foreground">Product not found</p>
-        <Link to="/shop" className="mt-4 inline-block text-primary hover:underline">Back to shop</Link>
-      </div>
+      <NotFoundState
+        title="Product not found"
+        description="This product doesn't exist or is no longer available."
+      />
     </SiteLayout>
   ),
-  errorComponent: ({ error }) => (
+  errorComponent: ({ error, reset }) => (
     <SiteLayout>
-      <div className="container mx-auto px-4 py-16 text-center text-destructive">{error.message}</div>
+      <ErrorState error={error} reset={reset} />
     </SiteLayout>
   ),
 });

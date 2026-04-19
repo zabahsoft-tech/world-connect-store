@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { FullScreenLoader } from "@/components/Loader";
+import { ErrorState, ForbiddenState } from "@/components/ErrorState";
 import {
   Sidebar,
   SidebarContent,
@@ -22,6 +23,11 @@ import {
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
+  errorComponent: ({ error, reset }) => (
+    <div className="flex min-h-screen items-center justify-center bg-muted/30">
+      <ErrorState error={error} reset={reset} />
+    </div>
+  ),
 });
 
 const NAV = [
