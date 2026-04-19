@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { ShoppingCart, Menu, X, User as UserIcon, LogOut, LayoutDashboard, LogIn, Search } from "lucide-react";
+import { ShoppingCart, Menu, X, User as UserIcon, LogOut, LayoutDashboard, LogIn } from "lucide-react";
+import { NavSearch } from "./NavSearch";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLang } from "@/contexts/LangContext";
@@ -138,15 +139,7 @@ export function Header() {
         <div className="flex items-center gap-1">
           <LangSwitcher />
 
-          <Link to="/shop" aria-label={tr("shop")} className="hidden sm:inline-flex">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hover:bg-white/15 hover:text-primary-foreground text-primary-foreground/90"
-            >
-              <Search className="h-5 w-5" />
-            </Button>
-          </Link>
+          <NavSearch className="hidden md:block w-56 lg:w-72" />
 
           <Link to="/cart" aria-label="Cart">
             <Button
@@ -233,6 +226,7 @@ export function Header() {
       {open && (
         <nav className="border-t border-white/10 bg-background md:hidden animate-in slide-in-from-top-2 duration-200">
           <div className="container mx-auto flex flex-col gap-1 px-4 py-3">
+            <NavSearch variant="panel" className="mb-2" onNavigate={() => setOpen(false)} />
             {links.map((l) => (
               <Link
                 key={l.to}
