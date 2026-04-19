@@ -1,66 +1,65 @@
 
-## Plan: Branded Error Pages with SiteLayout
+## Plan: Multilingual SEO Targeted at Afghanistan
 
-Currently error UI is plain divs, inconsistent across the app:
-- Root 404 in `__root.tsx` — bare div, no header/footer
-- Default error in `router.tsx` — bare div, no layout
-- Per-route in `products.$slug.tsx` — uses SiteLayout but minimal styling
+The site has rich multilingual content (EN/FA/PS) but weak SEO: only `__root.tsx` has hardcoded English meta, no per-route head, no structured data, no sitemap, no hreflang, no geo targeting. I'll fix all of this with a focus on Afghanistan + Dari/Pashto markets.
 
-I'll create a shared, branded error UI and wire it everywhere via `SiteLayout`.
-
-### 1. New `src/components/ErrorState.tsx`
-A reusable branded component with three variants:
-- `<NotFoundState />` — big "404", search-off icon, "Back to home" + "Browse shop" CTAs
-- `<ErrorState error reset />` — alert-triangle icon, error message, "Try again" + "Go home" CTAs (uses `router.invalidate()` + `reset()`)
-- `<ForbiddenState />` — for future 403 use (admin pages)
-
-All use the primary color, soft gradient backdrop matching FullScreenLoader, store name from settings, i18n-aware copy.
-
-### 2. New `src/routes/404.tsx` (catch-all)
-Standalone route using `SiteLayout` + `<NotFoundState />` for users hitting unknown URLs in marketing context. Actually — TanStack uses `notFoundComponent`, not a route file. Skip this; handle via root.
+### 1. New `src/lib/seo.ts` helper
+Central module with:
+- `BASE_URL` (from window origin / hardcoded production URL)
+- Per-language SEO dictionaries (titles, descriptions, keywords for each page in EN/FA/PS) — Afghanistan-specific keywords like "Kabul", "Afghanistan", "آنلاین خرید افغانستان", "آنلاین پلورنځی افغانستان"
+- `buildMeta({ title, description, image, url, lang, type })` — returns the full `meta[]` array including OG, Twitter, geo tags (`geo.region=AF`, `geo.placename=Kabul`, `geo.position`, `ICBM`)
+- `buildHreflangLinks(path)` — returns hreflang `link[]` for `en-AF`, `fa-AF`, `ps-AF`, `x-default`
+- `buildJsonLd(type, data)` — Organization, Website, Product, BreadcrumbList, LocalBusiness schema generators
 
 ### 2. Update `src/routes/__root.tsx`
-Replace inline `NotFoundComponent` with one that wraps `<NotFoundState />` in `SiteLayout` (so header/footer/nav still show on 404 pages).
+- Replace hardcoded English meta with Afghanistan-aware defaults
+- Add `geo.region=AF`, `geo.placename`, `ICBM` meta
+- Add `og:locale` (defaults to `fa_AF` since most users are Afghan), `og:locale:alternate` for `en_US` and `ps_AF`
+- Add canonical link, theme-color, robots
+- Add Organization + WebSite JSON-LD with `SearchAction`
+- Add hreflang `<link>` tags for the homepage
 
-### 3. Update `src/router.tsx`
-Replace inline `DefaultErrorComponent` with one wrapping `<ErrorState />` in `SiteLayout`. Keep dev-mode error message preview.
+### 3. Per-route `head()` for all marketing routes
+Add `head()` (and where data-driven, derive from loader) to:
+- `src/routes/index.tsx` — homepage SEO trio per language + Organization JSON-LD
+- `src/routes/shop.tsx` — uses `head: ({ search })` to vary by category/query
+- `src/routes/categories.tsx` — categories listing
+- `src/routes/about.tsx` — derives from `about_*` settings
+- `src/routes/contact.tsx` — LocalBusiness JSON-LD with phone, address, geo
+- `src/routes/products.$slug.tsx` — convert to use `loader` so `head()` can read product name/description/image and emit Product JSON-LD with `priceCurrency: AFN`, availability, brand
 
-### 4. Update `src/routes/products.$slug.tsx`
-Use the new shared components instead of bare divs inside SiteLayout.
+Each `head()` returns three-language-aware tags using a fallback chain (current lang → settings store name → defaults). Since SSR doesn't know the user's lang preference (it's stored in localStorage), we render **all three languages** in the `<head>`:
+- Primary `<title>` and `<meta name="description">` in English (international default)
+- `<meta property="og:title:fa">`, `<meta property="og:title:ps">` for alternates
+- Full hreflang link set so search engines route users to the right language version
 
-### 5. Add per-route boundaries to data routes missing them
-Routes with loaders/queries that should have proper boundaries:
-- `src/routes/shop.tsx` — add `errorComponent`
-- `src/routes/categories.tsx` — add `errorComponent`
-- `src/routes/index.tsx` — add `errorComponent`
+### 4. Sitemap and robots
+- `src/routes/sitemap[.]xml.tsx` — server route generating XML sitemap with all static routes + dynamic products/categories from Supabase, with `<xhtml:link rel="alternate" hreflang="...">` entries per URL
+- `public/robots.txt` — allow all, point to sitemap, disallow `/admin/*`, `/checkout`, `/cart`, `/login`, `/signup`
 
-Each uses `SiteLayout` + `<ErrorState />`.
+### 5. Sync `<html lang>` and meta description from settings
+- `LangContext` already syncs `document.documentElement.lang` — extend it to also update `document.dir` and write a meta tag `content-language`
+- When `settings.meta_description_*` exists, it overrides defaults via the seo helper
 
-### 6. Admin error boundary
-- `src/routes/admin.tsx` — add `errorComponent` that renders inside the admin shell (NOT SiteLayout) with a simple branded error card + retry.
+### 6. Afghanistan-specific touches
+- Geo meta: `geo.region=AF`, `geo.placename=Kabul, Afghanistan`, `geo.position=34.5553;69.2075`, `ICBM=34.5553, 69.2075`
+- Currency hints in Product JSON-LD: `priceCurrency: "AFN"` (configurable via settings later)
+- Locale tags: `fa_AF` (Dari) and `ps_AF` (Pashto), not generic `fa_IR`
+- LocalBusiness schema with `addressCountry: AF`
+- Keywords mention major Afghan cities: Kabul, Herat, Mazar-i-Sharif, Kandahar, Jalalabad
 
-### Layout sketch
-```text
-┌─────────── Header ──────────────┐
-│                                 │
-│      [icon in tinted circle]    │
-│                                 │
-│           404                   │
-│      Page not found             │
-│   The page you're looking       │
-│   for doesn't exist.            │
-│                                 │
-│   [Go home] [Browse shop]       │
-│                                 │
-├─────────── Footer ──────────────┤
-```
+### 7. PWA basics for share quality
+- Add `<link rel="canonical">` per route
+- Add `<meta name="format-detection" content="telephone=yes">` (helps Afghan users tap phone numbers)
+- `<meta name="theme-color">` from settings primary_color
 
 ### Files
-- New: `src/components/ErrorState.tsx`
-- Edit: `src/routes/__root.tsx` — use `NotFoundState` in `SiteLayout`
-- Edit: `src/router.tsx` — use `ErrorState` in `SiteLayout` for default error
-- Edit: `src/routes/products.$slug.tsx` — use shared components
-- Edit: `src/routes/shop.tsx`, `src/routes/categories.tsx`, `src/routes/index.tsx` — add `errorComponent`
-- Edit: `src/routes/admin.tsx` — add admin-styled `errorComponent`
+- New: `src/lib/seo.ts`
+- New: `src/routes/sitemap[.]xml.tsx`
+- New: `public/robots.txt`
+- Edit: `src/routes/__root.tsx` — Afghanistan-aware defaults + JSON-LD + hreflang
+- Edit: `src/routes/index.tsx`, `shop.tsx`, `categories.tsx`, `about.tsx`, `contact.tsx` — add `head()`
+- Edit: `src/routes/products.$slug.tsx` — add `loader` + dynamic `head()` with Product JSON-LD
+- Edit: `src/contexts/LangContext.tsx` — write `content-language` meta tag
 
-No DB changes, no new dependencies (uses lucide icons, shadcn Button, existing SiteLayout).
+No DB changes, no new dependencies.
