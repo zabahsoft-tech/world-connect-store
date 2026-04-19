@@ -1,51 +1,44 @@
 
-The user wants to enhance the admin dashboard with a proper shadcn sidebar and improve the products section (table + form). Currently the admin uses a custom hand-rolled aside, and products use a basic HTML table + dialog form.
+The user wants admin-controlled hero slides instead of hardcoded ones in `src/routes/index.tsx`.
 
-## Plan: Enhance Admin Dashboard
+## Plan: Dynamic Hero Slides
 
-### 1. Replace custom sidebar with shadcn Sidebar
-In `src/routes/admin.tsx`:
-- Use `SidebarProvider`, `Sidebar`, `SidebarContent`, `SidebarGroup`, `SidebarMenu`, `SidebarMenuItem`, `SidebarMenuButton`, `SidebarHeader`, `SidebarFooter`, `SidebarTrigger`, `SidebarInset`
-- Collapsible to icon mode (`collapsible="icon"`) so it stays usable when collapsed
-- Top header bar with always-visible `SidebarTrigger`, page title, and sign-out
-- Active route highlighting via TanStack Router `activeProps`
-- Mobile responsive (sidebar becomes off-canvas drawer on small screens automatically)
+### 1. Database
+New `hero_slides` table:
+- `id` uuid pk
+- `image` text (URL)
+- `title_en/fa/ps` text
+- `subtitle_en/fa/ps` text
+- `cta_label_en/fa/ps` text (nullable)
+- `cta_link` text (nullable, e.g. `/shop`)
+- `sort_order` int default 0
+- `active` boolean default true
+- `created_at`, `updated_at` timestamps
 
-### 2. Enhance Products section
-In `src/routes/admin.products.tsx`:
+RLS: public SELECT (active only via app filter), admins full ALL — same pattern as `categories`/`products`.
 
-**Table improvements** (use shadcn `Table` components):
-- Replace raw `<table>` with `Table`, `TableHeader`, `TableRow`, `TableHead`, `TableBody`, `TableCell`
-- Add search input (filter by name across all 3 langs)
-- Add category filter dropdown
-- Add stock status filter (all / in stock / out of stock)
-- Add featured filter
-- Show category badge per row
-- Show price formatted with currency
-- Better empty state with icon + CTA
-- Loading skeleton rows while fetching
-- Confirm delete via `AlertDialog` instead of native `confirm()`
+Seed 3 rows so the homepage isn't empty on first load.
 
-**Form improvements** (keep `Dialog`, restructure with `Tabs`):
-- Tabs: "General" | "Translations" | "Media" | "Settings"
-  - General: slug, price, category
-  - Translations: 3 tabs/columns for EN/FA/PS (name + description)
-  - Media: image URL + live preview
-  - Settings: in_stock, featured switches
-- Auto-generate slug from EN name if blank
-- Better field labels and helper text
-- Form validation feedback
-- Loading state on save button
+### 2. Homepage (`src/routes/index.tsx`)
+- Replace the hardcoded `SLIDES` const with a `useQuery` fetching `hero_slides` where `active=true` ordered by `sort_order`.
+- Use `pickLang(slide, "title", lang)` and `pickLang(slide, "subtitle", lang)` for translations.
+- CTA button uses `cta_link` + localized label (fallback to "Shop now" if empty).
+- Skeleton placeholder while loading; hide hero entirely if zero active slides.
 
-### 3. Dashboard page polish
-In `src/routes/admin.index.tsx`:
-- Keep stat cards but add subtle improvements (better spacing, trend hint, link to section)
-- Add a "Recent orders" preview card (last 5 orders) below stats
-- Add a "Low stock / out of stock" preview card
+### 3. Admin slides page (`src/routes/admin.slides.tsx`)
+New route mirroring the categories/products admin pattern:
+- Table: thumbnail, EN title, sort order, active toggle, edit/delete actions.
+- Dialog form with Tabs: **General** (image URL + preview, sort_order, active, cta_link) and **Translations** (EN/FA/PS title + subtitle + cta_label).
+- AlertDialog for delete confirmation.
+- Reorder via sort_order number input (keep simple, no drag-and-drop).
 
-### Files to edit
-- `src/routes/admin.tsx` — replace layout with shadcn Sidebar
-- `src/routes/admin.products.tsx` — new Table + Tabs form + filters + AlertDialog
-- `src/routes/admin.index.tsx` — add recent orders + out-of-stock cards
+### 4. Sidebar nav (`src/routes/admin.tsx`)
+Add a "Hero slides" entry to the `NAV` array with the `Images` icon, between Categories and Orders.
 
-No DB schema changes, no new dependencies (shadcn sidebar, table, tabs, alert-dialog already exist in `src/components/ui/`).
+### Files
+- New migration: create `hero_slides` table + RLS + seed
+- New: `src/routes/admin.slides.tsx`
+- Edit: `src/routes/index.tsx` (fetch slides dynamically)
+- Edit: `src/routes/admin.tsx` (add nav link)
+
+No new dependencies — reuses existing shadcn Table, Dialog, Tabs, AlertDialog, Switch.
