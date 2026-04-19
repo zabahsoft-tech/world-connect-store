@@ -104,21 +104,11 @@ function BlogIndex() {
   const { tag } = Route.useSearch();
   const { lang, tr } = useLang();
 
-  const allTags = useQuery({
-    queryKey: ["blog-all-tags", posts.length],
-    queryFn: () => {
-      const set = new Set<string>();
-      posts.forEach((p) => p.tags?.forEach((t) => set.add(t)));
-      return Array.from(set).sort();
-    },
-    initialData: () => {
-      const set = new Set<string>();
-      posts.forEach((p) => p.tags?.forEach((t) => set.add(t)));
-      return Array.from(set).sort();
-    },
-  });
+  const tagSet = new Set<string>();
+  posts.forEach((p: BlogListItem) => p.tags?.forEach((t: string) => tagSet.add(t)));
+  const allTags = Array.from(tagSet).sort();
 
-  const filtered = tag ? posts.filter((p) => p.tags?.includes(tag)) : posts;
+  const filtered = tag ? posts.filter((p: BlogListItem) => p.tags?.includes(tag)) : posts;
 
   return (
     <SiteLayout>
@@ -127,7 +117,7 @@ function BlogIndex() {
           <h1 className="text-3xl font-bold md:text-4xl">{tr("blog")}</h1>
           <p className="mt-2 text-muted-foreground">{tr("latestPosts")}</p>
 
-          {allTags.data && allTags.data.length > 0 && (
+          {allTags.length > 0 && (
             <div className="mt-5 flex flex-wrap items-center gap-2">
               <Link
                 to="/blog"
@@ -138,7 +128,7 @@ function BlogIndex() {
               >
                 {tr("allPosts")}
               </Link>
-              {allTags.data.map((t) => (
+              {allTags.map((t) => (
                 <Link
                   key={t}
                   to="/blog"
@@ -160,7 +150,7 @@ function BlogIndex() {
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((p) => {
+            {filtered.map((p: BlogListItem) => {
               const title = pickLang(p, "title", lang) || p.slug;
               const excerpt = pickLang(p, "excerpt", lang);
               const date = formatDate(p.published_at || p.created_at, lang);
@@ -188,7 +178,7 @@ function BlogIndex() {
                     </div>
                     <div className="space-y-2 p-4">
                       <div className="flex flex-wrap gap-1.5">
-                        {p.tags?.slice(0, 3).map((t) => (
+                        {p.tags?.slice(0, 3).map((t: string) => (
                           <Badge key={t} variant="secondary" className="text-[10px]">
                             {t}
                           </Badge>
