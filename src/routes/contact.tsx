@@ -143,6 +143,37 @@ function ContactPage() {
             dangerouslySetInnerHTML={{ __html: pageContent }}
           />
         )}
+
+        <Card className="mb-8 p-6">
+          <h2 className="mb-1 text-xl font-semibold">{tr("sendMessage")}</h2>
+          <p className="mb-5 text-sm text-muted-foreground">{tr("contactFormIntro")}</p>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="cf-name" className="mb-1.5 block">{tr("yourName")} *</Label>
+              <Input id="cf-name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} maxLength={100} required />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="cf-phone" className="mb-1.5 block">{tr("yourPhone")}</Label>
+                <Input id="cf-phone" type="tel" inputMode="tel" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} maxLength={30} />
+              </div>
+              <div>
+                <Label htmlFor="cf-email" className="mb-1.5 block">{tr("yourEmail")}</Label>
+                <Input id="cf-email" type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} maxLength={255} />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="cf-message" className="mb-1.5 block">{tr("yourMessage")} *</Label>
+              <Textarea id="cf-message" rows={5} value={form.message} onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))} maxLength={1000} required />
+              <div className="mt-1 text-right text-xs text-muted-foreground">{form.message.length}/1000</div>
+            </div>
+            <Button type="submit" size="lg" className="w-full gap-2" disabled={submitting}>
+              {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+              {tr("sendMessage")}
+            </Button>
+          </form>
+        </Card>
+
         <div className="space-y-4">
           {wa && (
             <a href={`https://wa.me/${wa.replace(/[^\d]/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 rounded-xl border bg-card p-5 hover:border-primary">
