@@ -19,6 +19,10 @@ export const Route = createRootRoute({
       { property: "og:description", content: "Modern multilingual store. Order in English, Persian, or Pashto via WhatsApp." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Store — Order on WhatsApp" },
+      { name: "twitter:description", content: "Modern multilingual store. Order in English, Persian, or Pashto via WhatsApp." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/69adf668-a7ab-45da-b59e-61c6c791196b/id-preview-e83e5e6c--2859184a-8db2-499b-a042-9af03cc7e504.lovable.app-1776572666693.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/69adf668-a7ab-45da-b59e-61c6c791196b/id-preview-e83e5e6c--2859184a-8db2-499b-a042-9af03cc7e504.lovable.app-1776572666693.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
