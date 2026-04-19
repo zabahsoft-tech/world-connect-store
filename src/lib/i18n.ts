@@ -66,15 +66,10 @@ export function tr(key: keyof typeof t, lang: Lang): string {
   return t[key][lang];
 }
 
-export function pickLang<T extends Record<string, unknown>>(
-  obj: T,
-  field: string,
-  lang: Lang,
-): string {
-  const k = `${field}_${lang}`;
-  const v = obj[k];
+export function pickLang(obj: unknown, field: string, lang: Lang): string {
+  const o = obj as Record<string, unknown>;
+  const v = o[`${field}_${lang}`];
   if (typeof v === "string" && v.trim()) return v;
-  // fallback
-  const en = obj[`${field}_en`];
+  const en = o[`${field}_en`];
   return typeof en === "string" ? en : "";
 }
