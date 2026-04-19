@@ -103,146 +103,167 @@ function HomePage() {
 
   return (
     <SiteLayout>
-      {/* Hero slider — full width, text on image */}
-      {slidesQuery.isLoading ? (
-        <section className="h-[70vh] min-h-[480px] w-full animate-pulse bg-muted md:h-[85vh]" />
-      ) : slideCount > 0 && current ? (
-        <section className="relative h-[70vh] min-h-[480px] w-full overflow-hidden md:h-[85vh]">
-          {SLIDES.map((s, i) => (
-            <div
-              key={s.id}
-              className={`absolute inset-0 transition-opacity duration-1000 ${i === slide ? "opacity-100" : "opacity-0"}`}
-              aria-hidden={i !== slide}
-            >
-              <img
-                src={s.image}
-                alt=""
-                loading={i === 0 ? "eager" : "lazy"}
-                decoding="async"
-                {...(i === 0 ? { fetchPriority: "high" as const } : {})}
-                className="h-full w-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-black/20" />
-            </div>
-          ))}
+      {/* Hero slider — card style, with breathing space */}
+      <section className="container mx-auto px-4 pt-6 md:pt-8">
+        {slidesQuery.isLoading ? (
+          <div className="h-[60vh] min-h-[440px] w-full animate-pulse rounded-3xl bg-muted md:h-[70vh] md:max-h-[640px]" />
+        ) : slideCount > 0 && current ? (
+          <div className="relative h-[60vh] min-h-[440px] w-full overflow-hidden rounded-3xl border shadow-[var(--shadow-card)] md:h-[70vh] md:max-h-[640px]">
+            {SLIDES.map((s, i) => (
+              <div
+                key={s.id}
+                className={`absolute inset-0 transition-opacity duration-1000 ${i === slide ? "opacity-100" : "opacity-0"}`}
+                aria-hidden={i !== slide}
+              >
+                <img
+                  src={s.image}
+                  alt=""
+                  loading={i === 0 ? "eager" : "lazy"}
+                  decoding="async"
+                  {...(i === 0 ? { fetchPriority: "high" as const } : {})}
+                  className="h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent" />
+              </div>
+            ))}
 
-          <div className="relative z-10 flex h-full items-center">
-            <div className="container mx-auto px-4">
-              <div className="max-w-2xl text-white">
-                <span className="mb-4 inline-flex w-fit items-center rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-                  ✨ {tr("featured")}
-                </span>
-                <h1 className="text-4xl font-bold leading-tight drop-shadow-lg md:text-6xl lg:text-7xl">
-                  {pickLang(current, "title", lang) || tr("heroTitle")}
-                </h1>
-                <p className="mt-4 max-w-xl text-lg text-white/90 drop-shadow md:text-xl">
-                  {pickLang(current, "subtitle", lang) || tr("heroSubtitle")}
-                </p>
-                <div className="mt-8 flex flex-wrap gap-3">
-                  <Link to={current.cta_link || "/shop"}>
-                    <Button size="lg" className="gap-2">
-                      {pickLang(current, "cta_label", lang) || tr("shopNow")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-                    </Button>
-                  </Link>
-                  <Link to="/categories">
-                    <Button size="lg" variant="outline" className="border-white bg-white/10 text-white backdrop-blur hover:bg-white hover:text-foreground">
-                      {tr("browseCategories")}
-                    </Button>
-                  </Link>
+            <div className="relative z-10 flex h-full items-center">
+              <div className="w-full px-6 md:px-12 lg:px-16">
+                <div className="max-w-2xl text-white">
+                  <span className="mb-4 inline-flex w-fit items-center rounded-full bg-primary/95 px-3 py-1 text-xs font-semibold text-primary-foreground backdrop-blur">
+                    ✨ {tr("featured")}
+                  </span>
+                  <h1 className="text-4xl font-bold leading-tight drop-shadow-lg md:text-5xl lg:text-6xl">
+                    {pickLang(current, "title", lang) || tr("heroTitle")}
+                  </h1>
+                  <p className="mt-4 max-w-xl text-base text-white/90 drop-shadow md:text-lg">
+                    {pickLang(current, "subtitle", lang) || tr("heroSubtitle")}
+                  </p>
+                  <div className="mt-8 flex flex-wrap gap-3">
+                    <Link to={current.cta_link || "/shop"}>
+                      <Button size="lg" className="gap-2 rounded-full">
+                        {pickLang(current, "cta_label", lang) || tr("shopNow")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                      </Button>
+                    </Link>
+                    <Link to="/categories">
+                      <Button size="lg" variant="outline" className="rounded-full border-white/70 bg-white/10 text-white backdrop-blur hover:bg-white hover:text-foreground">
+                        {tr("browseCategories")}
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
+
+            {slideCount > 1 && (
+              <>
+                <button
+                  onClick={goPrev}
+                  aria-label="Previous slide"
+                  className="absolute start-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-background/30 text-white backdrop-blur-md transition hover:bg-background/80 hover:text-foreground"
+                >
+                  <ChevronLeft className="h-5 w-5 rtl:rotate-180" />
+                </button>
+                <button
+                  onClick={goNext}
+                  aria-label="Next slide"
+                  className="absolute end-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-background/30 text-white backdrop-blur-md transition hover:bg-background/80 hover:text-foreground"
+                >
+                  <ChevronRight className="h-5 w-5 rtl:rotate-180" />
+                </button>
+
+                <div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/20 bg-background/30 px-3 py-1.5 backdrop-blur-md">
+                  {SLIDES.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setSlide(i)}
+                      aria-label={`Go to slide ${i + 1}`}
+                      className={`h-1.5 rounded-full transition-all ${i === slide ? "w-6 bg-white" : "w-1.5 bg-white/50 hover:bg-white/80"}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
-
-          {slideCount > 1 && (
-            <>
-              <button
-                onClick={goPrev}
-                aria-label="Previous slide"
-                className="absolute start-4 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur transition hover:bg-white hover:text-foreground"
-              >
-                <ChevronLeft className="h-6 w-6 rtl:rotate-180" />
-              </button>
-              <button
-                onClick={goNext}
-                aria-label="Next slide"
-                className="absolute end-4 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur transition hover:bg-white hover:text-foreground"
-              >
-                <ChevronRight className="h-6 w-6 rtl:rotate-180" />
-              </button>
-
-              <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 gap-2">
-                {SLIDES.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setSlide(i)}
-                    aria-label={`Go to slide ${i + 1}`}
-                    className={`h-2 rounded-full transition-all ${i === slide ? "w-8 bg-white" : "w-2 bg-white/50 hover:bg-white/80"}`}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-        </section>
-      ) : null}
+        ) : null}
+      </section>
 
       {/* Features */}
-      <section className="container mx-auto grid grid-cols-1 gap-4 px-4 py-12 md:grid-cols-3">
+      <section className="container mx-auto grid grid-cols-1 gap-4 px-4 py-16 md:grid-cols-3 md:py-20">
         {[
-          { icon: ShoppingBag, en: "Easy ordering", fa: "سفارش آسان", ps: "اسان فرمایش" },
-          { icon: Truck, en: "Fast delivery", fa: "تحویل سریع", ps: "ګړنده رسول" },
-          { icon: Headphones, en: "WhatsApp support", fa: "پشتیبانی واتساپ", ps: "د واټس اپ ملاتړ" },
+          { icon: ShoppingBag, key: "easyOrdering", en: "Easy ordering", fa: "سفارش آسان", ps: "اسان فرمایش", descKey: "easyOrderingDesc" as const },
+          { icon: Truck, key: "fastDelivery", en: "Fast delivery", fa: "تحویل سریع", ps: "ګړنده رسول", descKey: "fastDeliveryDesc" as const },
+          { icon: Headphones, key: "whatsappSupport", en: "WhatsApp support", fa: "پشتیبانی واتساپ", ps: "د واټس اپ ملاتړ", descKey: "whatsappSupportDesc" as const },
         ].map((f, i) => (
-          <div key={i} className="flex items-center gap-4 rounded-xl border bg-card p-5">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-soft text-primary">
-              <f.icon className="h-6 w-6" />
+          <div
+            key={i}
+            className="flex flex-col items-center gap-3 rounded-2xl border bg-card/50 p-6 text-center backdrop-blur transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-soft)]"
+          >
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary-soft text-primary">
+              <f.icon className="h-7 w-7" />
             </div>
             <span className="font-semibold">{f[lang]}</span>
+            <span className="text-sm text-muted-foreground">{tr(f.descKey)}</span>
           </div>
         ))}
       </section>
 
-      {/* Categories */}
+      {/* Categories — soft band */}
       {cats.data && cats.data.length > 0 && (
-        <section className="container mx-auto px-4 py-8">
-          <div className="mb-6 flex items-end justify-between">
-            <h2 className="text-2xl font-bold md:text-3xl">{tr("categories")}</h2>
-            <Link to="/categories" className="text-sm font-medium text-primary hover:underline">
-              {tr("viewAll")} →
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-            {cats.data.map((c) => (
-              <Link
-                key={c.id}
-                to="/shop"
-                search={{ category: c.slug }}
-                className="group flex flex-col items-center rounded-xl border bg-card p-4 transition-all hover:border-primary hover:shadow-[var(--shadow-soft)]"
-              >
-                <div className="aspect-square w-full overflow-hidden rounded-lg bg-muted">
-                  {c.image && (
-                    <img
-                      src={c.image}
-                      alt={pickLang(c, "name", lang)}
-                      loading="lazy"
-                      decoding="async"
-                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                    />
-                  )}
-                </div>
-                <span className="mt-3 text-center text-sm font-semibold">{pickLang(c, "name", lang)}</span>
+        <section className="bg-muted/40 py-16 md:py-20">
+          <div className="container mx-auto px-4">
+            <div className="mb-8 flex items-end justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">{tr("browseCategories")}</p>
+                <h2 className="mt-1 text-2xl font-bold md:text-3xl">{tr("categories")}</h2>
+              </div>
+              <Link to="/categories">
+                <Button variant="ghost" size="sm" className="gap-1 rounded-full">
+                  {tr("viewAll")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                </Button>
               </Link>
-            ))}
+            </div>
+            <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-6">
+              {cats.data.map((c) => (
+                <Link
+                  key={c.id}
+                  to="/shop"
+                  search={{ category: c.slug }}
+                  className="group relative aspect-square overflow-hidden rounded-2xl ring-1 ring-border transition-all hover:ring-2 hover:ring-primary/40"
+                >
+                  <div className="h-full w-full bg-muted">
+                    {c.image && (
+                      <img
+                        src={c.image}
+                        alt={pickLang(c, "name", lang)}
+                        loading="lazy"
+                        decoding="async"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    )}
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                  <span className="absolute bottom-3 start-3 text-sm font-semibold text-white drop-shadow">
+                    {pickLang(c, "name", lang)}
+                  </span>
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
       )}
 
       {/* Featured products */}
-      <section className="container mx-auto px-4 py-12">
-        <div className="mb-6 flex items-end justify-between">
-          <h2 className="text-2xl font-bold md:text-3xl">{tr("featuredProducts")}</h2>
-          <Link to="/shop" className="text-sm font-medium text-primary hover:underline">
-            {tr("viewAll")} →
+      <section className="container mx-auto px-4 py-16 md:py-20">
+        <div className="mb-8 flex items-end justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary">{tr("handPicked")}</p>
+            <h2 className="mt-1 text-2xl font-bold md:text-3xl">{tr("featuredProducts")}</h2>
+          </div>
+          <Link to="/shop">
+            <Button variant="ghost" size="sm" className="gap-1 rounded-full">
+              {tr("viewAll")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+            </Button>
           </Link>
         </div>
         {featured.isLoading ? (

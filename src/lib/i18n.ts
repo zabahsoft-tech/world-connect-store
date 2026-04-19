@@ -88,6 +88,10 @@ export const t: Dict = {
   noMessages: { en: "No messages yet", fa: "هنوز پیامی وجود ندارد", ps: "تر اوسه پیغامونه نشته" },
   newMessage: { en: "New", fa: "جدید", ps: "نوی" },
   contactFormIntro: { en: "Have a question? Send us a message and we'll get back to you.", fa: "سوالی دارید؟ پیامی برای ما ارسال کنید تا با شما تماس بگیریم.", ps: "پوښتنه لرئ؟ موږ ته پیغام واستوئ، موږ به درسره اړیکه ونیسو." },
+  easyOrderingDesc: { en: "Browse and order in seconds", fa: "در چند ثانیه مرور و سفارش دهید", ps: "په څو ثانیو کې وګورئ او فرمایش وکړئ" },
+  fastDeliveryDesc: { en: "Quick shipping to your door", fa: "ارسال سریع به درب منزل", ps: "ستاسو وره ته ګړندی لېږد" },
+  whatsappSupportDesc: { en: "Chat with us anytime", fa: "هر زمان با ما گپ بزنید", ps: "هر وخت موږ سره خبرې وکړئ" },
+  handPicked: { en: "Hand-picked", fa: "دست‌چین شده", ps: "غوره شوي" },
 };
 
 export function tr(key: keyof typeof t, lang: Lang): string {
