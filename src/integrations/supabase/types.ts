@@ -195,6 +195,7 @@ export type Database = {
           meta_description_en: string | null
           meta_description_fa: string | null
           meta_description_ps: string | null
+          show_in_nav: boolean
           slug: string
           sort_order: number
           title_en: string
@@ -214,6 +215,7 @@ export type Database = {
           meta_description_en?: string | null
           meta_description_fa?: string | null
           meta_description_ps?: string | null
+          show_in_nav?: boolean
           slug: string
           sort_order?: number
           title_en?: string
@@ -233,6 +235,7 @@ export type Database = {
           meta_description_en?: string | null
           meta_description_fa?: string | null
           meta_description_ps?: string | null
+          show_in_nav?: boolean
           slug?: string
           sort_order?: number
           title_en?: string
