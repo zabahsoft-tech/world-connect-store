@@ -1,7 +1,7 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { Minus, Plus, ShoppingCart, MessageCircle } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Minus, Plus, ShoppingCart, MessageCircle, Play } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
@@ -10,6 +10,7 @@ import { pickLang } from "@/lib/i18n";
 import { SiteLayout } from "@/components/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { buildQuickOrderMessage, openWhatsApp } from "@/lib/whatsapp";
 import { NotFoundState, ErrorState } from "@/components/ErrorState";
 import {
@@ -20,6 +21,38 @@ import {
   jsonLdScript,
   SITE_URL,
 } from "@/lib/seo";
+
+interface Variant {
+  id: string;
+  name_en: string;
+  name_fa: string;
+  name_ps: string;
+  sku?: string | null;
+  price?: number | null;
+  in_stock: boolean;
+  image_url?: string | null;
+}
+
+interface AttributeRow {
+  label_en: string;
+  label_fa: string;
+  label_ps: string;
+  value_en: string;
+  value_fa: string;
+  value_ps: string;
+}
+
+function getVideoEmbed(url: string): { type: "youtube" | "vimeo" | "file"; src: string } | null {
+  if (!url) return null;
+  const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
+  if (yt) return { type: "youtube", src: `https://www.youtube.com/embed/${yt[1]}` };
+  const vm = url.match(/vimeo\.com\/(\d+)/);
+  if (vm) return { type: "vimeo", src: `https://player.vimeo.com/video/${vm[1]}` };
+  if (/\.(mp4|webm|mov)(\?|$)/i.test(url)) return { type: "file", src: url };
+  // Assume direct file if uploaded via storage
+  if (url.includes("/site-assets/") && url.includes("/videos/")) return { type: "file", src: url };
+  return { type: "file", src: url };
+}
 
 export const Route = createFileRoute("/products/$slug")({
   loader: async ({ params }) => {
@@ -107,7 +140,8 @@ function ProductPage() {
   const { tr, lang } = useLang();
   const { add } = useCart();
   const [qty, setQty] = useState(1);
-  const [activeImg, setActiveImg] = useState(0);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
 
   const settings = useQuery({
     queryKey: ["settings"],
@@ -117,12 +151,26 @@ function ProductPage() {
     },
   });
 
-  if (!p) return null;
+  const gallery: string[] = useMemo(() => (Array.isArray(p.gallery) ? (p.gallery as string[]) : []), [p.gallery]);
+  const allImages = useMemo(() => {
+    const merged = p.image_url && !gallery.includes(p.image_url) ? [p.image_url, ...gallery] : gallery;
+    return merged.filter(Boolean) as string[];
+  }, [gallery, p.image_url]);
+
+  const videoEmbed = p.video_url ? getVideoEmbed(p.video_url) : null;
+  const totalSlots = allImages.length + (videoEmbed ? 1 : 0);
+  const isVideoSlot = videoEmbed && activeIdx === allImages.length;
+
+  const attributes: AttributeRow[] = Array.isArray(p.attributes) ? (p.attributes as unknown as AttributeRow[]) : [];
+  const variants: Variant[] = Array.isArray(p.variants) ? (p.variants as unknown as Variant[]) : [];
+
+  const selectedVariant = variants.find((v) => v.id === selectedVariantId) || null;
+  const effectivePrice = selectedVariant?.price != null ? Number(selectedVariant.price) : Number(p.price);
+  const variantInStock = selectedVariant ? selectedVariant.in_stock : true;
+  const canBuy = p.in_stock && variantInStock && (variants.length === 0 || !!selectedVariant);
 
   const name = pickLang(p, "name", lang);
   const desc = pickLang(p, "description", lang);
-  const gallery: string[] = Array.isArray(p.gallery) ? (p.gallery as string[]) : [];
-  const allImages = [p.image_url, ...gallery].filter(Boolean) as string[];
 
   const handleQuickOrder = () => {
     const wa = settings.data?.whatsapp_number;
@@ -130,7 +178,43 @@ function ProductPage() {
       toast.error("WhatsApp number not configured");
       return;
     }
-    openWhatsApp(wa, buildQuickOrderMessage({ lang, productName: name, price: Number(p.price) * qty }));
+    if (variants.length > 0 && !selectedVariant) {
+      toast.error(tr("selectVariant"));
+      return;
+    }
+    const variantName = selectedVariant ? pickLang(selectedVariant, "name", lang) : undefined;
+    openWhatsApp(
+      wa,
+      buildQuickOrderMessage({ lang, productName: name, price: effectivePrice * qty, variantName }),
+    );
+  };
+
+  const handleAddToCart = () => {
+    if (variants.length > 0 && !selectedVariant) {
+      toast.error(tr("selectVariant"));
+      return;
+    }
+    add(
+      {
+        id: p.id,
+        slug: p.slug,
+        name_en: p.name_en,
+        name_fa: p.name_fa,
+        name_ps: p.name_ps,
+        price: effectivePrice,
+        image_url: selectedVariant?.image_url || p.image_url,
+        ...(selectedVariant
+          ? {
+              variantId: selectedVariant.id,
+              variantName_en: selectedVariant.name_en,
+              variantName_fa: selectedVariant.name_fa,
+              variantName_ps: selectedVariant.name_ps,
+            }
+          : {}),
+      },
+      qty,
+    );
+    toast.success(tr("addToCart"));
   };
 
   return (
@@ -138,23 +222,53 @@ function ProductPage() {
       <section className="container mx-auto grid gap-8 px-4 py-8 md:grid-cols-2">
         <div className="space-y-3">
           <div className="aspect-square overflow-hidden rounded-2xl bg-muted">
-            {allImages[activeImg] ? (
-              <img src={allImages[activeImg]} alt={name} className="h-full w-full object-cover" />
+            {isVideoSlot && videoEmbed ? (
+              videoEmbed.type === "file" ? (
+                <video src={videoEmbed.src} controls className="h-full w-full object-contain" />
+              ) : (
+                <iframe
+                  src={videoEmbed.src}
+                  title={name}
+                  className="h-full w-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              )
+            ) : allImages[activeIdx] ? (
+              <img src={allImages[activeIdx]} alt={name} className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-muted-foreground">No image</div>
             )}
           </div>
-          {allImages.length > 1 && (
+          {totalSlots > 1 && (
             <div className="grid grid-cols-5 gap-2">
               {allImages.map((src, i) => (
                 <button
-                  key={i}
-                  onClick={() => setActiveImg(i)}
-                  className={`aspect-square overflow-hidden rounded-lg border-2 transition-colors ${i === activeImg ? "border-primary" : "border-transparent"}`}
+                  key={src + i}
+                  type="button"
+                  onClick={() => setActiveIdx(i)}
+                  className={`aspect-square overflow-hidden rounded-lg border-2 transition-colors ${i === activeIdx ? "border-primary" : "border-transparent"}`}
                 >
                   <img src={src} alt="" className="h-full w-full object-cover" />
                 </button>
               ))}
+              {videoEmbed && (
+                <button
+                  type="button"
+                  onClick={() => setActiveIdx(allImages.length)}
+                  className={`relative aspect-square overflow-hidden rounded-lg border-2 transition-colors ${isVideoSlot ? "border-primary" : "border-transparent"}`}
+                  aria-label={tr("watchVideo")}
+                >
+                  {allImages[0] ? (
+                    <img src={allImages[0]} alt="" className="h-full w-full object-cover opacity-70" />
+                  ) : (
+                    <div className="h-full w-full bg-muted" />
+                  )}
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                    <Play className="h-6 w-6 fill-white text-white" />
+                  </div>
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -162,14 +276,64 @@ function ProductPage() {
         <div className="flex flex-col">
           <div className="flex flex-wrap items-center gap-2">
             {p.featured && <Badge variant="default">{tr("featured")}</Badge>}
-            <Badge variant={p.in_stock ? "secondary" : "destructive"}>
-              {p.in_stock ? tr("inStock") : tr("outOfStock")}
+            <Badge variant={p.in_stock && variantInStock ? "secondary" : "destructive"}>
+              {p.in_stock && variantInStock ? tr("inStock") : tr("outOfStock")}
             </Badge>
           </div>
           <h1 className="mt-3 text-3xl font-bold md:text-4xl">{name}</h1>
-          <p className="mt-2 text-3xl font-bold text-primary">{Number(p.price).toFixed(2)}</p>
+          <p className="mt-2 text-3xl font-bold text-primary">{effectivePrice.toFixed(2)}</p>
 
           {desc && <p className="mt-6 whitespace-pre-line text-muted-foreground">{desc}</p>}
+
+          {variants.length > 0 && (
+            <div className="mt-6 space-y-2">
+              <p className="text-sm font-medium">{tr("variant")}:</p>
+              <div className="flex flex-wrap gap-2">
+                {variants.map((v) => {
+                  const vname = pickLang(v, "name", lang);
+                  const isSelected = v.id === selectedVariantId;
+                  return (
+                    <button
+                      key={v.id}
+                      type="button"
+                      disabled={!v.in_stock}
+                      onClick={() => setSelectedVariantId(v.id)}
+                      className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
+                        isSelected
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-background hover:border-primary"
+                      } ${!v.in_stock ? "cursor-not-allowed line-through opacity-50" : ""}`}
+                    >
+                      {vname}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {attributes.length > 0 && (
+            <div className="mt-6">
+              <h2 className="mb-2 text-sm font-semibold">{tr("specifications")}</h2>
+              <div className="overflow-hidden rounded-lg border">
+                <Table>
+                  <TableBody>
+                    {attributes.map((a, i) => {
+                      const label = pickLang(a, "label", lang);
+                      const value = pickLang(a, "value", lang);
+                      if (!label && !value) return null;
+                      return (
+                        <TableRow key={i}>
+                          <TableCell className="w-1/3 bg-muted/40 font-medium">{label}</TableCell>
+                          <TableCell>{value}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
 
           <div className="mt-8 space-y-4">
             <div className="flex items-center gap-3">
@@ -189,19 +353,8 @@ function ProductPage() {
               <Button
                 size="lg"
                 className="flex-1 gap-2"
-                disabled={!p.in_stock}
-                onClick={() => {
-                  add({
-                    id: p.id,
-                    slug: p.slug,
-                    name_en: p.name_en,
-                    name_fa: p.name_fa,
-                    name_ps: p.name_ps,
-                    price: Number(p.price),
-                    image_url: p.image_url,
-                  }, qty);
-                  toast.success(tr("addToCart"));
-                }}
+                disabled={!canBuy}
+                onClick={handleAddToCart}
               >
                 <ShoppingCart className="h-5 w-5" /> {tr("addToCart")}
               </Button>
@@ -209,7 +362,7 @@ function ProductPage() {
                 size="lg"
                 variant="outline"
                 className="flex-1 gap-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                disabled={!p.in_stock}
+                disabled={!canBuy}
                 onClick={handleQuickOrder}
               >
                 <MessageCircle className="h-5 w-5" /> {tr("quickOrder")}

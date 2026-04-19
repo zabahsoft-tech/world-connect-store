@@ -35,7 +35,9 @@ export function buildOrderMessage(opts: {
   lines.push(`*${labels.items}:*`);
   for (const i of items) {
     const name = pickLang(i, "name", lang);
-    lines.push(`• ${name} × ${i.quantity} = ${(i.price * i.quantity).toFixed(2)}`);
+    const variantName = pickLang(i, "variantName", lang);
+    const display = variantName ? `${name} — ${variantName}` : name;
+    lines.push(`• ${display} × ${i.quantity} = ${(i.price * i.quantity).toFixed(2)}`);
   }
   lines.push("");
   lines.push(`💰 *${labels.total}: ${total.toFixed(2)}*`);

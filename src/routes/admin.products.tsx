@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Plus, Pencil, Trash2, Search, Package as PackageIcon, ImageOff } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Package as PackageIcon, ImageOff, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -26,10 +26,32 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { GalleryUpload } from "@/components/GalleryUpload";
+import { MediaUpload } from "@/components/MediaUpload";
 
 export const Route = createFileRoute("/admin/products")({
   component: AdminProducts,
 });
+
+interface AttributeRow {
+  label_en: string;
+  label_fa: string;
+  label_ps: string;
+  value_en: string;
+  value_fa: string;
+  value_ps: string;
+}
+
+interface VariantRow {
+  id: string;
+  name_en: string;
+  name_fa: string;
+  name_ps: string;
+  sku: string;
+  price: string; // override; "" = use base
+  in_stock: boolean;
+  image_url: string;
+}
 
 interface ProductForm {
   id?: string;
@@ -41,17 +63,32 @@ interface ProductForm {
   description_fa: string;
   description_ps: string;
   price: string;
-  image_url: string;
+  gallery: string[];
+  video_url: string;
   category_id: string;
   in_stock: boolean;
   featured: boolean;
+  attributes: AttributeRow[];
+  variants: VariantRow[];
 }
 
 const empty: ProductForm = {
   slug: "", name_en: "", name_fa: "", name_ps: "",
   description_en: "", description_fa: "", description_ps: "",
-  price: "0", image_url: "", category_id: "", in_stock: true, featured: false,
+  price: "0", gallery: [], video_url: "", category_id: "",
+  in_stock: true, featured: false, attributes: [], variants: [],
 };
+
+const emptyAttr = (): AttributeRow => ({
+  label_en: "", label_fa: "", label_ps: "",
+  value_en: "", value_fa: "", value_ps: "",
+});
+
+const emptyVariant = (): VariantRow => ({
+  id: crypto.randomUUID(),
+  name_en: "", name_fa: "", name_ps: "",
+  sku: "", price: "", in_stock: true, image_url: "",
+});
 
 function slugify(s: string) {
   return s.toLowerCase().trim().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-").slice(0, 80);
@@ -63,6 +100,7 @@ function AdminProducts() {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState("general");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [videoMode, setVideoMode] = useState<"upload" | "url">("upload");
 
   const [search, setSearch] = useState("");
   const [filterCat, setFilterCat] = useState<string>("all");
@@ -109,6 +147,21 @@ function AdminProducts() {
       if (!f.name_en.trim() || !f.name_fa.trim() || !f.name_ps.trim()) {
         throw new Error("Name is required in all 3 languages");
       }
+      const cleanAttrs = f.attributes.filter(
+        (a) => (a.label_en + a.value_en + a.label_fa + a.value_fa + a.label_ps + a.value_ps).trim().length > 0
+      );
+      const cleanVariants = f.variants
+        .filter((v) => (v.name_en + v.name_fa + v.name_ps).trim().length > 0)
+        .map((v) => ({
+          id: v.id,
+          name_en: v.name_en,
+          name_fa: v.name_fa,
+          name_ps: v.name_ps,
+          sku: v.sku || null,
+          price: v.price.trim() === "" ? null : Number(v.price),
+          in_stock: v.in_stock,
+          image_url: v.image_url || null,
+        }));
       const payload = {
         slug: f.slug.trim() || slugify(f.name_en),
         name_en: f.name_en, name_fa: f.name_fa, name_ps: f.name_ps,
@@ -116,7 +169,11 @@ function AdminProducts() {
         description_fa: f.description_fa || null,
         description_ps: f.description_ps || null,
         price: Number(f.price) || 0,
-        image_url: f.image_url || null,
+        image_url: f.gallery[0] || null,
+        gallery: f.gallery,
+        video_url: f.video_url || null,
+        attributes: cleanAttrs,
+        variants: cleanVariants,
         category_id: f.category_id || null,
         in_stock: f.in_stock,
         featured: f.featured,
@@ -154,18 +211,35 @@ function AdminProducts() {
   const openNew = () => {
     setEditing({ ...empty });
     setTab("general");
+    setVideoMode("upload");
     setOpen(true);
   };
 
   const openEdit = (p: typeof products.data extends (infer T)[] | null | undefined ? T : never) => {
+    const galleryArr: string[] = Array.isArray(p.gallery) ? (p.gallery as string[]) : [];
+    // if image_url exists but isn't in gallery, prepend it
+    const merged = p.image_url && !galleryArr.includes(p.image_url) ? [p.image_url, ...galleryArr] : galleryArr;
+    const attrsRaw = (Array.isArray(p.attributes) ? p.attributes : []) as Partial<AttributeRow>[];
+    const variantsRaw = (Array.isArray(p.variants) ? p.variants : []) as Array<Partial<VariantRow> & { price?: number | string | null }>;
     setEditing({
       id: p.id, slug: p.slug,
       name_en: p.name_en, name_fa: p.name_fa, name_ps: p.name_ps,
       description_en: p.description_en ?? "", description_fa: p.description_fa ?? "", description_ps: p.description_ps ?? "",
-      price: String(p.price), image_url: p.image_url ?? "", category_id: p.category_id ?? "",
+      price: String(p.price),
+      gallery: merged,
+      video_url: p.video_url ?? "",
+      category_id: p.category_id ?? "",
       in_stock: p.in_stock, featured: p.featured,
+      attributes: attrsRaw.map((a) => ({ ...emptyAttr(), ...a })),
+      variants: variantsRaw.map((v) => ({
+        ...emptyVariant(),
+        ...v,
+        id: v.id ?? crypto.randomUUID(),
+        price: v.price == null ? "" : String(v.price),
+      })),
     });
     setTab("general");
+    setVideoMode(p.video_url && /^https?:\/\//.test(p.video_url) && !p.video_url.includes("supabase") ? "url" : "upload");
     setOpen(true);
   };
 
@@ -184,7 +258,7 @@ function AdminProducts() {
               <Plus className="h-4 w-4" /> New product
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+          <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editing?.id ? "Edit product" : "New product"}</DialogTitle>
               <DialogDescription>
@@ -194,10 +268,11 @@ function AdminProducts() {
             {editing && (
               <form onSubmit={(e) => { e.preventDefault(); save.mutate(editing); }} className="space-y-4">
                 <Tabs value={tab} onValueChange={setTab}>
-                  <TabsList className="grid w-full grid-cols-4">
+                  <TabsList className="grid w-full grid-cols-5">
                     <TabsTrigger value="general">General</TabsTrigger>
                     <TabsTrigger value="trans">Translations</TabsTrigger>
                     <TabsTrigger value="media">Media</TabsTrigger>
+                    <TabsTrigger value="variations">Variations</TabsTrigger>
                     <TabsTrigger value="settings">Settings</TabsTrigger>
                   </TabsList>
 
@@ -256,28 +331,256 @@ function AdminProducts() {
                     ))}
                   </TabsContent>
 
-                  <TabsContent value="media" className="space-y-3">
-                    <Field label="Image URL" hint="Direct link to the product image.">
-                      <Input
-                        value={editing.image_url}
-                        placeholder="https://..."
-                        onChange={(e) => setEditing({ ...editing, image_url: e.target.value })}
+                  <TabsContent value="media" className="space-y-5">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold">Gallery images</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Upload multiple product photos. Drag-free reorder with arrows; the first image is used as the thumbnail across the site.
+                      </p>
+                      <GalleryUpload
+                        value={editing.gallery}
+                        onChange={(g) => setEditing({ ...editing, gallery: g })}
+                        folder="products/images"
                       />
-                    </Field>
+                    </div>
+
                     <div className="rounded-md border bg-muted/30 p-3">
-                      <p className="mb-2 text-xs text-muted-foreground">Preview</p>
-                      {editing.image_url ? (
+                      <p className="mb-2 text-xs font-medium">Thumbnail preview</p>
+                      <p className="mb-2 text-[11px] text-muted-foreground">
+                        This is the thumbnail customers see in listings.
+                      </p>
+                      {editing.gallery[0] ? (
                         <img
-                          src={editing.image_url}
-                          alt="Preview"
-                          className="h-48 w-full rounded object-cover"
-                          onError={(e) => { e.currentTarget.style.display = "none"; }}
+                          src={editing.gallery[0]}
+                          alt="Thumbnail"
+                          className="h-32 w-32 rounded-lg border object-cover"
                         />
                       ) : (
-                        <div className="flex h-48 w-full items-center justify-center rounded bg-muted text-muted-foreground">
-                          <ImageOff className="h-8 w-8" />
+                        <div className="flex h-32 w-32 items-center justify-center rounded-lg border bg-muted text-muted-foreground">
+                          <ImageOff className="h-7 w-7" />
                         </div>
                       )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold">Product video (optional)</Label>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={videoMode === "upload" ? "default" : "outline"}
+                          onClick={() => setVideoMode("upload")}
+                        >
+                          Upload file
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={videoMode === "url" ? "default" : "outline"}
+                          onClick={() => setVideoMode("url")}
+                        >
+                          Paste URL
+                        </Button>
+                      </div>
+                      {videoMode === "upload" ? (
+                        <MediaUpload
+                          kind="video"
+                          value={editing.video_url}
+                          onChange={(u) => setEditing({ ...editing, video_url: u })}
+                          folder="products/videos"
+                        />
+                      ) : (
+                        <Input
+                          value={editing.video_url}
+                          onChange={(e) => setEditing({ ...editing, video_url: e.target.value })}
+                          placeholder="https://youtube.com/... or https://vimeo.com/... or .mp4"
+                        />
+                      )}
+                      <p className="text-[11px] text-muted-foreground">
+                        Supported: YouTube, Vimeo, direct .mp4/.webm links, or uploaded video files.
+                      </p>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="variations" className="space-y-6">
+                    {/* Specifications */}
+                    <div className="space-y-3 rounded-md border p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-semibold">Specifications table</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            Display-only attributes (e.g. Material: Cotton). Shown as a table on the product page.
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setEditing({ ...editing, attributes: [...editing.attributes, emptyAttr()] })}
+                        >
+                          <Plus className="me-1 h-3.5 w-3.5" /> Add row
+                        </Button>
+                      </div>
+                      {editing.attributes.length === 0 && (
+                        <p className="text-xs text-muted-foreground">No specifications yet.</p>
+                      )}
+                      {editing.attributes.map((a, i) => (
+                        <div key={i} className="space-y-2 rounded border bg-muted/30 p-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-medium text-muted-foreground">Row {i + 1}</span>
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7"
+                              onClick={() =>
+                                setEditing({ ...editing, attributes: editing.attributes.filter((_, idx) => idx !== i) })
+                              }
+                            >
+                              <X className="h-3.5 w-3.5 text-destructive" />
+                            </Button>
+                          </div>
+                          <div className="grid gap-2 md:grid-cols-2">
+                            {(["en", "fa", "ps"] as const).map((lng) => (
+                              <div key={lng} className="contents">
+                                <Input
+                                  placeholder={`Label (${lng.toUpperCase()})`}
+                                  dir={lng === "en" ? "ltr" : "rtl"}
+                                  value={a[`label_${lng}`]}
+                                  onChange={(e) => {
+                                    const next = editing.attributes.slice();
+                                    next[i] = { ...next[i], [`label_${lng}`]: e.target.value };
+                                    setEditing({ ...editing, attributes: next });
+                                  }}
+                                  className="text-xs"
+                                />
+                                <Input
+                                  placeholder={`Value (${lng.toUpperCase()})`}
+                                  dir={lng === "en" ? "ltr" : "rtl"}
+                                  value={a[`value_${lng}`]}
+                                  onChange={(e) => {
+                                    const next = editing.attributes.slice();
+                                    next[i] = { ...next[i], [`value_${lng}`]: e.target.value };
+                                    setEditing({ ...editing, attributes: next });
+                                  }}
+                                  className="text-xs"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Variants */}
+                    <div className="space-y-3 rounded-md border p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-semibold">Sellable variants</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            Selectable options (e.g. Size: Small / Large) with optional price override and stock.
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setEditing({ ...editing, variants: [...editing.variants, emptyVariant()] })}
+                        >
+                          <Plus className="me-1 h-3.5 w-3.5" /> Add variant
+                        </Button>
+                      </div>
+                      {editing.variants.length === 0 && (
+                        <p className="text-xs text-muted-foreground">No variants — product sells as a single SKU.</p>
+                      )}
+                      {editing.variants.map((v, i) => (
+                        <div key={v.id} className="space-y-2 rounded border bg-muted/30 p-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-medium text-muted-foreground">Variant {i + 1}</span>
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7"
+                              onClick={() =>
+                                setEditing({ ...editing, variants: editing.variants.filter((_, idx) => idx !== i) })
+                              }
+                            >
+                              <X className="h-3.5 w-3.5 text-destructive" />
+                            </Button>
+                          </div>
+                          <div className="grid gap-2 md:grid-cols-3">
+                            {(["en", "fa", "ps"] as const).map((lng) => (
+                              <Input
+                                key={lng}
+                                placeholder={`Name (${lng.toUpperCase()})`}
+                                dir={lng === "en" ? "ltr" : "rtl"}
+                                value={v[`name_${lng}`]}
+                                onChange={(e) => {
+                                  const next = editing.variants.slice();
+                                  next[i] = { ...next[i], [`name_${lng}`]: e.target.value };
+                                  setEditing({ ...editing, variants: next });
+                                }}
+                                className="text-xs"
+                              />
+                            ))}
+                          </div>
+                          <div className="grid gap-2 md:grid-cols-3">
+                            <Input
+                              placeholder="SKU (optional)"
+                              value={v.sku}
+                              onChange={(e) => {
+                                const next = editing.variants.slice();
+                                next[i] = { ...next[i], sku: e.target.value };
+                                setEditing({ ...editing, variants: next });
+                              }}
+                              className="text-xs"
+                            />
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              placeholder="Price override (blank = base)"
+                              value={v.price}
+                              onChange={(e) => {
+                                const next = editing.variants.slice();
+                                next[i] = { ...next[i], price: e.target.value };
+                                setEditing({ ...editing, variants: next });
+                              }}
+                              className="text-xs"
+                            />
+                            <Select
+                              value={v.image_url || "none"}
+                              onValueChange={(val) => {
+                                const next = editing.variants.slice();
+                                next[i] = { ...next[i], image_url: val === "none" ? "" : val };
+                                setEditing({ ...editing, variants: next });
+                              }}
+                            >
+                              <SelectTrigger className="text-xs"><SelectValue placeholder="Variant image (from gallery)" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">— No image —</SelectItem>
+                                {editing.gallery.map((g, idx) => (
+                                  <SelectItem key={g} value={g}>
+                                    Image {idx + 1}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <label className="flex items-center justify-between rounded border bg-background p-2">
+                            <span className="text-xs">In stock</span>
+                            <Switch
+                              checked={v.in_stock}
+                              onCheckedChange={(checked) => {
+                                const next = editing.variants.slice();
+                                next[i] = { ...next[i], in_stock: checked };
+                                setEditing({ ...editing, variants: next });
+                              }}
+                            />
+                          </label>
+                        </div>
+                      ))}
                     </div>
                   </TabsContent>
 
