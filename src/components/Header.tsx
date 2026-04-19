@@ -226,6 +226,7 @@ export function Header() {
       {open && (
         <nav className="border-t border-white/10 bg-background md:hidden animate-in slide-in-from-top-2 duration-200">
           <div className="container mx-auto flex flex-col gap-1 px-4 py-3">
+            <NavSearch variant="panel" className="mb-2" onNavigate={() => setOpen(false)} />
             {links.map((l) => (
               <Link
                 key={l.to}
