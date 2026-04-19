@@ -71,6 +71,21 @@ export const t: Dict = {
   published: { en: "Published", fa: "منتشر شده", ps: "خپور شوی" },
   systemPage: { en: "System page", fa: "صفحه سیستمی", ps: "سیسټم پاڼه" },
   heroImageOptional: { en: "Hero image (optional)", fa: "تصویر اصلی (اختیاری)", ps: "اصلي انځور (اختیاري)" },
+  messages: { en: "Messages", fa: "پیام‌ها", ps: "پیغامونه" },
+  yourName: { en: "Your name", fa: "نام شما", ps: "ستاسو نوم" },
+  yourEmail: { en: "Your email (optional)", fa: "ایمیل شما (اختیاری)", ps: "ستاسو بریښنالیک (اختیاري)" },
+  yourPhone: { en: "Your phone (optional)", fa: "شماره تماس شما (اختیاری)", ps: "ستاسو د تلیفون شمېره (اختیاري)" },
+  yourMessage: { en: "Your message", fa: "پیام شما", ps: "ستاسو پیغام" },
+  sendMessage: { en: "Send message", fa: "ارسال پیام", ps: "پیغام ولېږئ" },
+  messageSent: { en: "Message sent! Opening WhatsApp...", fa: "پیام ارسال شد! واتساپ باز می‌شود...", ps: "پیغام ولېږل شو! واټس اپ خلاصیږي..." },
+  messageError: { en: "Failed to send message", fa: "ارسال پیام ناموفق بود", ps: "د پیغام لېږل ناکام شول" },
+  markAsRead: { en: "Mark as read", fa: "علامت‌گذاری به عنوان خوانده‌شده", ps: "د لوستل شوي په توګه نښه کړئ" },
+  markAsNew: { en: "Mark as new", fa: "علامت‌گذاری به عنوان جدید", ps: "د نوي په توګه نښه کړئ" },
+  archive: { en: "Archive", fa: "بایگانی", ps: "ارشیف" },
+  unarchive: { en: "Unarchive", fa: "خارج از بایگانی", ps: "له ارشیفه ایستل" },
+  noMessages: { en: "No messages yet", fa: "هنوز پیامی وجود ندارد", ps: "تر اوسه پیغامونه نشته" },
+  newMessage: { en: "New", fa: "جدید", ps: "نوی" },
+  contactFormIntro: { en: "Have a question? Send us a message and we'll get back to you.", fa: "سوالی دارید؟ پیامی برای ما ارسال کنید تا با شما تماس بگیریم.", ps: "پوښتنه لرئ؟ موږ ته پیغام واستوئ، موږ به درسره اړیکه ونیسو." },
 };
 
 export function tr(key: keyof typeof t, lang: Lang): string {

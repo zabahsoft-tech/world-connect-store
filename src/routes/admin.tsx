@@ -1,10 +1,13 @@
 import { createFileRoute, Outlet, Link, useRouter } from "@tanstack/react-router";
-import { LayoutDashboard, Package, FolderTree, ShoppingBag, Settings, LogOut, Home, Images, Users, FileText } from "lucide-react";
+import { LayoutDashboard, Package, FolderTree, ShoppingBag, Settings, LogOut, Home, Images, Users, FileText, MessageSquare } from "lucide-react";
 import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { FullScreenLoader } from "@/components/Loader";
 import { ErrorState, ForbiddenState } from "@/components/ErrorState";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
   SidebarContent,
@@ -37,6 +40,7 @@ const NAV = [
   { to: "/admin/slides", label: "Hero slides", icon: Images, exact: false },
   { to: "/admin/pages", label: "Pages", icon: FileText, exact: false },
   { to: "/admin/orders", label: "Orders", icon: ShoppingBag, exact: false },
+  { to: "/admin/messages", label: "Messages", icon: MessageSquare, exact: false },
   { to: "/admin/users", label: "Users", icon: Users, exact: false },
   { to: "/admin/settings", label: "Settings", icon: Settings, exact: false },
 ] as const;
