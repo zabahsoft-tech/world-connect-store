@@ -135,7 +135,7 @@ function ContactPage() {
   ];
   const visibleSocials = socials.filter((x) => x.url && x.url.trim());
 
-  const infoTiles: { href?: string; icon: typeof Mail; label: string; value: string }[] = [];
+  const infoTiles: { href?: string; icon: React.ComponentType<{ className?: string }>; label: string; value: string }[] = [];
   if (wa) infoTiles.push({ href: `https://wa.me/${wa.replace(/[^\d]/g, "")}`, icon: WhatsAppIcon, label: "WhatsApp", value: wa });
   if (wa2) infoTiles.push({ href: `https://wa.me/${wa2.replace(/[^\d]/g, "")}`, icon: WhatsAppIcon, label: "WhatsApp 2", value: wa2 });
   if (s?.phone) infoTiles.push({ href: `tel:${s.phone}`, icon: Phone, label: tr("phone"), value: s.phone });
