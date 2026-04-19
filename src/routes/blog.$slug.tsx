@@ -14,9 +14,26 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 
+interface RelatedPost {
+  id: string;
+  slug: string;
+  title_en: string;
+  title_fa: string;
+  title_ps: string;
+  excerpt_en: string;
+  excerpt_fa: string;
+  excerpt_ps: string;
+  cover_image: string | null;
+  published_at: string | null;
+  created_at: string;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sb = supabase as any;
+
 export const Route = createFileRoute("/blog/$slug")({
   loader: async ({ params }) => {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from("blog_posts")
       .select("*")
       .eq("slug", params.slug)
@@ -25,7 +42,7 @@ export const Route = createFileRoute("/blog/$slug")({
     if (error) throw error;
     if (!data) throw notFound();
 
-    const { data: related } = await supabase
+    const { data: related } = await sb
       .from("blog_posts")
       .select("id, slug, title_en, title_fa, title_ps, excerpt_en, excerpt_fa, excerpt_ps, cover_image, published_at, created_at")
       .eq("is_published", true)
@@ -33,7 +50,7 @@ export const Route = createFileRoute("/blog/$slug")({
       .order("published_at", { ascending: false, nullsFirst: false })
       .limit(3);
 
-    return { post: data, related: related ?? [] };
+    return { post: data, related: (related ?? []) as RelatedPost[] };
   },
   head: ({ loaderData, params }) => {
     const p = loaderData?.post;
