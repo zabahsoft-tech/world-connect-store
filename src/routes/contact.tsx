@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Mail, Phone, MapPin, MessageCircle, Clock, Facebook, Instagram, Twitter, Youtube, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
+import { pickLang } from "@/lib/i18n";
 import { SiteLayout } from "@/components/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { openWhatsApp } from "@/lib/whatsapp";
