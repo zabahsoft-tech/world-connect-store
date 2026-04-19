@@ -1,52 +1,51 @@
 
-## Plan: SPA Mode + Branded Page-Transition Loader + Speed Optimizations
 
-The site is currently SSR (TanStack Start with Cloudflare Worker). User wants pure SPA + page-transition loader on inner navigation + max performance.
+## Plan: Multi-image gallery, video, and variations system
 
-### 1. Disable SSR (make it a SPA)
-TanStack Start supports SPA mode via `defineConfig({ spa: { enabled: true } })`. This:
-- Pre-renders only the shell on the server
-- Hydrates all routes client-side
-- Eliminates server round-trips for navigation
-- Keeps SEO via the pre-rendered shell + meta tags already in place
+### 1. Database migration
+Add to `products` table:
+- `video_url text` — uploaded file URL OR external link (YouTube/Vimeo/mp4)
+- `attributes jsonb default '[]'` — spec table rows: `[{ label_en, label_fa, label_ps, value_en, value_fa, value_ps }]`
+- `variants jsonb default '[]'` — selectable variants: `[{ id, name_en, name_fa, name_ps, sku, price, in_stock, image_url }]`
 
-Edit `vite.config.ts`:
-```ts
-export default defineConfig({ spa: { enabled: true, prerender: { outputPath: "/" } } });
-```
+`gallery jsonb` already exists — keep using it for images. `image_url` stays as the **thumbnail** (auto-set to first gallery image when admin saves).
 
-### 2. Page-transition loader (top progress bar + branded overlay)
-Use the router's built-in `useRouterState({ select: s => s.isLoading })` to detect in-flight navigation. Add a new component `RouteTransition` mounted in `__root.tsx` that:
-- Shows a slim top progress bar (primary color, animated) for any navigation
-- Falls back to the existing `FullScreenLoader` if navigation takes >500ms (slow data)
-- Auto-hides instantly when navigation resolves
+### 2. Storage
+Reuse existing `site-assets` bucket. New folders: `products/images/`, `products/videos/`. Bump `ImageUpload` to also support video — or add a sibling `MediaUpload` component that accepts both image and video MIME types with a 50MB cap for video.
 
-This avoids ugly "blank flashes" and gives a native-app feel.
+### 3. Admin: `src/routes/admin.products.tsx`
+Expand the dialog tabs to: **General | Translations | Media | Variations | Settings**.
 
-### 3. Default `pendingComponent` for routes with loaders
-Add per-route `pendingComponent` (using the inline `Loader`) to data routes:
-- `shop.tsx`, `categories.tsx`, `index.tsx`, `products.$slug.tsx`, `about.tsx`, `contact.tsx`
-Threshold via `defaultPendingMs: 200` and `defaultPendingMinMs: 300` in router config so quick loads never flash a spinner.
+**Media tab** (rebuilt):
+- "Gallery images" — multi-upload list, drag-to-reorder, remove. The first item becomes the thumbnail automatically.
+- Live thumbnail preview labeled "This is the thumbnail customers see in listings."
+- "Product video" — toggle "Upload file" / "Paste URL". Upload uses `MediaUpload` (mp4/webm, max 50MB). URL field accepts YouTube, Vimeo, or direct mp4 links (basic regex validation).
+- Drop the legacy single `image_url` input — it becomes derived from gallery[0].
 
-### 4. Speed optimizations
-- **Aggressive preloading**: set `defaultPreload: "intent"` and bump `defaultPreloadStaleTime` to 60s in `router.tsx` so hovered links pre-fetch route chunks + data.
-- **Query cache tuning**: bump `staleTime` in root QueryClient from 30s → 5min for marketing data (settings, categories, slides rarely change).
-- **Code splitting**: TanStack auto-splits already; ensure no route component is `export`ed (quick audit, fix any).
-- **Font loading**: add `&display=swap` (already present) + preload Inter 400/600 woff2 to kill the FOUT. Drop Vazirmatn weights we don't use (keep 400/600/700 only).
-- **Image hints**: add `loading="lazy"` + `decoding="async"` to non-hero images in `ProductCard`, `categories`, `shop` grids; `fetchpriority="high"` on the hero/first slide image.
-- **Prefetch DNS** for Supabase + R2 image CDN in root `<head>` (`dns-prefetch` + `preconnect`).
-- **Defer non-critical providers**: keep providers as-is (already lightweight) but memoize Toaster.
-- **Remove unused work**: drop the JSON-LD scripts from leaf routes that duplicate root, keep only product-specific JSON-LD.
+**Variations tab** (new):
+- **Specifications table** (admin-friendly editor): rows of (Label EN/FA/PS, Value EN/FA/PS) with Add row / Remove. Renders as a simple table on the public page.
+- **Sellable variants** (below): rows of (Name EN/FA/PS, SKU, price override, in-stock switch, optional image picker from gallery). Add / Remove / Reorder. Empty list = product has no variants (current behavior).
 
-### 5. SPA fallback
-Lovable hosting auto-falls-back to `index.html` for unknown paths, so SPA mode works without extra config.
+### 4. Public: `src/routes/products.$slug.tsx`
+- Gallery: keep existing thumbnail strip; add video as the **last gallery item** with a play icon overlay. Clicking it shows the player (HTML5 `<video>` for files / mp4, iframe for YouTube/Vimeo). Helper `getVideoEmbed(url)` parses provider.
+- Below price + description: render **Specifications** table if `attributes.length > 0` (uses shadcn `Table`, RTL-aware).
+- If `variants.length > 0`: render variant chips — selecting one updates displayed price (override or base) and disables Add-to-cart when that variant is out of stock. Selected variant info travels into cart item + WhatsApp message.
+
+### 5. Cart + WhatsApp
+- `CartContext`: extend cart item with optional `variantId`, `variantName_*`, effective `price`. Two of the same product with different variants stay as separate lines.
+- `whatsapp.ts buildQuickOrderMessage`: append variant name when present.
+
+### 6. ProductCard / listings
+No change needed — they already use `image_url` (which now mirrors gallery[0]).
 
 ### Files
-- Edit `vite.config.ts` — enable SPA mode
-- Edit `src/router.tsx` — `defaultPreload: "intent"`, `defaultPreloadStaleTime: 60_000`, `defaultPendingMs`, `defaultPendingComponent`
-- New `src/components/RouteTransition.tsx` — top progress bar + delayed full-screen loader
-- Edit `src/routes/__root.tsx` — mount `<RouteTransition />`, bump QueryClient staleTime, add Supabase/R2 preconnect, slim font weights, preload hero font
-- Edit `src/routes/shop.tsx`, `categories.tsx`, `products.$slug.tsx`, `index.tsx` — add `pendingComponent`, lazy-load images, `fetchpriority` on hero
-- Edit `src/components/ProductCard.tsx` — `loading="lazy"`, `decoding="async"`
+- New migration: add `video_url`, `attributes`, `variants` columns
+- New: `src/components/MediaUpload.tsx` (image + video) and `src/components/GalleryUpload.tsx` (multi-image with reorder)
+- Edit: `src/routes/admin.products.tsx` — Variations tab, rebuilt Media tab
+- Edit: `src/routes/products.$slug.tsx` — video in gallery, spec table, variant picker
+- Edit: `src/contexts/CartContext.tsx` — variant fields on cart items
+- Edit: `src/lib/whatsapp.ts` — include variant in message
+- Edit: `src/lib/i18n.ts` — translations for "Specifications", "Variant", "Select variant", "Watch video"
 
-No DB changes, no new dependencies.
+No new dependencies.
+
