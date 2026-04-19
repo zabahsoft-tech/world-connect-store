@@ -1,0 +1,18 @@
+ALTER TABLE public.settings
+  ADD COLUMN IF NOT EXISTS phone text,
+  ADD COLUMN IF NOT EXISTS whatsapp_number_2 text,
+  ADD COLUMN IF NOT EXISTS business_hours text,
+  ADD COLUMN IF NOT EXISTS facebook_url text,
+  ADD COLUMN IF NOT EXISTS instagram_url text,
+  ADD COLUMN IF NOT EXISTS twitter_url text,
+  ADD COLUMN IF NOT EXISTS youtube_url text,
+  ADD COLUMN IF NOT EXISTS telegram_url text,
+  ADD COLUMN IF NOT EXISTS logo_url text,
+  ADD COLUMN IF NOT EXISTS favicon_url text,
+  ADD COLUMN IF NOT EXISTS primary_color text,
+  ADD COLUMN IF NOT EXISTS footer_text_en text,
+  ADD COLUMN IF NOT EXISTS footer_text_fa text,
+  ADD COLUMN IF NOT EXISTS footer_text_ps text,
+  ADD COLUMN IF NOT EXISTS meta_description_en text,
+  ADD COLUMN IF NOT EXISTS meta_description_fa text,
+  ADD COLUMN IF NOT EXISTS meta_description_ps text;
