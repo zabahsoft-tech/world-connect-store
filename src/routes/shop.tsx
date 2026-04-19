@@ -70,13 +70,13 @@ function ShopPage() {
             <Input
               placeholder={tr("search")}
               value={q}
-              onChange={(e) => navigate({ search: (p) => ({ ...p, q: e.target.value || undefined }) })}
+              onChange={(e) => navigate({ search: (p: z.infer<typeof searchSchema>) => ({ ...p, q: e.target.value || undefined }) })}
               className="ps-9"
             />
           </div>
           <Select
             value={category}
-            onValueChange={(v) => navigate({ search: (p) => ({ ...p, category: v === "all" ? undefined : v }) })}
+            onValueChange={(v) => navigate({ search: (p: z.infer<typeof searchSchema>) => ({ ...p, category: v === "all" ? undefined : v }) })}
           >
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -88,7 +88,7 @@ function ShopPage() {
           </Select>
           <Select
             value={sort}
-            onValueChange={(v) => navigate({ search: (p) => ({ ...p, sort: v as "new" | "asc" | "desc" }) })}
+            onValueChange={(v) => navigate({ search: (p: z.infer<typeof searchSchema>) => ({ ...p, sort: v as "new" | "asc" | "desc" }) })}
           >
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
