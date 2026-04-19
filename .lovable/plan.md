@@ -1,49 +1,47 @@
 
+## Plan: Enhanced Footer with developer credit
 
-## Plan: Polish the blog post page
+Refresh the footer with better visual hierarchy, a newsletter/CTA accent, and a "Developed by zabashoft.com" credit in the bottom bar.
 
-The page already loads correctly (network shows 200s) — what feels "not working" is the bare layout: tiny content like `<p>ABN</p>` looks lost, the hero has no overlaid title, there's no share row, no reading time, no view tracking, and when there are no related posts the page just ends abruptly.
+### 1. Visual refresh — `src/components/Footer.tsx`
 
-### 1. Hero with overlaid title — `src/routes/blog.$slug.tsx`
-Replace the standalone cover image + separate title block with a unified hero:
-- Cover image becomes a **full-width banner** with stronger gradient (`from-background via-background/80`) and **title + meta overlaid at the bottom** (white text, drop-shadow).
-- When no cover image: show a clean gradient header block with the title centered.
-- Breadcrumb (`Blog → {title}`) sits **above** the hero in the container.
-- Tags chip row moved into the overlay.
+**Top decorative band**
+- Add a subtle top border accent: a thin gradient line (`bg-gradient-to-r from-transparent via-primary/40 to-transparent`) above the footer.
+- Switch background to a slightly richer surface: `bg-gradient-to-b from-muted/30 to-muted/60`.
 
-### 2. Article body card
-- Wrap the prose in a **white/card container** (`rounded-2xl border bg-card shadow-sm p-6 md:p-10`) that floats up over the hero edge (`-mt-12 relative z-10`).
-- Add `max-w-3xl mx-auto` for comfortable reading width.
-- Apply richer prose tokens: `prose-headings:tracking-tight prose-p:leading-relaxed prose-img:shadow-md prose-blockquote:border-primary`.
-- Empty content fallback shows a friendlier message + back-to-blog button.
+**Brand column (col 1)**
+- Slightly larger logo (h-10 w-10), bolder store name.
+- Tagline kept but trimmed to 2 lines max with `line-clamp-2`.
+- Social icons get a hover lift: `hover:-translate-y-0.5 hover:bg-primary hover:text-primary-foreground` with smooth transition.
 
-### 3. Meta row enhancements
-Under the title, show: **date · reading time · author** (compute reading time from word count of `content_{lang}`, ~200 wpm). Use small icons (Calendar, Clock, User from lucide-react).
+**Link columns (Shop / About)**
+- Section heading with a small accent dot (`•` in primary color) before the title.
+- Links get a subtle left-arrow reveal on hover (`group` + translating chevron) for polish — kept minimal.
 
-### 4. Share row
-After the article body, add a compact **Share** bar with WhatsApp, Telegram, Facebook, X/Twitter, and Copy link buttons (use existing `WhatsAppIcon` + lucide). Each opens the platform share URL in a new tab; copy uses `navigator.clipboard` + sonner toast.
+**Contact column**
+- Icons next to each contact item (Mail, Phone, MapPin, Clock from lucide-react) for scanability.
+- Email and phone become proper `mailto:` / `tel:` links.
 
-### 5. View counter (lightweight)
-On mount, fire-and-forget `supabase.rpc` not needed — just `update blog_posts set views = views + 1 where id = ...`. RLS currently blocks public UPDATE, so add a tiny migration: SECURITY DEFINER function `increment_blog_view(post_id uuid)` that bumps `views`, granted to `anon, authenticated`. Display "X views" in the meta row when > 0.
+**New: trust strip (above bottom bar)**
+- Small horizontal row showing 3 quick value props using existing i18n keys: `easyOrdering`, `fastDelivery`, `whatsappSupport` with their lucide icons. Compact, single-line on desktop, wraps on mobile. Reinforces brand without adding new strings.
 
-### 6. Related section fallback + CTA
-- When `related.length === 0`: show a single centered CTA card "Explore more articles → /blog" instead of nothing.
-- When present: keep the 3-card grid but tighten spacing and add the date to each card.
+**Bottom bar — credit line**
+- Two-row layout on mobile, single row on desktop:
+  - Left: `© {year} {storeName}. All rights reserved.`
+  - Right: `Developed by <a href="https://zabashoft.com" target="_blank" rel="noopener noreferrer">zabashoft.com</a>` — link styled with `font-semibold text-primary hover:underline`.
+- Use `flex flex-col md:flex-row md:justify-between` with `gap-2`.
 
-### 7. Back-to-top + sticky read progress (small touches)
-- Thin **reading progress bar** fixed at the top of the viewport (driven by scroll position on the article element).
-- After the article, a "← Back to all posts" link styled as a button.
+### 2. Mobile responsiveness
+- Grid stays `grid-cols-2 md:grid-cols-4`; on mobile the brand column spans both (`col-span-2 md:col-span-1`).
+- Trust strip wraps to 2 columns on mobile.
+- Bottom bar stacks vertically with center alignment on mobile.
 
-### 8. Mobile polish
-- Hero height: `h-[280px] md:h-[420px]`.
-- Title sizes: `text-2xl md:text-4xl lg:text-5xl`.
-- Share row wraps; buttons stay ≥40px tap targets.
-- Card overlap (`-mt-12`) reduces to `-mt-8` on mobile.
+### 3. RTL safety
+- All directional spacing uses `start-*` / `end-*` (already the project convention).
+- Social icon row uses `gap-2` (direction-agnostic).
+- Bottom-bar order doesn't depend on visual side — handled by flex.
 
 ### Files touched
-- Edit: `src/routes/blog.$slug.tsx` (full layout refresh + share + view increment + reading time + progress bar)
-- New migration: `increment_blog_view(uuid)` SECURITY DEFINER function + grant
-- No i18n changes required (reuse existing `blog`, `relatedPosts`, `publishedOn`, `readMore` keys; share labels can stay English-only since they're brand names)
+- Edit only: `src/components/Footer.tsx`
 
-No new dependencies.
-
+No new dependencies, no DB changes, no i18n additions (reuses existing keys).
