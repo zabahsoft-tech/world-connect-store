@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
 import { SiteLayout } from "@/components/SiteLayout";
 import { NotFoundState } from "@/components/ErrorState";
+import { RouteTransition } from "@/components/RouteTransition";
 import {
   buildMeta,
   buildHreflangLinks,
@@ -47,9 +48,14 @@ export const Route = createRootRoute({
         { rel: "stylesheet", href: appCss },
         { rel: "preconnect", href: "https://fonts.googleapis.com" },
         { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+        // Preconnect to Supabase + R2 image CDN for faster first paint
+        { rel: "preconnect", href: "https://kqfdaqggrxflrticxisu.supabase.co", crossOrigin: "anonymous" },
+        { rel: "dns-prefetch", href: "https://kqfdaqggrxflrticxisu.supabase.co" },
+        { rel: "preconnect", href: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev", crossOrigin: "anonymous" },
+        { rel: "dns-prefetch", href: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev" },
         {
           rel: "stylesheet",
-          href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Vazirmatn:wght@400;500;600;700;800&display=swap",
+          href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Vazirmatn:wght@400;600;700&display=swap",
         },
         ...buildHreflangLinks("/"),
       ],
@@ -88,13 +94,22 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
+    defaultOptions: {
+      queries: {
+        // Marketing data (settings, categories, slides) rarely changes — cache aggressively
+        staleTime: 5 * 60_000,
+        gcTime: 10 * 60_000,
+        retry: 1,
+        refetchOnWindowFocus: false,
+      },
+    },
   }));
   return (
     <QueryClientProvider client={queryClient}>
       <LangProvider>
         <AuthProvider>
           <CartProvider>
+            <RouteTransition />
             <Outlet />
             <Toaster position="top-center" richColors />
           </CartProvider>

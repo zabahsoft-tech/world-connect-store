@@ -64,7 +64,15 @@ function CategoriesPage() {
                 className="group overflow-hidden rounded-xl border bg-card transition-all hover:shadow-[var(--shadow-soft)]"
               >
                 <div className="aspect-square overflow-hidden bg-muted">
-                  {c.image && <img src={c.image} alt={pickLang(c, "name", lang)} className="h-full w-full object-cover transition-transform group-hover:scale-105" />}
+                  {c.image && (
+                    <img
+                      src={c.image}
+                      alt={pickLang(c, "name", lang)}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    />
+                  )}
                 </div>
                 <div className="p-4">
                   <h3 className="font-semibold group-hover:text-primary">{pickLang(c, "name", lang)}</h3>

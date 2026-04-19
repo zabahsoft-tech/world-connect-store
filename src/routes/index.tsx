@@ -114,7 +114,14 @@ function HomePage() {
               className={`absolute inset-0 transition-opacity duration-1000 ${i === slide ? "opacity-100" : "opacity-0"}`}
               aria-hidden={i !== slide}
             >
-              <img src={s.image} alt="" className="h-full w-full object-cover" />
+              <img
+                src={s.image}
+                alt=""
+                loading={i === 0 ? "eager" : "lazy"}
+                decoding="async"
+                {...(i === 0 ? { fetchPriority: "high" as const } : {})}
+                className="h-full w-full object-cover"
+              />
               <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-black/20" />
             </div>
           ))}
@@ -214,7 +221,13 @@ function HomePage() {
               >
                 <div className="aspect-square w-full overflow-hidden rounded-lg bg-muted">
                   {c.image && (
-                    <img src={c.image} alt={pickLang(c, "name", lang)} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+                    <img
+                      src={c.image}
+                      alt={pickLang(c, "name", lang)}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    />
                   )}
                 </div>
                 <span className="mt-3 text-center text-sm font-semibold">{pickLang(c, "name", lang)}</span>
