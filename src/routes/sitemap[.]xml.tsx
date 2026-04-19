@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { SITE_URL, HREFLANG_MAP } from "@/lib/seo";
 
-const STATIC_PATHS = ["", "/shop", "/categories", "/about", "/contact"];
+const STATIC_PATHS = ["", "/shop", "/categories", "/blog", "/about", "/contact"];
 
 function urlEntry(path: string, lastmod?: string, priority = "0.8") {
   const loc = `${SITE_URL}${path}`;
@@ -36,9 +36,13 @@ export const Route = createFileRoute("/sitemap.xml")({
         if (supabaseUrl && supabaseKey) {
           try {
             const sb = createClient<Database>(supabaseUrl, supabaseKey);
-            const [products, categories] = await Promise.all([
+            const [products, categories, posts] = await Promise.all([
               sb.from("products").select("slug, updated_at"),
               sb.from("categories").select("slug, updated_at"),
+              sb
+                .from("blog_posts")
+                .select("slug, updated_at, published_at")
+                .eq("is_published", true),
             ]);
 
             (products.data ?? []).forEach((p) => {
@@ -47,6 +51,11 @@ export const Route = createFileRoute("/sitemap.xml")({
             (categories.data ?? []).forEach((c) => {
               entries.push(
                 urlEntry(`/shop?category=${encodeURIComponent(c.slug)}`, c.updated_at, "0.7"),
+              );
+            });
+            (posts.data ?? []).forEach((p) => {
+              entries.push(
+                urlEntry(`/blog/${p.slug}`, p.updated_at || p.published_at || undefined, "0.8"),
               );
             });
           } catch {
