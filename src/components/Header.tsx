@@ -54,6 +54,7 @@ export function Header() {
     { to: "/", label: tr("home") },
     { to: "/shop", label: tr("shop") },
     { to: "/categories", label: tr("categories") },
+    { to: "/blog", label: tr("blog") },
     { to: "/about", label: tr("about") },
     { to: "/contact", label: tr("contact") },
   ];
