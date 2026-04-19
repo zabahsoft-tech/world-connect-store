@@ -133,155 +133,128 @@ function ContactPage() {
   ];
   const visibleSocials = socials.filter((x) => x.url && x.url.trim());
 
+  const infoTiles: { href?: string; icon: typeof Mail; label: string; value: string }[] = [];
+  if (wa) infoTiles.push({ href: `https://wa.me/${wa.replace(/[^\d]/g, "")}`, icon: MessageCircle, label: "WhatsApp", value: wa });
+  if (wa2) infoTiles.push({ href: `https://wa.me/${wa2.replace(/[^\d]/g, "")}`, icon: MessageCircle, label: "WhatsApp 2", value: wa2 });
+  if (s?.phone) infoTiles.push({ href: `tel:${s.phone}`, icon: Phone, label: tr("phone"), value: s.phone });
+  if (s?.email) infoTiles.push({ href: `mailto:${s.email}`, icon: Mail, label: tr("email"), value: s.email });
+  if (s?.address) infoTiles.push({ icon: MapPin, label: "Address", value: s.address });
+  if (s?.business_hours) infoTiles.push({ icon: Clock, label: "Hours", value: s.business_hours });
+
   return (
     <SiteLayout>
-      <section className="container mx-auto max-w-2xl px-4 py-12">
-        <h1 className="mb-4 text-4xl font-bold">{pageTitle}</h1>
+      <section className="container mx-auto max-w-5xl px-4 py-8 md:py-12">
+        <header className="mb-6 md:mb-8">
+          <h1 className="text-3xl font-bold md:text-4xl">{pageTitle}</h1>
+          <p className="mt-2 text-sm text-muted-foreground md:text-base">{tr("contactFormIntro")}</p>
+        </header>
+
         {pageContent && (
           <div
-            className="prose prose-lg mb-8 max-w-none prose-headings:font-semibold prose-a:text-primary"
+            className="prose mb-6 max-w-none prose-headings:font-semibold prose-a:text-primary"
             dangerouslySetInnerHTML={{ __html: pageContent }}
           />
         )}
 
-        <Card className="mb-8 p-6">
-          <h2 className="mb-1 text-xl font-semibold">{tr("sendMessage")}</h2>
-          <p className="mb-5 text-sm text-muted-foreground">{tr("contactFormIntro")}</p>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="cf-name" className="mb-1.5 block">{tr("yourName")} *</Label>
-              <Input id="cf-name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} maxLength={100} required />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-5">
+          {/* Left: form */}
+          <Card className="p-5 md:p-6 lg:col-span-3">
+            <h2 className="mb-4 text-lg font-semibold">{tr("sendMessage")}</h2>
+            <form onSubmit={handleSubmit} className="space-y-3">
               <div>
-                <Label htmlFor="cf-phone" className="mb-1.5 block">{tr("yourPhone")}</Label>
-                <Input id="cf-phone" type="tel" inputMode="tel" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} maxLength={30} />
+                <Label htmlFor="cf-name" className="mb-1.5 block">{tr("yourName")} *</Label>
+                <Input id="cf-name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} maxLength={100} required />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <Label htmlFor="cf-phone" className="mb-1.5 block">{tr("yourPhone")}</Label>
+                  <Input id="cf-phone" type="tel" inputMode="tel" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} maxLength={30} />
+                </div>
+                <div>
+                  <Label htmlFor="cf-email" className="mb-1.5 block">{tr("yourEmail")}</Label>
+                  <Input id="cf-email" type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} maxLength={255} />
+                </div>
               </div>
               <div>
-                <Label htmlFor="cf-email" className="mb-1.5 block">{tr("yourEmail")}</Label>
-                <Input id="cf-email" type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} maxLength={255} />
+                <Label htmlFor="cf-message" className="mb-1.5 block">{tr("yourMessage")} *</Label>
+                <Textarea id="cf-message" rows={4} value={form.message} onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))} maxLength={1000} required />
+                <div className="mt-1 text-right text-xs text-muted-foreground">{form.message.length}/1000</div>
               </div>
-            </div>
-            <div>
-              <Label htmlFor="cf-message" className="mb-1.5 block">{tr("yourMessage")} *</Label>
-              <Textarea id="cf-message" rows={5} value={form.message} onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))} maxLength={1000} required />
-              <div className="mt-1 text-right text-xs text-muted-foreground">{form.message.length}/1000</div>
-            </div>
-            <Button type="submit" size="lg" className="w-full gap-2" disabled={submitting}>
-              {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-              {tr("sendMessage")}
-            </Button>
-          </form>
-        </Card>
+              <Button type="submit" size="lg" className="w-full gap-2 sm:w-auto sm:px-8" disabled={submitting}>
+                {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                {tr("sendMessage")}
+              </Button>
+            </form>
+          </Card>
 
-        <div className="space-y-4">
-          {wa && (
-            <a href={`https://wa.me/${wa.replace(/[^\d]/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 rounded-xl border bg-card p-5 hover:border-primary">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-soft text-primary">
-                <MessageCircle className="h-6 w-6" />
+          {/* Right: info panel + map + socials */}
+          <div className="space-y-4 lg:col-span-2">
+            {infoTiles.length > 0 && (
+              <div className="overflow-hidden rounded-xl border bg-card">
+                <ul className="divide-y">
+                  {infoTiles.map((t, i) => {
+                    const Icon = t.icon;
+                    const inner = (
+                      <div className="flex min-h-[56px] items-center gap-3 p-3.5">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+                          <Icon className="h-4.5 w-4.5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{t.label}</p>
+                          <p className="truncate text-sm font-semibold">{t.value}</p>
+                        </div>
+                      </div>
+                    );
+                    return (
+                      <li key={i}>
+                        {t.href ? (
+                          <a href={t.href} target={t.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" className="block transition-colors hover:bg-muted/50">
+                            {inner}
+                          </a>
+                        ) : (
+                          inner
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">WhatsApp</p>
-                <p className="font-semibold">{wa}</p>
+            )}
+
+            {s?.google_maps_embed_url && /^https:\/\/www\.google\.com\/maps\/embed/.test(s.google_maps_embed_url) && (
+              <div className="overflow-hidden rounded-xl border shadow-[var(--shadow-soft)]">
+                <iframe
+                  src={s.google_maps_embed_url}
+                  title="Map"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  allowFullScreen
+                  className="h-[220px] w-full border-0 md:h-[280px]"
+                />
               </div>
-            </a>
-          )}
-          {wa2 && (
-            <a href={`https://wa.me/${wa2.replace(/[^\d]/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 rounded-xl border bg-card p-5 hover:border-primary">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-soft text-primary">
-                <MessageCircle className="h-6 w-6" />
+            )}
+
+            {visibleSocials.length > 0 && (
+              <div className="rounded-xl border bg-card p-3.5">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Follow us</p>
+                <div className="flex flex-wrap gap-2">
+                  {visibleSocials.map(({ url, icon: Icon, label }) => (
+                    <a
+                      key={label}
+                      href={url!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={label}
+                      className="flex h-10 w-10 items-center justify-center rounded-lg border bg-background text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                    >
+                      <Icon className="h-5 w-5" />
+                    </a>
+                  ))}
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">WhatsApp (alt)</p>
-                <p className="font-semibold">{wa2}</p>
-              </div>
-            </a>
-          )}
-          {s?.phone && (
-            <a href={`tel:${s.phone}`} className="flex items-center gap-4 rounded-xl border bg-card p-5 hover:border-primary">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-soft text-primary">
-                <Phone className="h-6 w-6" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">{tr("phone")}</p>
-                <p className="font-semibold">{s.phone}</p>
-              </div>
-            </a>
-          )}
-          {s?.email && (
-            <a href={`mailto:${s.email}`} className="flex items-center gap-4 rounded-xl border bg-card p-5 hover:border-primary">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-soft text-primary">
-                <Mail className="h-6 w-6" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">{tr("email")}</p>
-                <p className="font-semibold">{s.email}</p>
-              </div>
-            </a>
-          )}
-          {s?.address && (
-            <div className="flex items-center gap-4 rounded-xl border bg-card p-5">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-soft text-primary">
-                <MapPin className="h-6 w-6" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Address</p>
-                <p className="font-semibold">{s.address}</p>
-              </div>
-            </div>
-          )}
-          {s?.business_hours && (
-            <div className="flex items-center gap-4 rounded-xl border bg-card p-5">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-soft text-primary">
-                <Clock className="h-6 w-6" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Business hours</p>
-                <p className="font-semibold">{s.business_hours}</p>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-
-        {s?.google_maps_embed_url && /^https:\/\/www\.google\.com\/maps\/embed/.test(s.google_maps_embed_url) && (
-          <div className="mt-8 overflow-hidden rounded-xl border shadow-[var(--shadow-soft)]">
-            <iframe
-              src={s.google_maps_embed_url}
-              title="Map"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              allowFullScreen
-              className="h-[360px] w-full border-0"
-            />
-          </div>
-        )}
-
-        {visibleSocials.length > 0 && (
-          <div className="mt-8">
-            <p className="mb-3 text-sm font-semibold text-muted-foreground">Follow us</p>
-            <div className="flex flex-wrap gap-2">
-              {visibleSocials.map(({ url, icon: Icon, label }) => (
-                <a
-                  key={label}
-                  href={url!}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={label}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg border bg-card text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-                >
-                  <Icon className="h-5 w-5" />
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {wa && (
-          <Button size="lg" className="mt-8 w-full gap-2" onClick={() => openWhatsApp(wa, greeting)}>
-            <MessageCircle className="h-5 w-5" />
-            {tr("send")} WhatsApp
-          </Button>
-        )}
       </section>
     </SiteLayout>
   );
