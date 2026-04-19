@@ -79,6 +79,51 @@ function ContactPage() {
   const pageTitle = page ? pickLang(page, "title", lang) : tr("contactUs");
   const pageContent = page ? pickLang(page, "content", lang) : "";
 
+  const [form, setForm] = useState({ name: "", phone: "", email: "", message: "" });
+  const [submitting, setSubmitting] = useState(false);
+
+  const messageSchema = z.object({
+    name: z.string().trim().min(2).max(100),
+    phone: z.string().trim().max(30).regex(/^[+\d\s\-()]*$/, "Invalid phone").optional().or(z.literal("")),
+    email: z.string().trim().email("Invalid email").max(255).optional().or(z.literal("")),
+    message: z.string().trim().min(5).max(1000),
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsed = messageSchema.safeParse(form);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? tr("messageError"));
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("contact_messages").insert({
+        name: parsed.data.name,
+        phone: parsed.data.phone || null,
+        email: parsed.data.email || null,
+        message: parsed.data.message,
+        language: lang,
+      });
+      if (error) throw error;
+      toast.success(tr("messageSent"));
+      if (wa) {
+        const waMsg =
+          `📩 ${parsed.data.name}` +
+          (parsed.data.phone ? ` (${parsed.data.phone})` : "") +
+          (parsed.data.email ? ` <${parsed.data.email}>` : "") +
+          `:\n\n${parsed.data.message}`;
+        openWhatsApp(wa, waMsg);
+      }
+      setForm({ name: "", phone: "", email: "", message: "" });
+    } catch (err) {
+      console.error(err);
+      toast.error(tr("messageError"));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const socials: { url: string | null | undefined; icon: typeof Facebook; label: string }[] = [
     { url: s?.facebook_url, icon: Facebook, label: "Facebook" },
     { url: s?.instagram_url, icon: Instagram, label: "Instagram" },
