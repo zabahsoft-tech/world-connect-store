@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ImageUpload } from "@/components/ImageUpload";
+import { RichTextEditor } from "@/components/RichTextEditor";
 
 export const Route = createFileRoute("/admin/settings")({
   component: AdminSettings,
@@ -180,24 +182,24 @@ function AdminSettings() {
               <div><Label className="text-xs">Store name (FA)</Label><Input dir="rtl" value={form.store_name_fa} onChange={(e) => set("store_name_fa", e.target.value)} /></div>
               <div><Label className="text-xs">Store name (PS)</Label><Input dir="rtl" value={form.store_name_ps} onChange={(e) => set("store_name_ps", e.target.value)} /></div>
             </div>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <Label className="text-xs">Logo URL</Label>
-                <Input value={form.logo_url} onChange={(e) => set("logo_url", e.target.value)} placeholder="https://..." />
-                {form.logo_url && (
-                  <div className="mt-2 flex h-16 w-16 items-center justify-center overflow-hidden rounded border bg-muted">
-                    <img src={form.logo_url} alt="Logo preview" className="max-h-full max-w-full object-contain" />
-                  </div>
-                )}
+                <Label className="text-xs">Logo</Label>
+                <ImageUpload
+                  value={form.logo_url}
+                  onChange={(url) => set("logo_url", url)}
+                  folder="logos"
+                  previewSize="lg"
+                />
               </div>
               <div>
-                <Label className="text-xs">Favicon URL</Label>
-                <Input value={form.favicon_url} onChange={(e) => set("favicon_url", e.target.value)} placeholder="https://..." />
-                {form.favicon_url && (
-                  <div className="mt-2 flex h-8 w-8 items-center justify-center overflow-hidden rounded border bg-muted">
-                    <img src={form.favicon_url} alt="Favicon preview" className="max-h-full max-w-full object-contain" />
-                  </div>
-                )}
+                <Label className="text-xs">Favicon</Label>
+                <ImageUpload
+                  value={form.favicon_url}
+                  onChange={(url) => set("favicon_url", url)}
+                  folder="favicons"
+                  previewSize="sm"
+                />
               </div>
             </div>
             <div>
@@ -241,10 +243,20 @@ function AdminSettings() {
           </TabsContent>
 
           <TabsContent value="about" className="space-y-4 pt-4">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-              <div><Label className="text-xs">About (EN)</Label><Textarea rows={6} value={form.about_en} onChange={(e) => set("about_en", e.target.value)} /></div>
-              <div><Label className="text-xs">About (FA)</Label><Textarea rows={6} dir="rtl" value={form.about_fa} onChange={(e) => set("about_fa", e.target.value)} /></div>
-              <div><Label className="text-xs">About (PS)</Label><Textarea rows={6} dir="rtl" value={form.about_ps} onChange={(e) => set("about_ps", e.target.value)} /></div>
+            <p className="text-xs text-muted-foreground">
+              Use the toolbar to format your About content. Each language has its own rich text editor.
+            </p>
+            <div>
+              <Label className="text-xs">About (EN)</Label>
+              <RichTextEditor value={form.about_en} onChange={(v) => set("about_en", v)} />
+            </div>
+            <div>
+              <Label className="text-xs">About (FA)</Label>
+              <RichTextEditor value={form.about_fa} onChange={(v) => set("about_fa", v)} dir="rtl" />
+            </div>
+            <div>
+              <Label className="text-xs">About (PS)</Label>
+              <RichTextEditor value={form.about_ps} onChange={(v) => set("about_ps", v)} dir="rtl" />
             </div>
           </TabsContent>
 

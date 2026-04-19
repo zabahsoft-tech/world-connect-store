@@ -41,15 +41,25 @@ function AboutPage() {
 
   const about = settings.data ? pickLang(settings.data, "about", lang) : "";
   const name = settings.data ? pickLang(settings.data, "store_name", lang) : "";
+  const isHtml = /<\/?[a-z][\s\S]*>/i.test(about);
 
   return (
     <SiteLayout>
       <section className="container mx-auto max-w-3xl px-4 py-12">
         <h1 className="mb-6 text-4xl font-bold">{tr("about")}</h1>
         {name && <h2 className="mb-4 text-2xl font-semibold text-primary">{name}</h2>}
-        <p className="whitespace-pre-line text-lg leading-relaxed text-muted-foreground">
-          {about || tr("heroSubtitle")}
-        </p>
+        {about ? (
+          isHtml ? (
+            <div
+              className="prose prose-lg max-w-none prose-headings:font-semibold prose-a:text-primary"
+              dangerouslySetInnerHTML={{ __html: about }}
+            />
+          ) : (
+            <p className="whitespace-pre-line text-lg leading-relaxed text-muted-foreground">{about}</p>
+          )
+        ) : (
+          <p className="whitespace-pre-line text-lg leading-relaxed text-muted-foreground">{tr("heroSubtitle")}</p>
+        )}
       </section>
     </SiteLayout>
   );
