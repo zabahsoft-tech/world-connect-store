@@ -220,39 +220,90 @@ export type Database = {
           about_fa: string | null
           about_ps: string | null
           address: string | null
+          business_hours: string | null
           email: string | null
+          facebook_url: string | null
+          favicon_url: string | null
+          footer_text_en: string | null
+          footer_text_fa: string | null
+          footer_text_ps: string | null
           id: string
+          instagram_url: string | null
+          logo_url: string | null
+          meta_description_en: string | null
+          meta_description_fa: string | null
+          meta_description_ps: string | null
+          phone: string | null
+          primary_color: string | null
           store_name_en: string
           store_name_fa: string
           store_name_ps: string
+          telegram_url: string | null
+          twitter_url: string | null
           updated_at: string
           whatsapp_number: string
+          whatsapp_number_2: string | null
+          youtube_url: string | null
         }
         Insert: {
           about_en?: string | null
           about_fa?: string | null
           about_ps?: string | null
           address?: string | null
+          business_hours?: string | null
           email?: string | null
+          facebook_url?: string | null
+          favicon_url?: string | null
+          footer_text_en?: string | null
+          footer_text_fa?: string | null
+          footer_text_ps?: string | null
           id?: string
+          instagram_url?: string | null
+          logo_url?: string | null
+          meta_description_en?: string | null
+          meta_description_fa?: string | null
+          meta_description_ps?: string | null
+          phone?: string | null
+          primary_color?: string | null
           store_name_en?: string
           store_name_fa?: string
           store_name_ps?: string
+          telegram_url?: string | null
+          twitter_url?: string | null
           updated_at?: string
           whatsapp_number?: string
+          whatsapp_number_2?: string | null
+          youtube_url?: string | null
         }
         Update: {
           about_en?: string | null
           about_fa?: string | null
           about_ps?: string | null
           address?: string | null
+          business_hours?: string | null
           email?: string | null
+          facebook_url?: string | null
+          favicon_url?: string | null
+          footer_text_en?: string | null
+          footer_text_fa?: string | null
+          footer_text_ps?: string | null
           id?: string
+          instagram_url?: string | null
+          logo_url?: string | null
+          meta_description_en?: string | null
+          meta_description_fa?: string | null
+          meta_description_ps?: string | null
+          phone?: string | null
+          primary_color?: string | null
           store_name_en?: string
           store_name_fa?: string
           store_name_ps?: string
+          telegram_url?: string | null
+          twitter_url?: string | null
           updated_at?: string
           whatsapp_number?: string
+          whatsapp_number_2?: string | null
+          youtube_url?: string | null
         }
         Relationships: []
       }
