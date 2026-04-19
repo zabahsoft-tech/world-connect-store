@@ -26,6 +26,15 @@ export function LangProvider({ children }: { children: ReactNode }) {
     if (typeof document !== "undefined") {
       document.documentElement.lang = lang;
       document.documentElement.dir = dirOf(lang);
+
+      // Sync content-language meta tag for SEO
+      let metaTag = document.querySelector('meta[http-equiv="content-language"]');
+      if (!metaTag) {
+        metaTag = document.createElement("meta");
+        metaTag.setAttribute("http-equiv", "content-language");
+        document.head.appendChild(metaTag);
+      }
+      metaTag.setAttribute("content", lang);
     }
   }, [lang]);
 

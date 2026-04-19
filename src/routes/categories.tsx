@@ -5,8 +5,28 @@ import { useLang } from "@/contexts/LangContext";
 import { pickLang } from "@/lib/i18n";
 import { SiteLayout } from "@/components/SiteLayout";
 import { ErrorState } from "@/components/ErrorState";
+import { buildMeta, buildHreflangLinks, getPageSeo, SITE_URL } from "@/lib/seo";
 
 export const Route = createFileRoute("/categories")({
+  head: () => {
+    const seo = getPageSeo("categories", "en");
+    return {
+      meta: [
+        ...buildMeta({
+          title: seo.title,
+          description: seo.description,
+          url: `${SITE_URL}/categories`,
+          lang: "en",
+          keywords: seo.keywords,
+        }),
+        { property: "og:title:fa", content: getPageSeo("categories", "fa").title },
+        { property: "og:description:fa", content: getPageSeo("categories", "fa").description },
+        { property: "og:title:ps", content: getPageSeo("categories", "ps").title },
+        { property: "og:description:ps", content: getPageSeo("categories", "ps").description },
+      ],
+      links: buildHreflangLinks("/categories"),
+    };
+  },
   component: CategoriesPage,
   errorComponent: ({ error, reset }) => (
     <SiteLayout>

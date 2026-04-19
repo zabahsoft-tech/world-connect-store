@@ -12,8 +12,80 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { buildQuickOrderMessage, openWhatsApp } from "@/lib/whatsapp";
 import { NotFoundState, ErrorState } from "@/components/ErrorState";
+import {
+  buildMeta,
+  buildHreflangLinks,
+  buildProductJsonLd,
+  buildBreadcrumbJsonLd,
+  jsonLdScript,
+  SITE_URL,
+} from "@/lib/seo";
 
 export const Route = createFileRoute("/products/$slug")({
+  loader: async ({ params }) => {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("slug", params.slug)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) throw notFound();
+    return { product: data };
+  },
+  head: ({ loaderData, params }) => {
+    const p = loaderData?.product;
+    const url = `${SITE_URL}/products/${params.slug}`;
+    if (!p) {
+      return {
+        meta: [{ title: "Product — World Connect Store" }],
+        links: buildHreflangLinks(`/products/${params.slug}`),
+      };
+    }
+    const nameEn = p.name_en || "Product";
+    const descEn = p.description_en || `Buy ${nameEn} on World Connect Store. Order on WhatsApp with delivery across Afghanistan.`;
+    const image = p.image_url || undefined;
+    return {
+      meta: [
+        ...buildMeta({
+          title: `${nameEn} — World Connect Store Afghanistan`,
+          description: descEn.slice(0, 160),
+          image: image || undefined,
+          url,
+          lang: "en",
+          type: "product",
+          keywords: `${nameEn}, buy ${nameEn} Afghanistan, ${nameEn} Kabul, online shopping Afghanistan`,
+        }),
+        { property: "product:price:amount", content: Number(p.price).toFixed(2) },
+        { property: "product:price:currency", content: "AFN" },
+        { property: "product:availability", content: p.in_stock ? "in stock" : "out of stock" },
+        { property: "og:title:fa", content: `${p.name_fa || nameEn} — ورلد کانکت افغانستان` },
+        { property: "og:description:fa", content: (p.description_fa || descEn).slice(0, 160) },
+        { property: "og:title:ps", content: `${p.name_ps || nameEn} — ورلډ کنیکټ افغانستان` },
+        { property: "og:description:ps", content: (p.description_ps || descEn).slice(0, 160) },
+      ],
+      links: buildHreflangLinks(`/products/${params.slug}`),
+      scripts: [
+        jsonLdScript(
+          buildProductJsonLd({
+            name: nameEn,
+            description: descEn,
+            image: image,
+            price: Number(p.price),
+            inStock: p.in_stock,
+            url,
+            sku: p.id,
+          }),
+        ),
+        jsonLdScript(
+          buildBreadcrumbJsonLd([
+            { name: "Home", url: SITE_URL },
+            { name: "Shop", url: `${SITE_URL}/shop` },
+            { name: nameEn, url },
+          ]),
+        ),
+      ],
+    };
+  },
   component: ProductPage,
   notFoundComponent: () => (
     <SiteLayout>
@@ -31,21 +103,11 @@ export const Route = createFileRoute("/products/$slug")({
 });
 
 function ProductPage() {
-  const { slug } = Route.useParams();
+  const { product: p } = Route.useLoaderData();
   const { tr, lang } = useLang();
   const { add } = useCart();
   const [qty, setQty] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
-
-  const product = useQuery({
-    queryKey: ["product", slug],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("products").select("*").eq("slug", slug).maybeSingle();
-      if (error) throw error;
-      if (!data) throw notFound();
-      return data;
-    },
-  });
 
   const settings = useQuery({
     queryKey: ["settings"],
@@ -55,22 +117,6 @@ function ProductPage() {
     },
   });
 
-  if (product.isLoading) {
-    return (
-      <SiteLayout>
-        <div className="container mx-auto grid gap-8 px-4 py-8 md:grid-cols-2">
-          <div className="aspect-square animate-pulse rounded-xl bg-muted" />
-          <div className="space-y-4">
-            <div className="h-8 w-2/3 animate-pulse rounded bg-muted" />
-            <div className="h-6 w-1/3 animate-pulse rounded bg-muted" />
-            <div className="h-24 animate-pulse rounded bg-muted" />
-          </div>
-        </div>
-      </SiteLayout>
-    );
-  }
-
-  const p = product.data;
   if (!p) return null;
 
   const name = pickLang(p, "name", lang);

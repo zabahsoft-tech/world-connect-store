@@ -9,8 +9,28 @@ import { SiteLayout } from "@/components/SiteLayout";
 import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ErrorState";
+import { buildMeta, buildHreflangLinks, getPageSeo, SITE_URL } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
+  head: () => {
+    const seo = getPageSeo("home", "en");
+    return {
+      meta: [
+        ...buildMeta({
+          title: seo.title,
+          description: seo.description,
+          url: SITE_URL,
+          lang: "en",
+          keywords: seo.keywords,
+        }),
+        { property: "og:title:fa", content: getPageSeo("home", "fa").title },
+        { property: "og:description:fa", content: getPageSeo("home", "fa").description },
+        { property: "og:title:ps", content: getPageSeo("home", "ps").title },
+        { property: "og:description:ps", content: getPageSeo("home", "ps").description },
+      ],
+      links: buildHreflangLinks("/"),
+    };
+  },
   component: HomePage,
   errorComponent: ({ error, reset }) => (
     <SiteLayout>

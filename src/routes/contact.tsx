@@ -6,8 +6,36 @@ import { useLang } from "@/contexts/LangContext";
 import { SiteLayout } from "@/components/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { openWhatsApp } from "@/lib/whatsapp";
+import {
+  buildMeta,
+  buildHreflangLinks,
+  buildLocalBusinessJsonLd,
+  jsonLdScript,
+  getPageSeo,
+  SITE_URL,
+} from "@/lib/seo";
 
 export const Route = createFileRoute("/contact")({
+  head: () => {
+    const seo = getPageSeo("contact", "en");
+    return {
+      meta: [
+        ...buildMeta({
+          title: seo.title,
+          description: seo.description,
+          url: `${SITE_URL}/contact`,
+          lang: "en",
+          keywords: seo.keywords,
+        }),
+        { property: "og:title:fa", content: getPageSeo("contact", "fa").title },
+        { property: "og:description:fa", content: getPageSeo("contact", "fa").description },
+        { property: "og:title:ps", content: getPageSeo("contact", "ps").title },
+        { property: "og:description:ps", content: getPageSeo("contact", "ps").description },
+      ],
+      links: buildHreflangLinks("/contact"),
+      scripts: [jsonLdScript(buildLocalBusinessJsonLd({ url: `${SITE_URL}/contact` }))],
+    };
+  },
   component: ContactPage,
 });
 
