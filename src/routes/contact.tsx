@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { openWhatsApp } from "@/lib/whatsapp";
+
 import {
   buildMeta,
   buildHreflangLinks,
@@ -74,7 +74,7 @@ function ContactPage() {
   const page = pageQ.data;
   const wa = s?.whatsapp_number;
   const wa2 = s?.whatsapp_number_2;
-  const greeting = { en: "Hi! I have a question.", fa: "سلام! یک سوال دارم.", ps: "سلام! یوه پوښتنه لرم." }[lang];
+  
 
   const pageTitle = page ? pickLang(page, "title", lang) : tr("contactUs");
   const pageContent = page ? pickLang(page, "content", lang) : "";
