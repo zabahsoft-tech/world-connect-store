@@ -14,6 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      blog_posts: {
+        Row: {
+          author_name: string | null
+          content_en: string
+          content_fa: string
+          content_ps: string
+          cover_image: string | null
+          created_at: string
+          excerpt_en: string
+          excerpt_fa: string
+          excerpt_ps: string
+          id: string
+          is_published: boolean
+          meta_description_en: string | null
+          meta_description_fa: string | null
+          meta_description_ps: string | null
+          published_at: string | null
+          slug: string
+          tags: string[]
+          title_en: string
+          title_fa: string
+          title_ps: string
+          updated_at: string
+          views: number
+        }
+        Insert: {
+          author_name?: string | null
+          content_en?: string
+          content_fa?: string
+          content_ps?: string
+          cover_image?: string | null
+          created_at?: string
+          excerpt_en?: string
+          excerpt_fa?: string
+          excerpt_ps?: string
+          id?: string
+          is_published?: boolean
+          meta_description_en?: string | null
+          meta_description_fa?: string | null
+          meta_description_ps?: string | null
+          published_at?: string | null
+          slug: string
+          tags?: string[]
+          title_en?: string
+          title_fa?: string
+          title_ps?: string
+          updated_at?: string
+          views?: number
+        }
+        Update: {
+          author_name?: string | null
+          content_en?: string
+          content_fa?: string
+          content_ps?: string
+          cover_image?: string | null
+          created_at?: string
+          excerpt_en?: string
+          excerpt_fa?: string
+          excerpt_ps?: string
+          id?: string
+          is_published?: boolean
+          meta_description_en?: string | null
+          meta_description_fa?: string | null
+          meta_description_ps?: string | null
+          published_at?: string | null
+          slug?: string
+          tags?: string[]
+          title_en?: string
+          title_fa?: string
+          title_ps?: string
+          updated_at?: string
+          views?: number
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
