@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ImageUpload } from "@/components/ImageUpload";
 
 export const Route = createFileRoute("/admin/categories")({
   component: AdminCategories,
@@ -91,14 +92,45 @@ function AdminCategories() {
             {editing && (
               <form onSubmit={(e) => { e.preventDefault(); save.mutate(editing); }} className="space-y-3">
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                  <div><Label className="text-xs">Name (EN)</Label><Input value={editing.name_en} onChange={(e) => setEditing({ ...editing, name_en: e.target.value })} required /></div>
+                  <div>
+                    <Label className="text-xs">Name (EN)</Label>
+                    <Input
+                      value={editing.name_en}
+                      onChange={(e) => {
+                        const name_en = e.target.value;
+                        const autoSlug = !editing.id && (editing.slug === "" || editing.slug === slugify(editing.name_en));
+                        setEditing({
+                          ...editing,
+                          name_en,
+                          slug: autoSlug ? slugify(name_en) : editing.slug,
+                        });
+                      }}
+                      required
+                    />
+                  </div>
                   <div><Label className="text-xs">Name (FA)</Label><Input dir="rtl" value={editing.name_fa} onChange={(e) => setEditing({ ...editing, name_fa: e.target.value })} required /></div>
                   <div><Label className="text-xs">Name (PS)</Label><Input dir="rtl" value={editing.name_ps} onChange={(e) => setEditing({ ...editing, name_ps: e.target.value })} required /></div>
                 </div>
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                  <div><Label className="text-xs">Slug</Label><Input value={editing.slug} placeholder="auto" onChange={(e) => setEditing({ ...editing, slug: e.target.value })} /></div>
-                  <div><Label className="text-xs">Image URL</Label><Input value={editing.image} onChange={(e) => setEditing({ ...editing, image: e.target.value })} /></div>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <div>
+                    <Label className="text-xs">Slug</Label>
+                    <Input
+                      value={editing.slug}
+                      placeholder="auto-generated from English name"
+                      onChange={(e) => setEditing({ ...editing, slug: slugify(e.target.value) })}
+                    />
+                    <p className="mt-1 text-[11px] text-muted-foreground">Used in the URL. Lowercase letters, numbers and dashes only.</p>
+                  </div>
                   <div><Label className="text-xs">Sort order</Label><Input type="number" value={editing.sort_order} onChange={(e) => setEditing({ ...editing, sort_order: e.target.value })} /></div>
+                </div>
+                <div>
+                  <Label className="text-xs">Category image</Label>
+                  <ImageUpload
+                    value={editing.image}
+                    onChange={(url) => setEditing({ ...editing, image: url })}
+                    folder="categories"
+                    previewSize="lg"
+                  />
                 </div>
                 <Button type="submit" className="w-full" disabled={save.isPending}>{save.isPending ? "..." : "Save"}</Button>
               </form>
