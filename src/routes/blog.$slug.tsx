@@ -144,7 +144,7 @@ function computeReadingTime(html: string) {
   return Math.max(1, Math.ceil(words / 200));
 }
 
-function ReadingProgress({ targetRef }: { targetRef: React.RefObject<HTMLElement> }) {
+function ReadingProgress({ targetRef }: { targetRef: React.RefObject<HTMLElement | null> }) {
   const [progress, setProgress] = useState(0);
   useEffect(() => {
     const onScroll = () => {
