@@ -170,7 +170,7 @@ export function NavSearch({ className, variant = "navbar", onNavigate }: NavSear
           {suggestQ.isLoading ? (
             <div className="flex items-center justify-center gap-2 p-4 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              {tr("loading") || "Loading..."}
+              <span>...</span>
             </div>
           ) : results.length === 0 ? (
             <div className="p-4 text-sm text-muted-foreground">
@@ -222,7 +222,7 @@ export function NavSearch({ className, variant = "navbar", onNavigate }: NavSear
             }}
             className="block border-t border-border bg-muted/40 px-3 py-2.5 text-center text-xs font-medium text-primary hover:bg-muted"
           >
-            {tr("viewAllResults") || `View all results for "${debounced}"`}
+            {`→ "${debounced}"`}
           </Link>
         </div>
       )}
