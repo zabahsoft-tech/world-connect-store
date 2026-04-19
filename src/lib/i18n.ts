@@ -60,6 +60,10 @@ export const t: Dict = {
   newest: { en: "Newest", fa: "جدیدترین", ps: "نوي" },
   priceLowHigh: { en: "Price: Low to High", fa: "قیمت: کم به زیاد", ps: "بیه: کم تر ډېر" },
   priceHighLow: { en: "Price: High to Low", fa: "قیمت: زیاد به کم", ps: "بیه: ډېر تر کم" },
+  specifications: { en: "Specifications", fa: "مشخصات", ps: "ځانګړتیاوې" },
+  variant: { en: "Variant", fa: "نوع", ps: "ډول" },
+  selectVariant: { en: "Select a variant", fa: "یک نوع را انتخاب کنید", ps: "یو ډول وټاکئ" },
+  watchVideo: { en: "Watch video", fa: "تماشای ویدیو", ps: "ویډیو وګورئ" },
 };
 
 export function tr(key: keyof typeof t, lang: Lang): string {

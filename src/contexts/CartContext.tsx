@@ -9,6 +9,10 @@ export interface CartItem {
   price: number;
   image_url: string | null;
   quantity: number;
+  variantId?: string;
+  variantName_en?: string;
+  variantName_fa?: string;
+  variantName_ps?: string;
 }
 
 interface CartContextValue {
@@ -46,11 +50,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [items, loaded]);
 
+  const lineKey = (i: { id: string; variantId?: string }) => `${i.id}::${i.variantId ?? ""}`;
+
   const add: CartContextValue["add"] = (item, qty = 1) => {
     setItems((prev) => {
-      const existing = prev.find((i) => i.id === item.id);
+      const key = lineKey(item);
+      const existing = prev.find((i) => lineKey(i) === key);
       if (existing) {
-        return prev.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity + qty } : i));
+        return prev.map((i) => (lineKey(i) === key ? { ...i, quantity: i.quantity + qty } : i));
       }
       return [...prev, { ...item, quantity: qty }];
     });
