@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
 import { pickLang } from "@/lib/i18n";
@@ -32,12 +31,17 @@ interface BlogListItem {
   created_at: string;
 }
 
+// Cast supabase client because the auto-generated `Database` types may not yet include `blog_posts`.
+// Using `any` here is intentional — types regenerate after the next deploy.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sb = supabase as any;
+
 export const Route = createFileRoute("/blog")({
   validateSearch: (search: Record<string, unknown>) => ({
     tag: typeof search.tag === "string" ? search.tag : undefined,
   }),
   loader: async () => {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from("blog_posts")
       .select(
         "id, slug, title_en, title_fa, title_ps, excerpt_en, excerpt_fa, excerpt_ps, cover_image, tags, author_name, published_at, created_at"
