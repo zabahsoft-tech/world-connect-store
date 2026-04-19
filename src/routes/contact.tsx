@@ -1,11 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Mail, Phone, MapPin, MessageCircle, Clock, Facebook, Instagram, Twitter, Youtube, Send } from "lucide-react";
+import { useState } from "react";
+import { z } from "zod";
+import { toast } from "sonner";
+import { Mail, Phone, MapPin, MessageCircle, Clock, Facebook, Instagram, Twitter, Youtube, Send, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
 import { pickLang } from "@/lib/i18n";
 import { SiteLayout } from "@/components/SiteLayout";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
 import { openWhatsApp } from "@/lib/whatsapp";
 import {
   buildMeta,
@@ -72,6 +79,51 @@ function ContactPage() {
   const pageTitle = page ? pickLang(page, "title", lang) : tr("contactUs");
   const pageContent = page ? pickLang(page, "content", lang) : "";
 
+  const [form, setForm] = useState({ name: "", phone: "", email: "", message: "" });
+  const [submitting, setSubmitting] = useState(false);
+
+  const messageSchema = z.object({
+    name: z.string().trim().min(2).max(100),
+    phone: z.string().trim().max(30).regex(/^[+\d\s\-()]*$/, "Invalid phone").optional().or(z.literal("")),
+    email: z.string().trim().email("Invalid email").max(255).optional().or(z.literal("")),
+    message: z.string().trim().min(5).max(1000),
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsed = messageSchema.safeParse(form);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? tr("messageError"));
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("contact_messages").insert({
+        name: parsed.data.name,
+        phone: parsed.data.phone || null,
+        email: parsed.data.email || null,
+        message: parsed.data.message,
+        language: lang,
+      });
+      if (error) throw error;
+      toast.success(tr("messageSent"));
+      if (wa) {
+        const waMsg =
+          `📩 ${parsed.data.name}` +
+          (parsed.data.phone ? ` (${parsed.data.phone})` : "") +
+          (parsed.data.email ? ` <${parsed.data.email}>` : "") +
+          `:\n\n${parsed.data.message}`;
+        openWhatsApp(wa, waMsg);
+      }
+      setForm({ name: "", phone: "", email: "", message: "" });
+    } catch (err) {
+      console.error(err);
+      toast.error(tr("messageError"));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const socials: { url: string | null | undefined; icon: typeof Facebook; label: string }[] = [
     { url: s?.facebook_url, icon: Facebook, label: "Facebook" },
     { url: s?.instagram_url, icon: Instagram, label: "Instagram" },
@@ -91,6 +143,37 @@ function ContactPage() {
             dangerouslySetInnerHTML={{ __html: pageContent }}
           />
         )}
+
+        <Card className="mb-8 p-6">
+          <h2 className="mb-1 text-xl font-semibold">{tr("sendMessage")}</h2>
+          <p className="mb-5 text-sm text-muted-foreground">{tr("contactFormIntro")}</p>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="cf-name" className="mb-1.5 block">{tr("yourName")} *</Label>
+              <Input id="cf-name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} maxLength={100} required />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="cf-phone" className="mb-1.5 block">{tr("yourPhone")}</Label>
+                <Input id="cf-phone" type="tel" inputMode="tel" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} maxLength={30} />
+              </div>
+              <div>
+                <Label htmlFor="cf-email" className="mb-1.5 block">{tr("yourEmail")}</Label>
+                <Input id="cf-email" type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} maxLength={255} />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="cf-message" className="mb-1.5 block">{tr("yourMessage")} *</Label>
+              <Textarea id="cf-message" rows={5} value={form.message} onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))} maxLength={1000} required />
+              <div className="mt-1 text-right text-xs text-muted-foreground">{form.message.length}/1000</div>
+            </div>
+            <Button type="submit" size="lg" className="w-full gap-2" disabled={submitting}>
+              {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+              {tr("sendMessage")}
+            </Button>
+          </form>
+        </Card>
+
         <div className="space-y-4">
           {wa && (
             <a href={`https://wa.me/${wa.replace(/[^\d]/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 rounded-xl border bg-card p-5 hover:border-primary">

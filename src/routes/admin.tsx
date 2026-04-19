@@ -1,10 +1,13 @@
 import { createFileRoute, Outlet, Link, useRouter } from "@tanstack/react-router";
-import { LayoutDashboard, Package, FolderTree, ShoppingBag, Settings, LogOut, Home, Images, Users, FileText } from "lucide-react";
+import { LayoutDashboard, Package, FolderTree, ShoppingBag, Settings, LogOut, Home, Images, Users, FileText, MessageSquare } from "lucide-react";
 import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { FullScreenLoader } from "@/components/Loader";
 import { ErrorState, ForbiddenState } from "@/components/ErrorState";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
   SidebarContent,
@@ -37,6 +40,7 @@ const NAV = [
   { to: "/admin/slides", label: "Hero slides", icon: Images, exact: false },
   { to: "/admin/pages", label: "Pages", icon: FileText, exact: false },
   { to: "/admin/orders", label: "Orders", icon: ShoppingBag, exact: false },
+  { to: "/admin/messages", label: "Messages", icon: MessageSquare, exact: false },
   { to: "/admin/users", label: "Users", icon: Users, exact: false },
   { to: "/admin/settings", label: "Settings", icon: Settings, exact: false },
 ] as const;
@@ -46,6 +50,19 @@ function AdminLayout() {
   const router = useRouter();
   const path = router.state.location.pathname;
   const isLogin = path === "/admin/login";
+
+  const unread = useQuery({
+    queryKey: ["admin-unread-messages"],
+    enabled: !!user && isAdmin,
+    refetchInterval: 30000,
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("contact_messages")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "new");
+      return count ?? 0;
+    },
+  });
 
   useEffect(() => {
     if (loading || isLogin) return;
@@ -89,12 +106,18 @@ function AdminLayout() {
                 <SidebarMenu>
                   {NAV.map((l) => {
                     const active = l.exact ? path === l.to : path.startsWith(l.to);
+                    const showBadge = l.to === "/admin/messages" && (unread.data ?? 0) > 0;
                     return (
                       <SidebarMenuItem key={l.to}>
                         <SidebarMenuButton asChild isActive={active} tooltip={l.label}>
                           <Link to={l.to}>
                             <l.icon className="h-4 w-4" />
-                            <span>{l.label}</span>
+                            <span className="flex-1">{l.label}</span>
+                            {showBadge && (
+                              <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-[10px] group-data-[collapsible=icon]:hidden">
+                                {unread.data}
+                              </Badge>
+                            )}
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
