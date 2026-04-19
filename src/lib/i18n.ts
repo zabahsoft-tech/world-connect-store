@@ -1,0 +1,75 @@
+export type Lang = "en" | "fa" | "ps";
+
+export const LANGS: { code: Lang; label: string; native: string; dir: "ltr" | "rtl" }[] = [
+  { code: "en", label: "English", native: "English", dir: "ltr" },
+  { code: "fa", label: "Persian", native: "فارسی", dir: "rtl" },
+  { code: "ps", label: "Pashto", native: "پښتو", dir: "rtl" },
+];
+
+export const dirOf = (lang: Lang): "ltr" | "rtl" => (lang === "en" ? "ltr" : "rtl");
+
+type Dict = Record<string, { en: string; fa: string; ps: string }>;
+
+export const t: Dict = {
+  home: { en: "Home", fa: "خانه", ps: "کور" },
+  shop: { en: "Shop", fa: "فروشگاه", ps: "پلورنځی" },
+  categories: { en: "Categories", fa: "دسته‌بندی‌ها", ps: "کټګورۍ" },
+  cart: { en: "Cart", fa: "سبد خرید", ps: "ټوکرۍ" },
+  checkout: { en: "Checkout", fa: "تسویه حساب", ps: "پیرود بشپړول" },
+  about: { en: "About", fa: "درباره ما", ps: "زموږ په اړه" },
+  contact: { en: "Contact", fa: "تماس", ps: "اړیکه" },
+  admin: { en: "Admin", fa: "مدیریت", ps: "اداره" },
+  search: { en: "Search products...", fa: "جستجوی محصولات...", ps: "د توکو لټون..." },
+  addToCart: { en: "Add to cart", fa: "افزودن به سبد", ps: "ټوکرۍ ته اضافه کړه" },
+  quickOrder: { en: "Quick order on WhatsApp", fa: "سفارش سریع از واتساپ", ps: "په واټس اپ ګړندی فرمایش" },
+  orderOnWhatsApp: { en: "Order on WhatsApp", fa: "سفارش در واتساپ", ps: "په واټس اپ فرمایش" },
+  inStock: { en: "In stock", fa: "موجود", ps: "موجود" },
+  outOfStock: { en: "Out of stock", fa: "ناموجود", ps: "نه شته" },
+  featured: { en: "Featured", fa: "ویژه", ps: "ځانګړی" },
+  price: { en: "Price", fa: "قیمت", ps: "بیه" },
+  quantity: { en: "Quantity", fa: "تعداد", ps: "شمېر" },
+  total: { en: "Total", fa: "جمع کل", ps: "ټول" },
+  emptyCart: { en: "Your cart is empty", fa: "سبد خرید شما خالی است", ps: "ستاسو ټوکرۍ خالي ده" },
+  continueShopping: { en: "Continue shopping", fa: "ادامه خرید", ps: "پیرودنې ته دوام ورکړئ" },
+  proceedCheckout: { en: "Proceed to checkout", fa: "ادامه به تسویه حساب", ps: "پیرود ته دوام ورکړئ" },
+  customerName: { en: "Full name", fa: "نام و نام خانوادگی", ps: "بشپړ نوم" },
+  phone: { en: "Phone number", fa: "شماره تماس", ps: "د تلیفون شمېره" },
+  address: { en: "Delivery address", fa: "آدرس تحویل", ps: "د رسولو پته" },
+  notes: { en: "Notes (optional)", fa: "یادداشت (اختیاری)", ps: "یادښت (اختیاري)" },
+  placeOrder: { en: "Place order via WhatsApp", fa: "ثبت سفارش از طریق واتساپ", ps: "د واټس اپ له لارې فرمایش" },
+  heroTitle: { en: "Shop the best, ordered with one click", fa: "بهترین‌ها را با یک کلیک سفارش دهید", ps: "تر ټولو ښه د یوې کلیک په واسطه فرمایش وکړئ" },
+  heroSubtitle: { en: "Browse our catalog, add to cart, and complete your order on WhatsApp.", fa: "کاتالوگ ما را مرور کنید، به سبد اضافه کنید و سفارش خود را در واتساپ تکمیل کنید.", ps: "زموږ کتلاګ وګورئ، ټوکرۍ ته یې اضافه کړئ او په واټس اپ کې مو فرمایش بشپړ کړئ." },
+  shopNow: { en: "Shop now", fa: "همین حالا خرید کنید", ps: "اوس پیرود وکړئ" },
+  featuredProducts: { en: "Featured products", fa: "محصولات ویژه", ps: "ځانګړي توکي" },
+  browseCategories: { en: "Browse categories", fa: "مرور دسته‌بندی‌ها", ps: "د کټګوریو لیدنه" },
+  viewAll: { en: "View all", fa: "مشاهده همه", ps: "ټول وګورئ" },
+  noProducts: { en: "No products found", fa: "محصولی یافت نشد", ps: "هیڅ توکي ونه موندل شول" },
+  remove: { en: "Remove", fa: "حذف", ps: "لرې کول" },
+  subtotal: { en: "Subtotal", fa: "جمع جزء", ps: "فرعي ټول" },
+  contactUs: { en: "Contact us", fa: "با ما تماس بگیرید", ps: "موږ سره اړیکه ونیسئ" },
+  message: { en: "Message", fa: "پیام", ps: "پیغام" },
+  send: { en: "Send", fa: "ارسال", ps: "لیږل" },
+  email: { en: "Email", fa: "ایمیل", ps: "بریښنالیک" },
+  login: { en: "Login", fa: "ورود", ps: "ننوتل" },
+  logout: { en: "Logout", fa: "خروج", ps: "وتل" },
+  password: { en: "Password", fa: "رمز عبور", ps: "رمز" },
+  signUp: { en: "Sign up", fa: "ثبت نام", ps: "نوم لیکنه" },
+  orderPlaced: { en: "Order placed! Opening WhatsApp...", fa: "سفارش ثبت شد! واتساپ باز می‌شود...", ps: "فرمایش وشو! واټس اپ خلاصیږي..." },
+  filterAll: { en: "All", fa: "همه", ps: "ټول" },
+  sortBy: { en: "Sort by", fa: "مرتب‌سازی", ps: "ترتیب" },
+  newest: { en: "Newest", fa: "جدیدترین", ps: "نوي" },
+  priceLowHigh: { en: "Price: Low to High", fa: "قیمت: کم به زیاد", ps: "بیه: کم تر ډېر" },
+  priceHighLow: { en: "Price: High to Low", fa: "قیمت: زیاد به کم", ps: "بیه: ډېر تر کم" },
+};
+
+export function tr(key: keyof typeof t, lang: Lang): string {
+  return t[key][lang];
+}
+
+export function pickLang(obj: unknown, field: string, lang: Lang): string {
+  const o = obj as Record<string, unknown>;
+  const v = o[`${field}_${lang}`];
+  if (typeof v === "string" && v.trim()) return v;
+  const en = o[`${field}_en`];
+  return typeof en === "string" ? en : "";
+}
