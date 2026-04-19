@@ -151,6 +151,7 @@ export type Database = {
       }
       products: {
         Row: {
+          attributes: Json
           category_id: string | null
           created_at: string
           description_en: string | null
@@ -167,8 +168,11 @@ export type Database = {
           price: number
           slug: string
           updated_at: string
+          variants: Json
+          video_url: string | null
         }
         Insert: {
+          attributes?: Json
           category_id?: string | null
           created_at?: string
           description_en?: string | null
@@ -185,8 +189,11 @@ export type Database = {
           price?: number
           slug: string
           updated_at?: string
+          variants?: Json
+          video_url?: string | null
         }
         Update: {
+          attributes?: Json
           category_id?: string | null
           created_at?: string
           description_en?: string | null
@@ -203,6 +210,8 @@ export type Database = {
           price?: number
           slug?: string
           updated_at?: string
+          variants?: Json
+          video_url?: string | null
         }
         Relationships: [
           {
