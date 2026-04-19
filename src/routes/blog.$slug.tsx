@@ -202,7 +202,7 @@ function BlogPost() {
             <div className="container mx-auto max-w-5xl px-4 py-12">
               <h2 className="mb-6 text-2xl font-bold">{tr("relatedPosts")}</h2>
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {related.map((r) => {
+                {related.map((r: RelatedPost) => {
                   const rt = pickLang(r, "title", lang) || r.slug;
                   const rex = pickLang(r, "excerpt", lang);
                   return (
