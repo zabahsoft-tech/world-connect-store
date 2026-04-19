@@ -36,6 +36,7 @@ interface PageForm {
   hero_image: string;
   is_published: boolean;
   is_system: boolean;
+  show_in_nav: boolean;
   sort_order: string;
 }
 
@@ -53,6 +54,7 @@ const empty: PageForm = {
   hero_image: "",
   is_published: true,
   is_system: false,
+  show_in_nav: false,
   sort_order: "0",
 };
 
@@ -98,6 +100,7 @@ function AdminPages() {
         meta_description_ps: f.meta_description_ps || null,
         hero_image: f.hero_image || null,
         is_published: f.is_published,
+        show_in_nav: f.show_in_nav,
         sort_order: Number(f.sort_order) || 0,
       };
       if (!payload.slug) throw new Error("Slug is required");
@@ -167,6 +170,7 @@ function AdminPages() {
       hero_image: p.hero_image ?? "",
       is_published: p.is_published,
       is_system: p.is_system,
+      show_in_nav: (p as { show_in_nav?: boolean }).show_in_nav ?? false,
       sort_order: String(p.sort_order ?? 0),
     });
     setOpen(true);
@@ -262,6 +266,16 @@ function AdminPages() {
                       <Switch
                         checked={editing.is_published}
                         onCheckedChange={(v) => setEditing({ ...editing, is_published: v })}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border p-3">
+                      <div>
+                        <Label className="text-sm font-medium">Show in navigation</Label>
+                        <p className="text-xs text-muted-foreground">Pin this page to the main header menu.</p>
+                      </div>
+                      <Switch
+                        checked={editing.show_in_nav}
+                        onCheckedChange={(v) => setEditing({ ...editing, show_in_nav: v })}
                       />
                     </div>
                     <div>
@@ -363,6 +377,7 @@ function AdminPages() {
                     <code className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">/{p.slug}</code>
                     {p.is_system && <Badge variant="secondary" className="gap-1"><Lock className="h-3 w-3" /> System</Badge>}
                     {!p.is_published && <Badge variant="outline">Draft</Badge>}
+                    {(p as { show_in_nav?: boolean }).show_in_nav && <Badge className="bg-primary/10 text-primary hover:bg-primary/15">In nav</Badge>}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
