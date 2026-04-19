@@ -27,6 +27,7 @@ interface SettingsForm {
   store_name_ps: string;
   email: string;
   address: string;
+  google_maps_embed_url: string;
   about_en: string;
   about_fa: string;
   about_ps: string;
@@ -49,7 +50,7 @@ interface SettingsForm {
 const empty: SettingsForm = {
   whatsapp_number: "", whatsapp_number_2: "", phone: "", business_hours: "",
   store_name_en: "", store_name_fa: "", store_name_ps: "",
-  email: "", address: "",
+  email: "", address: "", google_maps_embed_url: "",
   about_en: "", about_fa: "", about_ps: "",
   logo_url: "", favicon_url: "", primary_color: "",
   facebook_url: "", instagram_url: "", twitter_url: "", youtube_url: "", telegram_url: "",
@@ -85,6 +86,7 @@ function AdminSettings() {
         store_name_ps: d.store_name_ps ?? "",
         email: d.email ?? "",
         address: d.address ?? "",
+        google_maps_embed_url: d.google_maps_embed_url ?? "",
         about_en: d.about_en ?? "",
         about_fa: d.about_fa ?? "",
         about_ps: d.about_ps ?? "",
@@ -119,6 +121,7 @@ function AdminSettings() {
         store_name_ps: f.store_name_ps,
         email: nullify(f.email),
         address: nullify(f.address),
+        google_maps_embed_url: nullify(f.google_maps_embed_url),
         about_en: nullify(f.about_en),
         about_fa: nullify(f.about_fa),
         about_ps: nullify(f.about_ps),
@@ -228,6 +231,17 @@ function AdminSettings() {
               <div className="md:col-span-2">
                 <Label className="text-xs">Business hours</Label>
                 <Input value={form.business_hours} onChange={(e) => set("business_hours", e.target.value)} placeholder="Mon-Fri 9am - 6pm" />
+              </div>
+              <div className="md:col-span-2">
+                <Label className="text-xs">Google Maps embed URL</Label>
+                <Input
+                  value={form.google_maps_embed_url}
+                  onChange={(e) => set("google_maps_embed_url", e.target.value)}
+                  placeholder="https://www.google.com/maps/embed?pb=..."
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  In Google Maps → Share → Embed a map → copy the <code>src</code> URL from the iframe.
+                </p>
               </div>
             </div>
           </TabsContent>

@@ -332,6 +332,7 @@ export type Database = {
           footer_text_en: string | null
           footer_text_fa: string | null
           footer_text_ps: string | null
+          google_maps_embed_url: string | null
           id: string
           instagram_url: string | null
           logo_url: string | null
@@ -362,6 +363,7 @@ export type Database = {
           footer_text_en?: string | null
           footer_text_fa?: string | null
           footer_text_ps?: string | null
+          google_maps_embed_url?: string | null
           id?: string
           instagram_url?: string | null
           logo_url?: string | null
@@ -392,6 +394,7 @@ export type Database = {
           footer_text_en?: string | null
           footer_text_fa?: string | null
           footer_text_ps?: string | null
+          google_maps_embed_url?: string | null
           id?: string
           instagram_url?: string | null
           logo_url?: string | null

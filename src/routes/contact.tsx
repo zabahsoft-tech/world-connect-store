@@ -243,6 +243,19 @@ function ContactPage() {
           )}
         </div>
 
+        {s?.google_maps_embed_url && /^https:\/\/www\.google\.com\/maps\/embed/.test(s.google_maps_embed_url) && (
+          <div className="mt-8 overflow-hidden rounded-xl border shadow-[var(--shadow-soft)]">
+            <iframe
+              src={s.google_maps_embed_url}
+              title="Map"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+              className="h-[360px] w-full border-0"
+            />
+          </div>
+        )}
+
         {visibleSocials.length > 0 && (
           <div className="mt-8">
             <p className="mb-3 text-sm font-semibold text-muted-foreground">Follow us</p>
