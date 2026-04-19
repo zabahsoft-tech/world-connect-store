@@ -106,12 +106,18 @@ function AdminLayout() {
                 <SidebarMenu>
                   {NAV.map((l) => {
                     const active = l.exact ? path === l.to : path.startsWith(l.to);
+                    const showBadge = l.to === "/admin/messages" && (unread.data ?? 0) > 0;
                     return (
                       <SidebarMenuItem key={l.to}>
                         <SidebarMenuButton asChild isActive={active} tooltip={l.label}>
                           <Link to={l.to}>
                             <l.icon className="h-4 w-4" />
-                            <span>{l.label}</span>
+                            <span className="flex-1">{l.label}</span>
+                            {showBadge && (
+                              <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-[10px] group-data-[collapsible=icon]:hidden">
+                                {unread.data}
+                              </Badge>
+                            )}
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
