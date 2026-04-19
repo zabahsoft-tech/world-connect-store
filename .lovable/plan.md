@@ -1,88 +1,66 @@
 
-The user wants a proper login experience. Currently `src/routes/admin.login.tsx` is the only auth page — basic email/password, mode toggle for signup, plain card. Let me design a richer auth system.
+## Plan: Branded Error Pages with SiteLayout
 
-## Plan: Enhanced Auth Pages
+Currently error UI is plain divs, inconsistent across the app:
+- Root 404 in `__root.tsx` — bare div, no header/footer
+- Default error in `router.tsx` — bare div, no layout
+- Per-route in `products.$slug.tsx` — uses SiteLayout but minimal styling
 
-### 1. Split into dedicated routes
-Replace the single `/admin/login` toggle page with three dedicated routes:
-- `/login` — Sign in (public, not admin-only)
-- `/signup` — Create account
-- `/forgot-password` — Request reset link
-- `/reset-password` — Set new password (linked from email)
+I'll create a shared, branded error UI and wire it everywhere via `SiteLayout`.
 
-Keep `/admin/login` redirecting to `/login` for back-compat.
+### 1. New `src/components/ErrorState.tsx`
+A reusable branded component with three variants:
+- `<NotFoundState />` — big "404", search-off icon, "Back to home" + "Browse shop" CTAs
+- `<ErrorState error reset />` — alert-triangle icon, error message, "Try again" + "Go home" CTAs (uses `router.invalidate()` + `reset()`)
+- `<ForbiddenState />` — for future 403 use (admin pages)
 
-### 2. Shared `AuthLayout` component
-New `src/components/AuthLayout.tsx` — split-screen layout:
-- Left: branded panel with store logo (from settings), tagline, gradient background using primary color
-- Right: form card (centered, max-w-md)
-- Mobile: stacks (branded panel becomes a small header)
-- Language switcher in top-right corner
+All use the primary color, soft gradient backdrop matching FullScreenLoader, store name from settings, i18n-aware copy.
 
-### 3. Enhanced login page (`/login`)
-- Email + password fields with icons (Mail, Lock from lucide)
-- Show/hide password toggle (Eye/EyeOff)
-- "Remember me" checkbox
-- "Forgot password?" link
-- Primary "Sign in" button with loading state
-- Divider + "Don't have an account? Sign up" link
-- After login: redirect to `?redirect=` search param or `/admin` if admin, else `/`
+### 2. New `src/routes/404.tsx` (catch-all)
+Standalone route using `SiteLayout` + `<NotFoundState />` for users hitting unknown URLs in marketing context. Actually — TanStack uses `notFoundComponent`, not a route file. Skip this; handle via root.
 
-### 4. Enhanced signup page (`/signup`)
-- Full name (optional, stored in user_metadata)
-- Email
-- Password with strength indicator (weak/medium/strong based on length + char classes)
-- Confirm password (client-side match validation)
-- Terms checkbox
-- "Create account" button
-- Link back to `/login`
-- After signup: success state telling user to check email
+### 2. Update `src/routes/__root.tsx`
+Replace inline `NotFoundComponent` with one that wraps `<NotFoundState />` in `SiteLayout` (so header/footer/nav still show on 404 pages).
 
-### 5. Forgot + reset password
-- `/forgot-password`: email field → `supabase.auth.resetPasswordForEmail(email, { redirectTo: origin + '/reset-password' })`, success state
-- `/reset-password`: detects recovery token in URL, shows new password + confirm fields, calls `supabase.auth.updateUser({ password })`, redirects to `/login` on success
+### 3. Update `src/router.tsx`
+Replace inline `DefaultErrorComponent` with one wrapping `<ErrorState />` in `SiteLayout`. Keep dev-mode error message preview.
 
-### 6. Account dropdown in Header
-Update `src/components/Header.tsx`:
-- If logged in: avatar dropdown (initials from email) with "Admin dashboard" (if admin), "Sign out"
-- If logged out: "Sign in" link/button
+### 4. Update `src/routes/products.$slug.tsx`
+Use the new shared components instead of bare divs inside SiteLayout.
 
-### 7. Update AuthContext
-Add to `src/contexts/AuthContext.tsx`:
-- `resetPassword(email)` method
-- `updatePassword(password)` method
-- Optional `fullName` param on signUp (stored in `options.data`)
+### 5. Add per-route boundaries to data routes missing them
+Routes with loaders/queries that should have proper boundaries:
+- `src/routes/shop.tsx` — add `errorComponent`
+- `src/routes/categories.tsx` — add `errorComponent`
+- `src/routes/index.tsx` — add `errorComponent`
 
-### 8. Update admin guard
-`src/routes/admin.tsx` currently redirects to `/admin/login`. Update redirect to `/login?redirect=/admin`.
+Each uses `SiteLayout` + `<ErrorState />`.
+
+### 6. Admin error boundary
+- `src/routes/admin.tsx` — add `errorComponent` that renders inside the admin shell (NOT SiteLayout) with a simple branded error card + retry.
 
 ### Layout sketch
 ```text
-┌─────────────────────────┬──────────────────────────┐
-│                         │   [Lang switcher]        │
-│   [Logo]                │                          │
-│   Store name            │   Welcome back           │
-│                         │   Sign in to continue    │
-│   "Tagline / blurb"     │                          │
-│                         │   [Email field]          │
-│   gradient bg           │   [Password field 👁]    │
-│   primary color         │   [✓ Remember]  [Forgot?]│
-│                         │                          │
-│                         │   [   Sign in   ]        │
-│                         │   ─── or ───             │
-│                         │   New here? Sign up      │
-└─────────────────────────┴──────────────────────────┘
+┌─────────── Header ──────────────┐
+│                                 │
+│      [icon in tinted circle]    │
+│                                 │
+│           404                   │
+│      Page not found             │
+│   The page you're looking       │
+│   for doesn't exist.            │
+│                                 │
+│   [Go home] [Browse shop]       │
+│                                 │
+├─────────── Footer ──────────────┤
 ```
 
 ### Files
-- New: `src/components/AuthLayout.tsx`
-- New: `src/routes/login.tsx`
-- New: `src/routes/signup.tsx`
-- New: `src/routes/forgot-password.tsx`
-- New: `src/routes/reset-password.tsx`
-- Edit: `src/routes/admin.login.tsx` — replace with redirect to `/login`
-- Edit: `src/contexts/AuthContext.tsx` — add reset/update password, fullName on signup
-- Edit: `src/routes/admin.tsx` — redirect to `/login?redirect=/admin`
-- Edit: `src/components/Header.tsx` — account dropdown
+- New: `src/components/ErrorState.tsx`
+- Edit: `src/routes/__root.tsx` — use `NotFoundState` in `SiteLayout`
+- Edit: `src/router.tsx` — use `ErrorState` in `SiteLayout` for default error
+- Edit: `src/routes/products.$slug.tsx` — use shared components
+- Edit: `src/routes/shop.tsx`, `src/routes/categories.tsx`, `src/routes/index.tsx` — add `errorComponent`
+- Edit: `src/routes/admin.tsx` — add admin-styled `errorComponent`
 
-No DB changes, no new dependencies (uses existing shadcn Card, Input, Button, Checkbox, DropdownMenu, Avatar, lucide-react icons).
+No DB changes, no new dependencies (uses lucide icons, shadcn Button, existing SiteLayout).
