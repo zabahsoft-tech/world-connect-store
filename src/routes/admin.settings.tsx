@@ -27,6 +27,7 @@ interface SettingsForm {
   store_name_ps: string;
   email: string;
   address: string;
+  google_maps_embed_url: string;
   about_en: string;
   about_fa: string;
   about_ps: string;
@@ -49,7 +50,7 @@ interface SettingsForm {
 const empty: SettingsForm = {
   whatsapp_number: "", whatsapp_number_2: "", phone: "", business_hours: "",
   store_name_en: "", store_name_fa: "", store_name_ps: "",
-  email: "", address: "",
+  email: "", address: "", google_maps_embed_url: "",
   about_en: "", about_fa: "", about_ps: "",
   logo_url: "", favicon_url: "", primary_color: "",
   facebook_url: "", instagram_url: "", twitter_url: "", youtube_url: "", telegram_url: "",
