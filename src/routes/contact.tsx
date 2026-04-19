@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, type ComponentType } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Mail, Phone, MapPin, MessageCircle, Clock, Facebook, Instagram, Twitter, Youtube, Send, Loader2 } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, Facebook, Instagram, Twitter, Youtube, Send, Loader2 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
 import { pickLang } from "@/lib/i18n";
@@ -134,9 +135,9 @@ function ContactPage() {
   ];
   const visibleSocials = socials.filter((x) => x.url && x.url.trim());
 
-  const infoTiles: { href?: string; icon: typeof Mail; label: string; value: string }[] = [];
-  if (wa) infoTiles.push({ href: `https://wa.me/${wa.replace(/[^\d]/g, "")}`, icon: MessageCircle, label: "WhatsApp", value: wa });
-  if (wa2) infoTiles.push({ href: `https://wa.me/${wa2.replace(/[^\d]/g, "")}`, icon: MessageCircle, label: "WhatsApp 2", value: wa2 });
+  const infoTiles: { href?: string; icon: ComponentType<{ className?: string }>; label: string; value: string }[] = [];
+  if (wa) infoTiles.push({ href: `https://wa.me/${wa.replace(/[^\d]/g, "")}`, icon: WhatsAppIcon, label: "WhatsApp", value: wa });
+  if (wa2) infoTiles.push({ href: `https://wa.me/${wa2.replace(/[^\d]/g, "")}`, icon: WhatsAppIcon, label: "WhatsApp 2", value: wa2 });
   if (s?.phone) infoTiles.push({ href: `tel:${s.phone}`, icon: Phone, label: tr("phone"), value: s.phone });
   if (s?.email) infoTiles.push({ href: `mailto:${s.email}`, icon: Mail, label: tr("email"), value: s.email });
   if (s?.address) infoTiles.push({ icon: MapPin, label: "Address", value: s.address });
