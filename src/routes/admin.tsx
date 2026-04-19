@@ -51,6 +51,19 @@ function AdminLayout() {
   const path = router.state.location.pathname;
   const isLogin = path === "/admin/login";
 
+  const unread = useQuery({
+    queryKey: ["admin-unread-messages"],
+    enabled: !!user && isAdmin,
+    refetchInterval: 30000,
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("contact_messages")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "new");
+      return count ?? 0;
+    },
+  });
+
   useEffect(() => {
     if (loading || isLogin) return;
     if (!user) router.navigate({ to: "/login", search: { redirect: "/admin" } });
