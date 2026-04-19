@@ -1,44 +1,51 @@
 
-The user wants admin-controlled hero slides instead of hardcoded ones in `src/routes/index.tsx`.
+The user wants an enhanced site settings area where the admin can manage all website-wide data (contact details, social links, branding, footer content) plus a separate user management section for granting/revoking admin access.
 
-## Plan: Dynamic Hero Slides
+## Plan: Enhanced Settings + User Management
 
-### 1. Database
-New `hero_slides` table:
-- `id` uuid pk
-- `image` text (URL)
-- `title_en/fa/ps` text
-- `subtitle_en/fa/ps` text
-- `cta_label_en/fa/ps` text (nullable)
-- `cta_link` text (nullable, e.g. `/shop`)
-- `sort_order` int default 0
-- `active` boolean default true
-- `created_at`, `updated_at` timestamps
+### 1. Extend `settings` table (migration)
+Add columns for contact + branding + social + footer:
+- `phone`, `whatsapp_number_2`, `business_hours`
+- `facebook_url`, `instagram_url`, `twitter_url`, `youtube_url`, `telegram_url`
+- `logo_url`, `favicon_url`, `primary_color`
+- `footer_text_en/fa/ps`
+- `meta_description_en/fa/ps`
 
-RLS: public SELECT (active only via app filter), admins full ALL — same pattern as `categories`/`products`.
+### 2. Rebuild `src/routes/admin.settings.tsx` with tabs
+Restructure the flat form into a tabbed interface:
+- **General** — store names (EN/FA/PS), logo URL + preview, favicon
+- **Contact** — WhatsApp (primary + secondary), phone, email, address, business hours
+- **Social** — Facebook, Instagram, Twitter, YouTube, Telegram URLs
+- **About** — about text in 3 languages
+- **Footer & SEO** — footer text per language, meta description per language
 
-Seed 3 rows so the homepage isn't empty on first load.
+Single Save button persists all tabs. Loading skeleton + toast feedback.
 
-### 2. Homepage (`src/routes/index.tsx`)
-- Replace the hardcoded `SLIDES` const with a `useQuery` fetching `hero_slides` where `active=true` ordered by `sort_order`.
-- Use `pickLang(slide, "title", lang)` and `pickLang(slide, "subtitle", lang)` for translations.
-- CTA button uses `cta_link` + localized label (fallback to "Shop now" if empty).
-- Skeleton placeholder while loading; hide hero entirely if zero active slides.
+### 3. New User Management page (`src/routes/admin.users.tsx`)
+A new admin section to view all signed-up users and manage admin roles. Since we can't query `auth.users` from the client, we'll need a server function with the admin client.
 
-### 3. Admin slides page (`src/routes/admin.slides.tsx`)
-New route mirroring the categories/products admin pattern:
-- Table: thumbnail, EN title, sort order, active toggle, edit/delete actions.
-- Dialog form with Tabs: **General** (image URL + preview, sort_order, active, cta_link) and **Translations** (EN/FA/PS title + subtitle + cta_label).
-- AlertDialog for delete confirmation.
-- Reorder via sort_order number input (keep simple, no drag-and-drop).
+- Server function `listUsers` (uses `supabaseAdmin.auth.admin.listUsers()`) + protected by `requireSupabaseAuth` + admin role check
+- Server function `setAdminRole({ userId, isAdmin })` to insert/delete row in `user_roles`
+- UI: table of users (email, signup date, admin badge, toggle switch to grant/revoke admin)
+- AlertDialog confirmation when revoking your own admin role
+- Search by email
 
-### 4. Sidebar nav (`src/routes/admin.tsx`)
-Add a "Hero slides" entry to the `NAV` array with the `Images` icon, between Categories and Orders.
+### 4. Wire updates into the site
+- **Footer.tsx** — read settings (logo, store name, social links, footer text) and render dynamically; replace hardcoded "Store" + "S" badge
+- **Contact page** — display new fields (phone, secondary WhatsApp, business hours, social links)
+- **Header.tsx** — use store name + logo from settings (light touch)
+
+### 5. Sidebar nav (`src/routes/admin.tsx`)
+Add "Users" entry with `Users` icon between Orders and Settings.
 
 ### Files
-- New migration: create `hero_slides` table + RLS + seed
-- New: `src/routes/admin.slides.tsx`
-- Edit: `src/routes/index.tsx` (fetch slides dynamically)
-- Edit: `src/routes/admin.tsx` (add nav link)
+- New migration: extend `settings` table with new columns
+- Edit: `src/routes/admin.settings.tsx` — tabbed UI with all new fields
+- New: `src/routes/admin.users.tsx` — user list + admin toggle
+- New: server functions for user listing/role management (uses existing `supabaseAdmin` + `requireSupabaseAuth`)
+- Edit: `src/routes/admin.tsx` — add Users nav entry
+- Edit: `src/components/Footer.tsx` — render from settings
+- Edit: `src/routes/contact.tsx` — show new contact fields + socials
+- Edit: `src/components/Header.tsx` — show store name/logo from settings
 
-No new dependencies — reuses existing shadcn Table, Dialog, Tabs, AlertDialog, Switch.
+No new dependencies — reuses existing shadcn Tabs, Table, Switch, AlertDialog, Dialog.
