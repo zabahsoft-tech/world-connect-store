@@ -41,7 +41,7 @@ function AdminLayout() {
 
   useEffect(() => {
     if (loading || isLogin) return;
-    if (!user) router.navigate({ to: "/admin/login" });
+    if (!user) router.navigate({ to: "/login", search: { redirect: "/admin" } });
   }, [user, loading, isLogin, router]);
 
   if (isLogin) return <Outlet />;
