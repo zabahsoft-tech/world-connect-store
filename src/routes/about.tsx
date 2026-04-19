@@ -4,8 +4,28 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
 import { pickLang } from "@/lib/i18n";
 import { SiteLayout } from "@/components/SiteLayout";
+import { buildMeta, buildHreflangLinks, getPageSeo, SITE_URL } from "@/lib/seo";
 
 export const Route = createFileRoute("/about")({
+  head: () => {
+    const seo = getPageSeo("about", "en");
+    return {
+      meta: [
+        ...buildMeta({
+          title: seo.title,
+          description: seo.description,
+          url: `${SITE_URL}/about`,
+          lang: "en",
+          keywords: seo.keywords,
+        }),
+        { property: "og:title:fa", content: getPageSeo("about", "fa").title },
+        { property: "og:description:fa", content: getPageSeo("about", "fa").description },
+        { property: "og:title:ps", content: getPageSeo("about", "ps").title },
+        { property: "og:description:ps", content: getPageSeo("about", "ps").description },
+      ],
+      links: buildHreflangLinks("/about"),
+    };
+  },
   component: AboutPage,
 });
 

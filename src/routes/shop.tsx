@@ -10,6 +10,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ErrorState } from "@/components/ErrorState";
+import { buildMeta, buildHreflangLinks, getPageSeo, SITE_URL } from "@/lib/seo";
 
 const searchSchema = z.object({
   q: z.string().optional(),
@@ -19,6 +20,28 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/shop")({
   validateSearch: searchSchema,
+  head: ({ match }) => {
+    const search = match.search as z.infer<typeof searchSchema>;
+    const seo = getPageSeo("shop", "en");
+    const qSuffix = search?.q ? ` — "${search.q}"` : search?.category ? ` — ${search.category}` : "";
+    const title = `${seo.title}${qSuffix}`;
+    return {
+      meta: [
+        ...buildMeta({
+          title,
+          description: seo.description,
+          url: `${SITE_URL}/shop`,
+          lang: "en",
+          keywords: seo.keywords,
+        }),
+        { property: "og:title:fa", content: getPageSeo("shop", "fa").title },
+        { property: "og:description:fa", content: getPageSeo("shop", "fa").description },
+        { property: "og:title:ps", content: getPageSeo("shop", "ps").title },
+        { property: "og:description:ps", content: getPageSeo("shop", "ps").description },
+      ],
+      links: buildHreflangLinks("/shop"),
+    };
+  },
   component: ShopPage,
   errorComponent: ({ error, reset }) => (
     <SiteLayout>
