@@ -71,6 +71,8 @@ export const t: Dict = {
   published: { en: "Published", fa: "منتشر شده", ps: "خپور شوی" },
   systemPage: { en: "System page", fa: "صفحه سیستمی", ps: "سیسټم پاڼه" },
   heroImageOptional: { en: "Hero image (optional)", fa: "تصویر اصلی (اختیاری)", ps: "اصلي انځور (اختیاري)" },
+  showInNav: { en: "Show in navigation", fa: "نمایش در منو", ps: "په مینو کې ښودل" },
+  inNav: { en: "In nav", fa: "در منو", ps: "په مینو کې" },
   messages: { en: "Messages", fa: "پیام‌ها", ps: "پیغامونه" },
   yourName: { en: "Your name", fa: "نام شما", ps: "ستاسو نوم" },
   yourEmail: { en: "Your email (optional)", fa: "ایمیل شما (اختیاری)", ps: "ستاسو بریښنالیک (اختیاري)" },

@@ -36,13 +36,35 @@ export function Header() {
   const s = settingsQ.data;
   const storeName = s ? pickLang(s, "store_name", lang) || "Store" : "Store";
 
-  const links = [
+  const navPagesQ = useQuery({
+    queryKey: ["nav-pages"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pages")
+        .select("slug,title_en,title_fa,title_ps,show_in_nav,is_published,sort_order")
+        .eq("is_published", true)
+        .eq("show_in_nav", true)
+        .order("sort_order")
+        .order("title_en");
+      return data ?? [];
+    },
+  });
+
+  const baseLinks = [
     { to: "/", label: tr("home") },
     { to: "/shop", label: tr("shop") },
     { to: "/categories", label: tr("categories") },
     { to: "/about", label: tr("about") },
     { to: "/contact", label: tr("contact") },
-  ] as const;
+  ];
+  const staticSlugs = new Set(["about", "contact"]);
+  const dynamicLinks = (navPagesQ.data ?? [])
+    .filter((p) => !staticSlugs.has(p.slug))
+    .map((p) => ({
+      to: `/p/${p.slug}`,
+      label: pickLang(p, "title", lang) || p.slug,
+    }));
+  const links = [...baseLinks, ...dynamicLinks];
 
   const initials = (user?.email ?? "?").charAt(0).toUpperCase();
   const displayName =
