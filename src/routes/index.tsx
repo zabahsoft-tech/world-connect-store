@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, ShoppingBag, Truck, Headphones } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowRight, ShoppingBag, Truck, Headphones, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
 import { pickLang } from "@/lib/i18n";
@@ -8,12 +9,39 @@ import { SiteLayout } from "@/components/SiteLayout";
 import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 
+const SLIDES = [
+  {
+    image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1920&q=80",
+    titleKey: "heroTitle" as const,
+    subtitleKey: "heroSubtitle" as const,
+  },
+  {
+    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1920&q=80",
+    titleKey: "heroTitle" as const,
+    subtitleKey: "heroSubtitle" as const,
+  },
+  {
+    image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1920&q=80",
+    titleKey: "heroTitle" as const,
+    subtitleKey: "heroSubtitle" as const,
+  },
+];
+
 export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
 function HomePage() {
   const { tr, lang } = useLang();
+  const [slide, setSlide] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setSlide((s) => (s + 1) % SLIDES.length), 5000);
+    return () => clearInterval(id);
+  }, []);
+
+  const goPrev = () => setSlide((s) => (s - 1 + SLIDES.length) % SLIDES.length);
+  const goNext = () => setSlide((s) => (s + 1) % SLIDES.length);
 
   const featured = useQuery({
     queryKey: ["featured-products"],
@@ -44,36 +72,71 @@ function HomePage() {
 
   return (
     <SiteLayout>
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary-soft via-background to-background">
-        <div className="container mx-auto grid gap-8 px-4 py-16 md:grid-cols-2 md:py-24">
-          <div className="flex flex-col justify-center">
-            <span className="mb-3 inline-flex w-fit items-center rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
-              ✨ {tr("featured")}
-            </span>
-            <h1 className="text-4xl font-bold leading-tight md:text-6xl">
-              {tr("heroTitle")}
-            </h1>
-            <p className="mt-4 max-w-lg text-lg text-muted-foreground">
-              {tr("heroSubtitle")}
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/shop">
-                <Button size="lg" className="gap-2">
-                  {tr("shopNow")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-                </Button>
-              </Link>
-              <Link to="/categories">
-                <Button size="lg" variant="outline">{tr("browseCategories")}</Button>
-              </Link>
+      {/* Hero slider — full width, text on image */}
+      <section className="relative h-[70vh] min-h-[480px] w-full overflow-hidden md:h-[85vh]">
+        {SLIDES.map((s, i) => (
+          <div
+            key={i}
+            className={`absolute inset-0 transition-opacity duration-1000 ${i === slide ? "opacity-100" : "opacity-0"}`}
+            aria-hidden={i !== slide}
+          >
+            <img src={s.image} alt="" className="h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-black/20" />
+          </div>
+        ))}
+
+        <div className="relative z-10 flex h-full items-center">
+          <div className="container mx-auto px-4">
+            <div className="max-w-2xl text-white">
+              <span className="mb-4 inline-flex w-fit items-center rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
+                ✨ {tr("featured")}
+              </span>
+              <h1 className="text-4xl font-bold leading-tight drop-shadow-lg md:text-6xl lg:text-7xl">
+                {tr(SLIDES[slide].titleKey)}
+              </h1>
+              <p className="mt-4 max-w-xl text-lg text-white/90 drop-shadow md:text-xl">
+                {tr(SLIDES[slide].subtitleKey)}
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link to="/shop">
+                  <Button size="lg" className="gap-2">
+                    {tr("shopNow")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                  </Button>
+                </Link>
+                <Link to="/categories">
+                  <Button size="lg" variant="outline" className="border-white bg-white/10 text-white backdrop-blur hover:bg-white hover:text-foreground">
+                    {tr("browseCategories")}
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
-          <div className="relative hidden md:block">
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary to-destructive opacity-90" />
-            <div className="relative flex h-full items-center justify-center p-12">
-              <ShoppingBag className="h-48 w-48 text-white opacity-30" strokeWidth={1} />
-            </div>
-          </div>
+        </div>
+
+        <button
+          onClick={goPrev}
+          aria-label="Previous slide"
+          className="absolute start-4 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur transition hover:bg-white hover:text-foreground"
+        >
+          <ChevronLeft className="h-6 w-6 rtl:rotate-180" />
+        </button>
+        <button
+          onClick={goNext}
+          aria-label="Next slide"
+          className="absolute end-4 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur transition hover:bg-white hover:text-foreground"
+        >
+          <ChevronRight className="h-6 w-6 rtl:rotate-180" />
+        </button>
+
+        <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 gap-2">
+          {SLIDES.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setSlide(i)}
+              aria-label={`Go to slide ${i + 1}`}
+              className={`h-2 rounded-full transition-all ${i === slide ? "w-8 bg-white" : "w-2 bg-white/50 hover:bg-white/80"}`}
+            />
+          ))}
         </div>
       </section>
 
