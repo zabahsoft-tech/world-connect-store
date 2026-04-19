@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, Link, useRouter } from "@tanstack/react-router";
-import { LayoutDashboard, Package, FolderTree, ShoppingBag, Settings, LogOut, Home, Images, Users } from "lucide-react";
+import { LayoutDashboard, Package, FolderTree, ShoppingBag, Settings, LogOut, Home, Images, Users, FileText } from "lucide-react";
 import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,7 @@ const NAV = [
   { to: "/admin/products", label: "Products", icon: Package, exact: false },
   { to: "/admin/categories", label: "Categories", icon: FolderTree, exact: false },
   { to: "/admin/slides", label: "Hero slides", icon: Images, exact: false },
+  { to: "/admin/pages", label: "Pages", icon: FileText, exact: false },
   { to: "/admin/orders", label: "Orders", icon: ShoppingBag, exact: false },
   { to: "/admin/users", label: "Users", icon: Users, exact: false },
   { to: "/admin/settings", label: "Settings", icon: Settings, exact: false },
