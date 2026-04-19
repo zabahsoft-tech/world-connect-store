@@ -1,65 +1,52 @@
 
-## Plan: Multilingual SEO Targeted at Afghanistan
+## Plan: SPA Mode + Branded Page-Transition Loader + Speed Optimizations
 
-The site has rich multilingual content (EN/FA/PS) but weak SEO: only `__root.tsx` has hardcoded English meta, no per-route head, no structured data, no sitemap, no hreflang, no geo targeting. I'll fix all of this with a focus on Afghanistan + Dari/Pashto markets.
+The site is currently SSR (TanStack Start with Cloudflare Worker). User wants pure SPA + page-transition loader on inner navigation + max performance.
 
-### 1. New `src/lib/seo.ts` helper
-Central module with:
-- `BASE_URL` (from window origin / hardcoded production URL)
-- Per-language SEO dictionaries (titles, descriptions, keywords for each page in EN/FA/PS) — Afghanistan-specific keywords like "Kabul", "Afghanistan", "آنلاین خرید افغانستان", "آنلاین پلورنځی افغانستان"
-- `buildMeta({ title, description, image, url, lang, type })` — returns the full `meta[]` array including OG, Twitter, geo tags (`geo.region=AF`, `geo.placename=Kabul`, `geo.position`, `ICBM`)
-- `buildHreflangLinks(path)` — returns hreflang `link[]` for `en-AF`, `fa-AF`, `ps-AF`, `x-default`
-- `buildJsonLd(type, data)` — Organization, Website, Product, BreadcrumbList, LocalBusiness schema generators
+### 1. Disable SSR (make it a SPA)
+TanStack Start supports SPA mode via `defineConfig({ spa: { enabled: true } })`. This:
+- Pre-renders only the shell on the server
+- Hydrates all routes client-side
+- Eliminates server round-trips for navigation
+- Keeps SEO via the pre-rendered shell + meta tags already in place
 
-### 2. Update `src/routes/__root.tsx`
-- Replace hardcoded English meta with Afghanistan-aware defaults
-- Add `geo.region=AF`, `geo.placename`, `ICBM` meta
-- Add `og:locale` (defaults to `fa_AF` since most users are Afghan), `og:locale:alternate` for `en_US` and `ps_AF`
-- Add canonical link, theme-color, robots
-- Add Organization + WebSite JSON-LD with `SearchAction`
-- Add hreflang `<link>` tags for the homepage
+Edit `vite.config.ts`:
+```ts
+export default defineConfig({ spa: { enabled: true, prerender: { outputPath: "/" } } });
+```
 
-### 3. Per-route `head()` for all marketing routes
-Add `head()` (and where data-driven, derive from loader) to:
-- `src/routes/index.tsx` — homepage SEO trio per language + Organization JSON-LD
-- `src/routes/shop.tsx` — uses `head: ({ search })` to vary by category/query
-- `src/routes/categories.tsx` — categories listing
-- `src/routes/about.tsx` — derives from `about_*` settings
-- `src/routes/contact.tsx` — LocalBusiness JSON-LD with phone, address, geo
-- `src/routes/products.$slug.tsx` — convert to use `loader` so `head()` can read product name/description/image and emit Product JSON-LD with `priceCurrency: AFN`, availability, brand
+### 2. Page-transition loader (top progress bar + branded overlay)
+Use the router's built-in `useRouterState({ select: s => s.isLoading })` to detect in-flight navigation. Add a new component `RouteTransition` mounted in `__root.tsx` that:
+- Shows a slim top progress bar (primary color, animated) for any navigation
+- Falls back to the existing `FullScreenLoader` if navigation takes >500ms (slow data)
+- Auto-hides instantly when navigation resolves
 
-Each `head()` returns three-language-aware tags using a fallback chain (current lang → settings store name → defaults). Since SSR doesn't know the user's lang preference (it's stored in localStorage), we render **all three languages** in the `<head>`:
-- Primary `<title>` and `<meta name="description">` in English (international default)
-- `<meta property="og:title:fa">`, `<meta property="og:title:ps">` for alternates
-- Full hreflang link set so search engines route users to the right language version
+This avoids ugly "blank flashes" and gives a native-app feel.
 
-### 4. Sitemap and robots
-- `src/routes/sitemap[.]xml.tsx` — server route generating XML sitemap with all static routes + dynamic products/categories from Supabase, with `<xhtml:link rel="alternate" hreflang="...">` entries per URL
-- `public/robots.txt` — allow all, point to sitemap, disallow `/admin/*`, `/checkout`, `/cart`, `/login`, `/signup`
+### 3. Default `pendingComponent` for routes with loaders
+Add per-route `pendingComponent` (using the inline `Loader`) to data routes:
+- `shop.tsx`, `categories.tsx`, `index.tsx`, `products.$slug.tsx`, `about.tsx`, `contact.tsx`
+Threshold via `defaultPendingMs: 200` and `defaultPendingMinMs: 300` in router config so quick loads never flash a spinner.
 
-### 5. Sync `<html lang>` and meta description from settings
-- `LangContext` already syncs `document.documentElement.lang` — extend it to also update `document.dir` and write a meta tag `content-language`
-- When `settings.meta_description_*` exists, it overrides defaults via the seo helper
+### 4. Speed optimizations
+- **Aggressive preloading**: set `defaultPreload: "intent"` and bump `defaultPreloadStaleTime` to 60s in `router.tsx` so hovered links pre-fetch route chunks + data.
+- **Query cache tuning**: bump `staleTime` in root QueryClient from 30s → 5min for marketing data (settings, categories, slides rarely change).
+- **Code splitting**: TanStack auto-splits already; ensure no route component is `export`ed (quick audit, fix any).
+- **Font loading**: add `&display=swap` (already present) + preload Inter 400/600 woff2 to kill the FOUT. Drop Vazirmatn weights we don't use (keep 400/600/700 only).
+- **Image hints**: add `loading="lazy"` + `decoding="async"` to non-hero images in `ProductCard`, `categories`, `shop` grids; `fetchpriority="high"` on the hero/first slide image.
+- **Prefetch DNS** for Supabase + R2 image CDN in root `<head>` (`dns-prefetch` + `preconnect`).
+- **Defer non-critical providers**: keep providers as-is (already lightweight) but memoize Toaster.
+- **Remove unused work**: drop the JSON-LD scripts from leaf routes that duplicate root, keep only product-specific JSON-LD.
 
-### 6. Afghanistan-specific touches
-- Geo meta: `geo.region=AF`, `geo.placename=Kabul, Afghanistan`, `geo.position=34.5553;69.2075`, `ICBM=34.5553, 69.2075`
-- Currency hints in Product JSON-LD: `priceCurrency: "AFN"` (configurable via settings later)
-- Locale tags: `fa_AF` (Dari) and `ps_AF` (Pashto), not generic `fa_IR`
-- LocalBusiness schema with `addressCountry: AF`
-- Keywords mention major Afghan cities: Kabul, Herat, Mazar-i-Sharif, Kandahar, Jalalabad
-
-### 7. PWA basics for share quality
-- Add `<link rel="canonical">` per route
-- Add `<meta name="format-detection" content="telephone=yes">` (helps Afghan users tap phone numbers)
-- `<meta name="theme-color">` from settings primary_color
+### 5. SPA fallback
+Lovable hosting auto-falls-back to `index.html` for unknown paths, so SPA mode works without extra config.
 
 ### Files
-- New: `src/lib/seo.ts`
-- New: `src/routes/sitemap[.]xml.tsx`
-- New: `public/robots.txt`
-- Edit: `src/routes/__root.tsx` — Afghanistan-aware defaults + JSON-LD + hreflang
-- Edit: `src/routes/index.tsx`, `shop.tsx`, `categories.tsx`, `about.tsx`, `contact.tsx` — add `head()`
-- Edit: `src/routes/products.$slug.tsx` — add `loader` + dynamic `head()` with Product JSON-LD
-- Edit: `src/contexts/LangContext.tsx` — write `content-language` meta tag
+- Edit `vite.config.ts` — enable SPA mode
+- Edit `src/router.tsx` — `defaultPreload: "intent"`, `defaultPreloadStaleTime: 60_000`, `defaultPendingMs`, `defaultPendingComponent`
+- New `src/components/RouteTransition.tsx` — top progress bar + delayed full-screen loader
+- Edit `src/routes/__root.tsx` — mount `<RouteTransition />`, bump QueryClient staleTime, add Supabase/R2 preconnect, slim font weights, preload hero font
+- Edit `src/routes/shop.tsx`, `categories.tsx`, `products.$slug.tsx`, `index.tsx` — add `pendingComponent`, lazy-load images, `fetchpriority` on hero
+- Edit `src/components/ProductCard.tsx` — `loading="lazy"`, `decoding="async"`
 
 No DB changes, no new dependencies.
