@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { FullScreenLoader } from "@/components/Loader";
+import { ErrorState, ForbiddenState } from "@/components/ErrorState";
 import {
   Sidebar,
   SidebarContent,
@@ -22,6 +23,11 @@ import {
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
+  errorComponent: ({ error, reset }) => (
+    <div className="flex min-h-screen items-center justify-center bg-muted/30">
+      <ErrorState error={error} reset={reset} />
+    </div>
+  ),
 });
 
 const NAV = [
@@ -53,11 +59,11 @@ function AdminLayout() {
 
   if (!isAdmin) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center px-4 text-center">
-        <h1 className="text-2xl font-bold">Access denied</h1>
-        <p className="mt-2 text-muted-foreground">Your account does not have admin privileges.</p>
-        <Button variant="outline" className="mt-4" onClick={() => signOut()}>Sign out</Button>
-        <Link to="/" className="mt-2 text-sm text-primary hover:underline">Go home</Link>
+      <div className="flex min-h-screen flex-col bg-muted/30">
+        <ForbiddenState description="Your account does not have admin privileges." />
+        <div className="flex justify-center pb-8">
+          <Button variant="outline" onClick={() => signOut()}>Sign out</Button>
+        </div>
       </div>
     );
   }

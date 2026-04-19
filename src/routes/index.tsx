@@ -8,9 +8,15 @@ import { pickLang } from "@/lib/i18n";
 import { SiteLayout } from "@/components/SiteLayout";
 import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
+import { ErrorState } from "@/components/ErrorState";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
+  errorComponent: ({ error, reset }) => (
+    <SiteLayout>
+      <ErrorState error={error} reset={reset} />
+    </SiteLayout>
+  ),
 });
 
 function HomePage() {

@@ -9,6 +9,7 @@ import { SiteLayout } from "@/components/SiteLayout";
 import { ProductCard } from "@/components/ProductCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ErrorState } from "@/components/ErrorState";
 
 const searchSchema = z.object({
   q: z.string().optional(),
@@ -19,6 +20,11 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/shop")({
   validateSearch: searchSchema,
   component: ShopPage,
+  errorComponent: ({ error, reset }) => (
+    <SiteLayout>
+      <ErrorState error={error} reset={reset} />
+    </SiteLayout>
+  ),
 });
 
 function ShopPage() {

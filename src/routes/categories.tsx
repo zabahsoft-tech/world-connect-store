@@ -4,9 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
 import { pickLang } from "@/lib/i18n";
 import { SiteLayout } from "@/components/SiteLayout";
+import { ErrorState } from "@/components/ErrorState";
 
 export const Route = createFileRoute("/categories")({
   component: CategoriesPage,
+  errorComponent: ({ error, reset }) => (
+    <SiteLayout>
+      <ErrorState error={error} reset={reset} />
+    </SiteLayout>
+  ),
 });
 
 function CategoriesPage() {
