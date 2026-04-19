@@ -1,47 +1,31 @@
 
-## Plan: Enhanced Footer with developer credit
+The user wants the website's main navigation bar (Header) to be red. Looking at `src/components/Header.tsx`, the header uses `bg-background/95` with a `backdrop-blur`. I'll switch it to a red background with appropriate contrast for text/icons.
 
-Refresh the footer with better visual hierarchy, a newsletter/CTA accent, and a "Developed by zabashoft.com" credit in the bottom bar.
+I'll use the existing `--primary` token (already a red — `oklch(0.58 0.22 27)`) so it stays on-brand and dark-mode safe, rather than hardcoding `bg-red-600`.
 
-### 1. Visual refresh — `src/components/Footer.tsx`
+## Plan: Red navigation bar
 
-**Top decorative band**
-- Add a subtle top border accent: a thin gradient line (`bg-gradient-to-r from-transparent via-primary/40 to-transparent`) above the footer.
-- Switch background to a slightly richer surface: `bg-gradient-to-b from-muted/30 to-muted/60`.
+### 1. Header background — `src/components/Header.tsx`
+- Change root `<header>` from `bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80` to `bg-primary text-primary-foreground` (solid red, white text).
+- Remove `border-b` (or change to `border-primary/30`) since a colored bar reads cleaner without a hairline border.
 
-**Brand column (col 1)**
-- Slightly larger logo (h-10 w-10), bolder store name.
-- Tagline kept but trimmed to 2 lines max with `line-clamp-2`.
-- Social icons get a hover lift: `hover:-translate-y-0.5 hover:bg-primary hover:text-primary-foreground` with smooth transition.
+### 2. Contrast adjustments
+- **Store name**: inherits `text-primary-foreground` (white) — no change needed.
+- **Logo fallback square**: switch from `bg-primary text-primary-foreground` to `bg-white/15 text-primary-foreground` so it doesn't disappear into the red background.
+- **Desktop nav links**: change `text-muted-foreground hover:bg-accent hover:text-accent-foreground` → `text-primary-foreground/80 hover:bg-white/15 hover:text-primary-foreground`. Active state: `bg-white/20 text-primary-foreground`.
+- **Icon buttons** (cart, menu, avatar trigger, login): add `hover:bg-white/15 hover:text-primary-foreground` so the default ghost hover (which uses `accent`) reads well on red.
+- **Cart badge**: switch from default (primary on primary = invisible) to `bg-white text-primary` for high contrast.
+- **Avatar fallback**: change from `bg-primary text-primary-foreground` to `bg-white/20 text-primary-foreground`.
 
-**Link columns (Shop / About)**
-- Section heading with a small accent dot (`•` in primary color) before the title.
-- Links get a subtle left-arrow reveal on hover (`group` + translating chevron) for polish — kept minimal.
+### 3. Mobile menu panel
+- The dropdown panel below the header (`border-t bg-background`) stays neutral so menu items remain readable — only the top bar itself turns red. Links inside use the existing muted styling.
+- Update the mobile menu toggle icon hover to match the white-on-red treatment.
 
-**Contact column**
-- Icons next to each contact item (Mail, Phone, MapPin, Clock from lucide-react) for scanability.
-- Email and phone become proper `mailto:` / `tel:` links.
-
-**New: trust strip (above bottom bar)**
-- Small horizontal row showing 3 quick value props using existing i18n keys: `easyOrdering`, `fastDelivery`, `whatsappSupport` with their lucide icons. Compact, single-line on desktop, wraps on mobile. Reinforces brand without adding new strings.
-
-**Bottom bar — credit line**
-- Two-row layout on mobile, single row on desktop:
-  - Left: `© {year} {storeName}. All rights reserved.`
-  - Right: `Developed by <a href="https://zabashoft.com" target="_blank" rel="noopener noreferrer">zabashoft.com</a>` — link styled with `font-semibold text-primary hover:underline`.
-- Use `flex flex-col md:flex-row md:justify-between` with `gap-2`.
-
-### 2. Mobile responsiveness
-- Grid stays `grid-cols-2 md:grid-cols-4`; on mobile the brand column spans both (`col-span-2 md:col-span-1`).
-- Trust strip wraps to 2 columns on mobile.
-- Bottom bar stacks vertically with center alignment on mobile.
-
-### 3. RTL safety
-- All directional spacing uses `start-*` / `end-*` (already the project convention).
-- Social icon row uses `gap-2` (direction-agnostic).
-- Bottom-bar order doesn't depend on visual side — handled by flex.
+### 4. RTL & dark mode
+- All changes use semantic tokens (`primary`, `primary-foreground`) which already have dark-mode variants defined in `styles.css` — no extra dark overrides needed.
+- No directional classes change.
 
 ### Files touched
-- Edit only: `src/components/Footer.tsx`
+- Edit only: `src/components/Header.tsx`
 
-No new dependencies, no DB changes, no i18n additions (reuses existing keys).
+No new dependencies, no DB changes, no i18n changes.
