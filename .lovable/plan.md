@@ -1,63 +1,39 @@
 
+The user wants the cPanel Node.js build/package pipeline to target Node 24 (the latest LTS-track release) instead of Node 20. Looking at the current files:
 
-## Plan: Build for shared cPanel hosting (Node.js Selector)
+- `vite.config.ts` sets `build.target: "node20"`
+- `server.mjs` uses APIs all available in Node 24 (no changes needed beyond a version note)
+- `README-cpanel.md` instructs users to pick Node 20 in cPanel
+- `.env.example` doesn't pin a version
+- `package.json` has no `engines` field (need to verify)
 
-The current build target is Cloudflare Workers (via `wrangler.jsonc` and `@cloudflare/vite-plugin` registered in `@lovable.dev/vite-tanstack-config`). cPanel's Node.js Selector runs a **standard Node.js process** behind Passenger — it cannot execute a Worker bundle. We need a parallel Node.js server build that cPanel can run with `npm start`, plus a packaging script that produces a clean `.zip` to upload.
+## Plan: Target Node.js 24
 
-### What we'll add
+### 1. `vite.config.ts`
+- Change SSR build target from `node20` → `node24`. This lets Vite/esbuild emit syntax that uses newer V8 features (top-level await is already fine, but newer ES features pass through untranspiled).
 
-**1. Node.js server entry — `server.mjs` (project root)**
-- Tiny Express-free Node HTTP server using `node:http` + the TanStack Start Node handler from `@tanstack/react-start/server-entry-node`.
-- Serves SSR + server functions + static assets from `dist/client`.
-- Reads `PORT` from env (cPanel sets this automatically via Passenger).
-- Sets `process.env.NODE_ENV = "production"`.
+### 2. `package.json`
+- Add an `"engines": { "node": ">=20.0.0 <25" }` field declaring Node 20–24 supported (keeps backward compat for hosts still on 20, but signals 24 is preferred).
+- No script changes — `build:node`, `start`, `package:cpanel` work unchanged.
 
-**2. Vite config update — `vite.config.ts`**
-- Pass `vite: { build: { ssr: true }, ssr: { target: "node", noExternal: [...] } }` overrides via the existing `defineConfig` from `@lovable.dev/vite-tanstack-config` so the SSR bundle is Node-targeted (instead of Worker).
-- We won't remove the Cloudflare plugin; the lovable config gates it to build-only and Workers deployment will still work. But we add a separate `build:node` script that produces the cPanel artifact in `dist/`.
+### 3. `server.mjs`
+- Add a runtime check at the top: warn (not fail) if `process.versions.node` major < 20, recommend 24.
+- Optionally use `import { styleText } from "node:util"` for nicer logs — skip to keep zero churn. Just bump the comment header to mention Node 24.
 
-**3. New scripts in `package.json`**
-- `"build:node": "BUILD_TARGET=node vite build"` — produces `dist/client` + `dist/server`.
-- `"start": "node server.mjs"` — what cPanel's "Application startup file" points to.
-- `"package:cpanel": "node scripts/package-cpanel.mjs"` — runs the build, then zips the deployable bundle.
+### 4. `README-cpanel.md`
+- Update prerequisites: "Node.js 24+ recommended (20+ supported)".
+- Update step 3 instructions: pick Node 24.x in cPanel's Node.js Selector.
+- Add a short note in Troubleshooting: if cPanel only offers ≤22, the app still runs but you miss the perf/security improvements in 24.
 
-**4. Packaging script — `scripts/package-cpanel.mjs`**
-- Runs `build:node`.
-- Creates `/mnt/documents/cpanel-deploy.zip` containing:
-  - `dist/` (built client + server)
-  - `server.mjs`
-  - `package.json` + `package-lock.json` (so cPanel's "Run NPM Install" works)
-  - `.env.example` with the required vars (`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `VITE_*` mirrors)
-  - `README-cpanel.md` with step-by-step deploy instructions
-- Excludes `node_modules`, `.git`, source `src/`, lockfile from non-prod tools.
+### 5. `.env.example`
+- No change needed (no version pinning there).
 
-**5. cPanel deployment guide — `README-cpanel.md`**
-- Prerequisites: Node 20+ available in cPanel's Node.js Selector, at least 512 MB RAM.
-- Steps:
-  1. cPanel → Setup Node.js App → Create Application (Node 20, mode: Production, root: `myapp`, startup file: `server.mjs`).
-  2. Upload + extract `cpanel-deploy.zip` into the app root via File Manager.
-  3. In the Node.js App panel → "Run NPM Install".
-  4. Add environment variables (copy from `.env.example`, fill real values).
-  5. Restart the app. Visit the assigned domain.
-- Troubleshooting section: Passenger logs location, common port/permission errors, how to update (re-upload zip + restart).
-
-### Limitations to flag for the user
-
-- Shared cPanel hosts often **kill long-running Node processes** under load — performance won't match Cloudflare/Vercel.
-- Some cPanel plans don't allow Node 20 (only 18 or older). If the host caps at Node 18, the build still works but Tailwind v4 + Vite 7 prefer 20+.
-- Server functions that rely on Cloudflare-specific APIs (none currently in this codebase — verified) would need rewriting; this codebase is clean.
-- Outbound HTTPS to Supabase must be allowed by the host (almost always is, but worth noting).
+### 6. `scripts/package-cpanel.mjs`
+- No functional change. Bundles same files. (Optionally bump the `[package:cpanel]` log to mention "Node 24-ready bundle" — cosmetic only.)
 
 ### Files touched
+- Edit: `vite.config.ts`, `package.json`, `server.mjs`, `README-cpanel.md`
 
-- New: `server.mjs`
-- New: `scripts/package-cpanel.mjs`
-- New: `README-cpanel.md`
-- New: `.env.example`
-- Edit: `package.json` (3 new scripts)
-- Edit: `vite.config.ts` (Node SSR target override when `BUILD_TARGET=node`)
-
-### Output
-
-After running the new flow, you'll get `cpanel-deploy.zip` as a downloadable artifact ready to upload to your cPanel host. The existing Lovable Cloud / Cloudflare build path stays untouched — you can keep deploying to both targets.
-
+### Notes
+- No new deps. No DB / i18n changes. Cloudflare Workers build path is untouched.
+- Node 24 is the current "Current" release line (Oct 2025 → LTS Oct 2026). Many shared cPanel hosts lag — that's why we keep `>=20` as the floor.
