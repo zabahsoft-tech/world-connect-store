@@ -188,25 +188,6 @@ function HomePage() {
         ) : null}
       </section>
 
-      {/* Features */}
-      <section className="container mx-auto grid grid-cols-1 gap-4 px-4 py-16 md:grid-cols-3 md:py-20">
-        {[
-          { icon: ShoppingBag, key: "easyOrdering", en: "Easy ordering", fa: "سفارش آسان", ps: "اسان فرمایش", descKey: "easyOrderingDesc" as const },
-          { icon: Truck, key: "fastDelivery", en: "Fast delivery", fa: "تحویل سریع", ps: "ګړنده رسول", descKey: "fastDeliveryDesc" as const },
-          { icon: Headphones, key: "whatsappSupport", en: "WhatsApp support", fa: "پشتیبانی واتساپ", ps: "د واټس اپ ملاتړ", descKey: "whatsappSupportDesc" as const },
-        ].map((f, i) => (
-          <div
-            key={i}
-            className="flex flex-col items-center gap-3 rounded-2xl border bg-card/50 p-6 text-center backdrop-blur transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-soft)]"
-          >
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary-soft text-primary">
-              <f.icon className="h-7 w-7" />
-            </div>
-            <span className="font-semibold">{f[lang]}</span>
-            <span className="text-sm text-muted-foreground">{tr(f.descKey)}</span>
-          </div>
-        ))}
-      </section>
 
       {/* Categories — soft band */}
       {cats.data && cats.data.length > 0 && (
