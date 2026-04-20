@@ -5,6 +5,9 @@
 // from ./dist/client, and forwards all other requests to the TanStack Start SSR
 // handler from ./dist/server.
 //
+// Recommended runtime: Node.js 24 (current release line, LTS Oct 2026).
+// Minimum supported:   Node.js 20 (required for global fetch + Web Streams).
+//
 // Build first with:  npm run build:node
 // Start with:        npm start   (or let Passenger run "node server.mjs")
 
@@ -15,6 +18,16 @@ import { extname, join, normalize, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 process.env.NODE_ENV = process.env.NODE_ENV || "production";
+
+// Soft runtime version check — warn (don't fail) if running on an old Node.
+const nodeMajor = Number(process.versions.node.split(".")[0]);
+if (Number.isFinite(nodeMajor) && nodeMajor < 20) {
+  console.warn(
+    `[server] Detected Node.js ${process.versions.node}. ` +
+      `This app requires Node 20+ and is optimised for Node 24. ` +
+      `Please upgrade in your cPanel Node.js Selector.`,
+  );
+}
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const CLIENT_DIR = resolve(__dirname, "dist", "client");
