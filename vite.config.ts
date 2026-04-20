@@ -6,28 +6,48 @@
 // You can pass additional config via defineConfig({ vite: { ... } }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-// When BUILD_TARGET=node, we produce a Node.js SSR bundle for shared cPanel
-// hosting (Node.js Selector / Passenger) instead of a Cloudflare Worker bundle.
-// The default build (no env var) keeps the Cloudflare Workers target intact.
-const isNodeBuild = process.env.BUILD_TARGET === "node";
+// Three build targets:
+//   (default)         → Cloudflare Worker SSR bundle (Lovable hosting)
+//   BUILD_TARGET=node → Node.js SSR bundle for cPanel "Setup Node.js App"
+//   BUILD_TARGET=spa  → Pure static SPA bundle for plain shared hosting
+//                       (Apache/LiteSpeed, no Node process required)
+const target = process.env.BUILD_TARGET;
+const isNodeBuild = target === "node";
+const isSpaBuild = target === "spa";
 
 export default defineConfig(
-  isNodeBuild
+  isSpaBuild
     ? {
-        // Disable the Cloudflare Vite plugin so the SSR build emits a plain
-        // Node-compatible bundle that `server.mjs` can import.
+        // Disable Cloudflare plugin — we want a static client bundle, no Worker.
         cloudflare: false,
-        vite: {
-          ssr: {
-            target: "node",
-          },
-          build: {
-            // Emit standard Node ESM output to dist/server (client goes to dist/client).
-            // Targeting Node 24 (current release line) — esbuild can emit modern
-            // syntax (e.g. newer ES features) without unnecessary down-leveling.
-            target: "node24",
+        // Enable TanStack Start's built-in SPA mode: emits a single shell HTML
+        // and prerenders only "/" so all client-side routes resolve via the
+        // shell. Combined with the .htaccess SPA fallback in public/, deep
+        // links work on Apache/LiteSpeed without any server runtime.
+        tanstackStart: {
+          spa: {
+            enabled: true,
+            // Emit the shell as index.html (default would be _shell.html).
+            prerender: { outputPath: "/index" },
           },
         },
       }
-    : undefined,
+    : isNodeBuild
+      ? {
+          // Disable the Cloudflare Vite plugin so the SSR build emits a plain
+          // Node-compatible bundle that `server.mjs` can import.
+          cloudflare: false,
+          vite: {
+            ssr: {
+              target: "node",
+            },
+            build: {
+              // Emit standard Node ESM output to dist/server (client goes to dist/client).
+              // Targeting Node 24 (current release line) — esbuild can emit modern
+              // syntax (e.g. newer ES features) without unnecessary down-leveling.
+              target: "node24",
+            },
+          },
+        }
+      : undefined,
 );
