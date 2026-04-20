@@ -93,7 +93,7 @@ function HomePage() {
         .from("categories")
         .select("*")
         .order("sort_order")
-        .limit(6);
+        .limit(12);
       if (error) throw error;
       return data;
     },
