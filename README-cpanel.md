@@ -32,8 +32,10 @@ The zip contains:
 
 ## 2. Prerequisites on the cPanel host
 
-- **Node.js 20+** available in **cPanel → Setup Node.js App** (Node 18 may work
-  but is not recommended — Tailwind v4 / Vite 7 prefer 20+).
+- **Node.js 24 recommended** (20+ supported) available in **cPanel → Setup
+  Node.js App**. Node 24 is the current release line (LTS Oct 2026) and gives
+  you the best performance + security. Node 20/22 also work; Node 18 is **not**
+  supported (Tailwind v4 / Vite 7 require 20+).
 - At least **512 MB RAM** allocated to the Node app.
 - Outbound HTTPS allowed (the app calls Supabase). This is enabled by default
   on virtually every shared host.
