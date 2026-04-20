@@ -237,7 +237,7 @@ function AdminImportPage() {
         const chunkSize = 200;
         for (let i = 0; i < payload.length; i += chunkSize) {
           const chunk = payload.slice(i, i + chunkSize);
-          const { error } = await supabase.from("products").upsert(chunk, { onConflict: "slug" });
+          const { error } = await supabase.from("products").upsert(chunk as never, { onConflict: "slug" });
           if (error) throw error;
         }
         prodCount = payload.length;
@@ -285,8 +285,8 @@ function AdminImportPage() {
           <FileSection
             label="categories.csv"
             file={catFile}
-            parsed={catParsed}
-            onFile={handleCatFile}
+            parsed={catParsed as ParsedFile<Record<string, unknown>> | null}
+            onFile={(f) => handleCatFile(f)}
             previewCols={["slug", "name_en", "name_fa", "name_ps"]}
           />
         </TabsContent>
@@ -295,8 +295,8 @@ function AdminImportPage() {
           <FileSection
             label="products.csv"
             file={prodFile}
-            parsed={prodParsed}
-            onFile={handleProdFile}
+            parsed={prodParsed as ParsedFile<Record<string, unknown>> | null}
+            onFile={(f) => handleProdFile(f)}
             previewCols={["slug", "name_en", "price", "category_slug"]}
           />
         </TabsContent>
