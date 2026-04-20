@@ -32,8 +32,10 @@ The zip contains:
 
 ## 2. Prerequisites on the cPanel host
 
-- **Node.js 20+** available in **cPanel → Setup Node.js App** (Node 18 may work
-  but is not recommended — Tailwind v4 / Vite 7 prefer 20+).
+- **Node.js 24 recommended** (20+ supported) available in **cPanel → Setup
+  Node.js App**. Node 24 is the current release line (LTS Oct 2026) and gives
+  you the best performance + security. Node 20/22 also work; Node 18 is **not**
+  supported (Tailwind v4 / Vite 7 require 20+).
 - At least **512 MB RAM** allocated to the Node app.
 - Outbound HTTPS allowed (the app calls Supabase). This is enabled by default
   on virtually every shared host.
@@ -44,7 +46,7 @@ The zip contains:
 
 1. Log into cPanel → **Setup Node.js App** → **Create Application**.
 2. Fill in:
-   - **Node.js version:** 20.x (or the highest available)
+   - **Node.js version:** 24.x (or the highest available — 22, 20 also fine)
    - **Application mode:** Production
    - **Application root:** e.g. `myapp` (a folder under your home dir)
    - **Application URL:** the domain or subdomain to serve from
@@ -124,6 +126,8 @@ server-side (view source — the HTML contains real content, not just a root
 
 - Shared cPanel hosts often **suspend long-idle Node processes** and limit CPU
   bursts. Cold-start latency will be noticeably higher than Cloudflare/Vercel.
-- If your plan caps Node at 18, the build still works but is unsupported.
+- If your host's Node.js Selector caps at Node 20 or 22, the app still runs —
+  you just miss the perf and security improvements shipped in Node 24. Node 18
+  and older are unsupported.
 - The Cloudflare Workers build path (`npm run build` + `wrangler`) is
   untouched — you can keep deploying to both targets in parallel.
