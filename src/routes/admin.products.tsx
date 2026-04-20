@@ -28,6 +28,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { GalleryUpload } from "@/components/GalleryUpload";
 import { MediaUpload } from "@/components/MediaUpload";
+import { RichTextEditor } from "@/components/RichTextEditor";
 
 export const Route = createFileRoute("/admin/products")({
   component: AdminProducts,
@@ -374,7 +375,7 @@ function AdminProducts() {
                           <RichTextEditor
                             dir={lng === "en" ? "ltr" : "rtl"}
                             value={editing[`description_${lng}`]}
-                            onChange={(html) => setEditing({ ...editing, [`description_${lng}`]: html })}
+                            onChange={(html: string) => setEditing({ ...editing, [`description_${lng}`]: html })}
                             minHeight={220}
                           />
                         </Field>
