@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 import { buildQuickOrderMessage, openWhatsApp } from "@/lib/whatsapp";
-import DOMPurify from "dompurify";
+import DOMPurify from "isomorphic-dompurify";
 import { NotFoundState, ErrorState } from "@/components/ErrorState";
 import {
   buildMeta,
