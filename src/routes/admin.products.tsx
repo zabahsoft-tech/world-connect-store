@@ -371,11 +371,11 @@ function AdminProducts() {
                           />
                         </Field>
                         <Field label="Description">
-                          <Textarea
-                            rows={3}
+                          <RichTextEditor
                             dir={lng === "en" ? "ltr" : "rtl"}
                             value={editing[`description_${lng}`]}
-                            onChange={(e) => setEditing({ ...editing, [`description_${lng}`]: e.target.value })}
+                            onChange={(html) => setEditing({ ...editing, [`description_${lng}`]: html })}
+                            minHeight={220}
                           />
                         </Field>
                       </div>
