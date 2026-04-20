@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 import { buildQuickOrderMessage, openWhatsApp } from "@/lib/whatsapp";
+import DOMPurify from "dompurify";
 import { NotFoundState, ErrorState } from "@/components/ErrorState";
 import {
   buildMeta,
@@ -285,7 +286,18 @@ function ProductPage() {
             <p className="mt-2 text-3xl font-bold text-primary">{effectivePrice.toFixed(2)}</p>
           )}
 
-          {desc && <p className="mt-6 whitespace-pre-line text-muted-foreground">{desc}</p>}
+          {desc && (
+            <div
+              className="prose prose-sm mt-6 max-w-none text-muted-foreground prose-headings:text-foreground prose-strong:text-foreground prose-a:text-primary prose-table:border prose-th:border prose-th:bg-muted prose-th:p-2 prose-td:border prose-td:p-2"
+              dir={lang === "en" ? "ltr" : "rtl"}
+              // eslint-disable-next-line react/no-danger
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(desc, {
+                  USE_PROFILES: { html: true },
+                }),
+              }}
+            />
+          )}
 
           {variants.length > 0 && (
             <div className="mt-6 space-y-2">
