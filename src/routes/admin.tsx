@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, Link, useRouter } from "@tanstack/react-router";
-import { LayoutDashboard, Package, FolderTree, ShoppingBag, Settings, LogOut, Home, Images, Users, FileText, MessageSquare, Newspaper } from "lucide-react";
+import { LayoutDashboard, Package, FolderTree, ShoppingBag, Settings, LogOut, Home, Images, Users, FileText, MessageSquare, Newspaper, Upload } from "lucide-react";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -43,6 +43,7 @@ const NAV = [
   { to: "/admin/orders", label: "Orders", icon: ShoppingBag, exact: false },
   { to: "/admin/messages", label: "Messages", icon: MessageSquare, exact: false },
   { to: "/admin/users", label: "Users", icon: Users, exact: false },
+  { to: "/admin/import", label: "Import", icon: Upload, exact: false },
   { to: "/admin/settings", label: "Settings", icon: Settings, exact: false },
 ] as const;
 
