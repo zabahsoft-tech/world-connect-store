@@ -61,6 +61,7 @@ export const t: Dict = {
   priceLowHigh: { en: "Price: Low to High", fa: "قیمت: کم به زیاد", ps: "بیه: کم تر ډېر" },
   priceHighLow: { en: "Price: High to Low", fa: "قیمت: زیاد به کم", ps: "بیه: ډېر تر کم" },
   specifications: { en: "Specifications", fa: "مشخصات", ps: "ځانګړتیاوې" },
+  sizes: { en: "Sizes", fa: "اندازه‌ها", ps: "اندازې" },
   variant: { en: "Variant", fa: "نوع", ps: "ډول" },
   selectVariant: { en: "Select a variant", fa: "یک نوع را انتخاب کنید", ps: "یو ډول وټاکئ" },
   watchVideo: { en: "Watch video", fa: "تماشای ویدیو", ps: "ویډیو وګورئ" },

@@ -69,6 +69,7 @@ interface ProductForm {
   in_stock: boolean;
   featured: boolean;
   attributes: AttributeRow[];
+  sizesText: string;
   variants: VariantRow[];
 }
 
@@ -76,13 +77,52 @@ const empty: ProductForm = {
   slug: "", name_en: "", name_fa: "", name_ps: "",
   description_en: "", description_fa: "", description_ps: "",
   price: "0", gallery: [], video_url: "", category_id: "",
-  in_stock: true, featured: false, attributes: [], variants: [],
+  in_stock: true, featured: false, attributes: [], sizesText: "", variants: [],
 };
 
 const emptyAttr = (): AttributeRow => ({
   label_en: "", label_fa: "", label_ps: "",
   value_en: "", value_fa: "", value_ps: "",
 });
+
+// Convert existing attribute rows -> "en | fa | ps" lines (one per row).
+// Falls back across languages if some are empty so legacy specs migrate cleanly.
+function attrsToSizesText(attrs: Partial<AttributeRow>[]): string {
+  return attrs
+    .map((a) => {
+      const en = (a.value_en || a.value_fa || a.value_ps || "").trim();
+      const fa = (a.value_fa || a.value_en || a.value_ps || "").trim();
+      const ps = (a.value_ps || a.value_en || a.value_fa || "").trim();
+      if (!en && !fa && !ps) return "";
+      // If all three are identical, render single segment
+      if (en === fa && fa === ps) return en;
+      return `${en} | ${fa} | ${ps}`;
+    })
+    .filter((l) => l.length > 0)
+    .join("\n");
+}
+
+// Parse "en | fa | ps" lines back into AttributeRow[] (label = "Size" per language).
+function sizesTextToAttrs(text: string): AttributeRow[] {
+  return text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .map((line) => {
+      const parts = line.split("|").map((p) => p.trim());
+      const en = parts[0] || "";
+      const fa = parts[1] ?? en;
+      const ps = parts[2] ?? (parts[1] ?? en);
+      return {
+        label_en: "Size",
+        label_fa: "اندازه",
+        label_ps: "اندازه",
+        value_en: en,
+        value_fa: fa,
+        value_ps: ps,
+      };
+    });
+}
 
 const emptyVariant = (): VariantRow => ({
   id: crypto.randomUUID(),
@@ -147,9 +187,7 @@ function AdminProducts() {
       if (!f.name_en.trim() || !f.name_fa.trim() || !f.name_ps.trim()) {
         throw new Error("Name is required in all 3 languages");
       }
-      const cleanAttrs = f.attributes.filter(
-        (a) => (a.label_en + a.value_en + a.label_fa + a.value_fa + a.label_ps + a.value_ps).trim().length > 0
-      );
+      const cleanAttrs = sizesTextToAttrs(f.sizesText);
       const cleanVariants = f.variants
         .filter((v) => (v.name_en + v.name_fa + v.name_ps).trim().length > 0)
         .map((v) => ({
@@ -231,6 +269,7 @@ function AdminProducts() {
       category_id: p.category_id ?? "",
       in_stock: p.in_stock, featured: p.featured,
       attributes: attrsRaw.map((a) => ({ ...emptyAttr(), ...a })),
+      sizesText: attrsToSizesText(attrsRaw),
       variants: variantsRaw.map((v) => ({
         ...emptyVariant(),
         ...v,
@@ -415,73 +454,21 @@ function AdminProducts() {
                   </TabsContent>
 
                   <TabsContent value="variations" className="space-y-6">
-                    {/* Specifications */}
-                    <div className="space-y-3 rounded-md border p-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-semibold">Specifications table</p>
-                          <p className="text-[11px] text-muted-foreground">
-                            Display-only attributes (e.g. Material: Cotton). Shown as a table on the product page.
-                          </p>
-                        </div>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setEditing({ ...editing, attributes: [...editing.attributes, emptyAttr()] })}
-                        >
-                          <Plus className="me-1 h-3.5 w-3.5" /> Add row
-                        </Button>
+                    {/* Sizes */}
+                    <div className="space-y-2 rounded-md border p-3">
+                      <div>
+                        <p className="text-sm font-semibold">Sizes</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          One size per line. Use <code className="rounded bg-muted px-1">|</code> to separate languages: <code className="rounded bg-muted px-1">English | فارسی | پښتو</code>. If you only type one value, it&apos;s used for all 3 languages.
+                        </p>
                       </div>
-                      {editing.attributes.length === 0 && (
-                        <p className="text-xs text-muted-foreground">No specifications yet.</p>
-                      )}
-                      {editing.attributes.map((a, i) => (
-                        <div key={i} className="space-y-2 rounded border bg-muted/30 p-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-medium text-muted-foreground">Row {i + 1}</span>
-                            <Button
-                              type="button"
-                              size="icon"
-                              variant="ghost"
-                              className="h-7 w-7"
-                              onClick={() =>
-                                setEditing({ ...editing, attributes: editing.attributes.filter((_, idx) => idx !== i) })
-                              }
-                            >
-                              <X className="h-3.5 w-3.5 text-destructive" />
-                            </Button>
-                          </div>
-                          <div className="grid gap-2 md:grid-cols-2">
-                            {(["en", "fa", "ps"] as const).map((lng) => (
-                              <div key={lng} className="contents">
-                                <Input
-                                  placeholder={`Label (${lng.toUpperCase()})`}
-                                  dir={lng === "en" ? "ltr" : "rtl"}
-                                  value={a[`label_${lng}`]}
-                                  onChange={(e) => {
-                                    const next = editing.attributes.slice();
-                                    next[i] = { ...next[i], [`label_${lng}`]: e.target.value };
-                                    setEditing({ ...editing, attributes: next });
-                                  }}
-                                  className="text-xs"
-                                />
-                                <Input
-                                  placeholder={`Value (${lng.toUpperCase()})`}
-                                  dir={lng === "en" ? "ltr" : "rtl"}
-                                  value={a[`value_${lng}`]}
-                                  onChange={(e) => {
-                                    const next = editing.attributes.slice();
-                                    next[i] = { ...next[i], [`value_${lng}`]: e.target.value };
-                                    setEditing({ ...editing, attributes: next });
-                                  }}
-                                  className="text-xs"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
+                      <Textarea
+                        value={editing.sizesText}
+                        onChange={(e) => setEditing({ ...editing, sizesText: e.target.value })}
+                        placeholder={"Small | کوچک | کوچنی\nMedium | متوسط | منځنی\nLarge | بزرگ | لوی"}
+                        rows={6}
+                        className="font-mono text-xs"
+                      />
                     </div>
 
                     {/* Variants */}
