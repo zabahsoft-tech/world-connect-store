@@ -187,9 +187,7 @@ function AdminProducts() {
       if (!f.name_en.trim() || !f.name_fa.trim() || !f.name_ps.trim()) {
         throw new Error("Name is required in all 3 languages");
       }
-      const cleanAttrs = f.attributes.filter(
-        (a) => (a.label_en + a.value_en + a.label_fa + a.value_fa + a.label_ps + a.value_ps).trim().length > 0
-      );
+      const cleanAttrs = sizesTextToAttrs(f.sizesText);
       const cleanVariants = f.variants
         .filter((v) => (v.name_en + v.name_fa + v.name_ps).trim().length > 0)
         .map((v) => ({
@@ -271,6 +269,7 @@ function AdminProducts() {
       category_id: p.category_id ?? "",
       in_stock: p.in_stock, featured: p.featured,
       attributes: attrsRaw.map((a) => ({ ...emptyAttr(), ...a })),
+      sizesText: attrsToSizesText(attrsRaw),
       variants: variantsRaw.map((v) => ({
         ...emptyVariant(),
         ...v,
