@@ -46,7 +46,7 @@ The zip contains:
 
 1. Log into cPanel → **Setup Node.js App** → **Create Application**.
 2. Fill in:
-   - **Node.js version:** 20.x (or the highest available)
+   - **Node.js version:** 24.x (or the highest available — 22, 20 also fine)
    - **Application mode:** Production
    - **Application root:** e.g. `myapp` (a folder under your home dir)
    - **Application URL:** the domain or subdomain to serve from
