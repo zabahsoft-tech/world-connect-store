@@ -454,73 +454,21 @@ function AdminProducts() {
                   </TabsContent>
 
                   <TabsContent value="variations" className="space-y-6">
-                    {/* Specifications */}
-                    <div className="space-y-3 rounded-md border p-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-semibold">Specifications table</p>
-                          <p className="text-[11px] text-muted-foreground">
-                            Display-only attributes (e.g. Material: Cotton). Shown as a table on the product page.
-                          </p>
-                        </div>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setEditing({ ...editing, attributes: [...editing.attributes, emptyAttr()] })}
-                        >
-                          <Plus className="me-1 h-3.5 w-3.5" /> Add row
-                        </Button>
+                    {/* Sizes */}
+                    <div className="space-y-2 rounded-md border p-3">
+                      <div>
+                        <p className="text-sm font-semibold">Sizes</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          One size per line. Use <code className="rounded bg-muted px-1">|</code> to separate languages: <code className="rounded bg-muted px-1">English | فارسی | پښتو</code>. If you only type one value, it&apos;s used for all 3 languages.
+                        </p>
                       </div>
-                      {editing.attributes.length === 0 && (
-                        <p className="text-xs text-muted-foreground">No specifications yet.</p>
-                      )}
-                      {editing.attributes.map((a, i) => (
-                        <div key={i} className="space-y-2 rounded border bg-muted/30 p-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-medium text-muted-foreground">Row {i + 1}</span>
-                            <Button
-                              type="button"
-                              size="icon"
-                              variant="ghost"
-                              className="h-7 w-7"
-                              onClick={() =>
-                                setEditing({ ...editing, attributes: editing.attributes.filter((_, idx) => idx !== i) })
-                              }
-                            >
-                              <X className="h-3.5 w-3.5 text-destructive" />
-                            </Button>
-                          </div>
-                          <div className="grid gap-2 md:grid-cols-2">
-                            {(["en", "fa", "ps"] as const).map((lng) => (
-                              <div key={lng} className="contents">
-                                <Input
-                                  placeholder={`Label (${lng.toUpperCase()})`}
-                                  dir={lng === "en" ? "ltr" : "rtl"}
-                                  value={a[`label_${lng}`]}
-                                  onChange={(e) => {
-                                    const next = editing.attributes.slice();
-                                    next[i] = { ...next[i], [`label_${lng}`]: e.target.value };
-                                    setEditing({ ...editing, attributes: next });
-                                  }}
-                                  className="text-xs"
-                                />
-                                <Input
-                                  placeholder={`Value (${lng.toUpperCase()})`}
-                                  dir={lng === "en" ? "ltr" : "rtl"}
-                                  value={a[`value_${lng}`]}
-                                  onChange={(e) => {
-                                    const next = editing.attributes.slice();
-                                    next[i] = { ...next[i], [`value_${lng}`]: e.target.value };
-                                    setEditing({ ...editing, attributes: next });
-                                  }}
-                                  className="text-xs"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
+                      <Textarea
+                        value={editing.sizesText}
+                        onChange={(e) => setEditing({ ...editing, sizesText: e.target.value })}
+                        placeholder={"Small | کوچک | کوچنی\nMedium | متوسط | منځنی\nLarge | بزرگ | لوی"}
+                        rows={6}
+                        className="font-mono text-xs"
+                      />
                     </div>
 
                     {/* Variants */}
