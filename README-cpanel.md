@@ -126,6 +126,8 @@ server-side (view source — the HTML contains real content, not just a root
 
 - Shared cPanel hosts often **suspend long-idle Node processes** and limit CPU
   bursts. Cold-start latency will be noticeably higher than Cloudflare/Vercel.
-- If your plan caps Node at 18, the build still works but is unsupported.
+- If your host's Node.js Selector caps at Node 20 or 22, the app still runs —
+  you just miss the perf and security improvements shipped in Node 24. Node 18
+  and older are unsupported.
 - The Cloudflare Workers build path (`npm run build` + `wrangler`) is
   untouched — you can keep deploying to both targets in parallel.
