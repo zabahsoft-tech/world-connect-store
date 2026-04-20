@@ -69,6 +69,7 @@ interface ProductForm {
   in_stock: boolean;
   featured: boolean;
   attributes: AttributeRow[];
+  sizesText: string;
   variants: VariantRow[];
 }
 
@@ -76,13 +77,52 @@ const empty: ProductForm = {
   slug: "", name_en: "", name_fa: "", name_ps: "",
   description_en: "", description_fa: "", description_ps: "",
   price: "0", gallery: [], video_url: "", category_id: "",
-  in_stock: true, featured: false, attributes: [], variants: [],
+  in_stock: true, featured: false, attributes: [], sizesText: "", variants: [],
 };
 
 const emptyAttr = (): AttributeRow => ({
   label_en: "", label_fa: "", label_ps: "",
   value_en: "", value_fa: "", value_ps: "",
 });
+
+// Convert existing attribute rows -> "en | fa | ps" lines (one per row).
+// Falls back across languages if some are empty so legacy specs migrate cleanly.
+function attrsToSizesText(attrs: Partial<AttributeRow>[]): string {
+  return attrs
+    .map((a) => {
+      const en = (a.value_en || a.value_fa || a.value_ps || "").trim();
+      const fa = (a.value_fa || a.value_en || a.value_ps || "").trim();
+      const ps = (a.value_ps || a.value_en || a.value_fa || "").trim();
+      if (!en && !fa && !ps) return "";
+      // If all three are identical, render single segment
+      if (en === fa && fa === ps) return en;
+      return `${en} | ${fa} | ${ps}`;
+    })
+    .filter((l) => l.length > 0)
+    .join("\n");
+}
+
+// Parse "en | fa | ps" lines back into AttributeRow[] (label = "Size" per language).
+function sizesTextToAttrs(text: string): AttributeRow[] {
+  return text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .map((line) => {
+      const parts = line.split("|").map((p) => p.trim());
+      const en = parts[0] || "";
+      const fa = parts[1] ?? en;
+      const ps = parts[2] ?? (parts[1] ?? en);
+      return {
+        label_en: "Size",
+        label_fa: "اندازه",
+        label_ps: "اندازه",
+        value_en: en,
+        value_fa: fa,
+        value_ps: ps,
+      };
+    });
+}
 
 const emptyVariant = (): VariantRow => ({
   id: crypto.randomUUID(),
