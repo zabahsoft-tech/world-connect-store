@@ -1,39 +1,46 @@
 
-The user wants the cPanel Node.js build/package pipeline to target Node 24 (the latest LTS-track release) instead of Node 20. Looking at the current files:
+## Plan: Replace product Specifications with a simple Sizes textarea
 
-- `vite.config.ts` sets `build.target: "node20"`
-- `server.mjs` uses APIs all available in Node 24 (no changes needed beyond a version note)
-- `README-cpanel.md` instructs users to pick Node 20 in cPanel
-- `.env.example` doesn't pin a version
-- `package.json` has no `engines` field (need to verify)
+### What changes
 
-## Plan: Target Node.js 24
+**Admin (`src/routes/admin.products.tsx`)**
+- Rename the "Specifications table" block to **"Sizes"** inside the Variations tab.
+- Replace the 6-input-per-row UI with a **single `Textarea`** — one size per line.
+- Per-line format: `English | فارسی | پښتو` (the `|` separator is optional — if a line has no `|`, the same value is used for all 3 languages).
+- Add a short helper hint above the textarea showing the format and an example:
+  ```
+  Small | کوچک | کوچنی
+  Medium | متوسط | منځنی
+  Large | بزرگ | لوی
+  ```
+- On open: convert existing `attributes` rows → textarea lines using `value_en | value_fa | value_ps` (falling back across languages when one is empty). This auto-migrates legacy specs.
+- On save: parse the textarea back into the existing `attributes` JSONB shape so we don't need a DB migration. Each non-empty line becomes:
+  ```
+  { label_en: "Size", label_fa: "اندازه", label_ps: "اندازه",
+    value_en: "...", value_fa: "...", value_ps: "..." }
+  ```
 
-### 1. `vite.config.ts`
-- Change SSR build target from `node20` → `node24`. This lets Vite/esbuild emit syntax that uses newer V8 features (top-level await is already fine, but newer ES features pass through untranspiled).
+**Product page (`src/routes/products.$slug.tsx`)**
+- Replace the Specifications `<Table>` (label/value rows) with a clean **chip/pill list of sizes** under a heading translated as "Sizes".
+- Reads from the same `attributes` JSONB — picks `value_<lang>` per line.
+- If a line has only one language filled in, falls back to whichever is non-empty (matches `pickLang` behaviour).
 
-### 2. `package.json`
-- Add an `"engines": { "node": ">=20.0.0 <25" }` field declaring Node 20–24 supported (keeps backward compat for hosts still on 20, but signals 24 is preferred).
-- No script changes — `build:node`, `start`, `package:cpanel` work unchanged.
+**i18n (`src/lib/i18n.ts`)**
+- Add new key `sizes`: `{ en: "Sizes", fa: "اندازه‌ها", ps: "اندازې" }`.
+- Keep `specifications` key (still used elsewhere if needed; harmless).
 
-### 3. `server.mjs`
-- Add a runtime check at the top: warn (not fail) if `process.versions.node` major < 20, recommend 24.
-- Optionally use `import { styleText } from "node:util"` for nicer logs — skip to keep zero churn. Just bump the comment header to mention Node 24.
+### What does NOT change
+- **Database**: no schema change. We reuse the existing `attributes` JSONB column — every line is stored as one row with `label_*` set to "Size" / "اندازه" / "اندازه".
+- **Variants** (sellable size options with price/stock) stay exactly as they are — this change only touches the display-only specs block.
+- No new dependencies, no RLS changes.
 
-### 4. `README-cpanel.md`
-- Update prerequisites: "Node.js 24+ recommended (20+ supported)".
-- Update step 3 instructions: pick Node 24.x in cPanel's Node.js Selector.
-- Add a short note in Troubleshooting: if cPanel only offers ≤22, the app still runs but you miss the perf/security improvements in 24.
-
-### 5. `.env.example`
-- No change needed (no version pinning there).
-
-### 6. `scripts/package-cpanel.mjs`
-- No functional change. Bundles same files. (Optionally bump the `[package:cpanel]` log to mention "Node 24-ready bundle" — cosmetic only.)
+### Edge cases handled
+- Blank lines in the textarea → ignored.
+- Line with no `|` → same text used for all 3 languages.
+- Line with 1 or 2 segments → missing langs left blank, page falls back to whichever is filled.
+- Existing products with multi-attribute specs (e.g. Material, Color) → all values merged into the sizes list on first edit; admin can prune. (User chose auto-migrate.)
 
 ### Files touched
-- Edit: `vite.config.ts`, `package.json`, `server.mjs`, `README-cpanel.md`
-
-### Notes
-- No new deps. No DB / i18n changes. Cloudflare Workers build path is untouched.
-- Node 24 is the current "Current" release line (Oct 2025 → LTS Oct 2026). Many shared cPanel hosts lag — that's why we keep `>=20` as the floor.
+- Edit: `src/routes/admin.products.tsx` (replace Specifications block + add parse/serialize helpers)
+- Edit: `src/routes/products.$slug.tsx` (replace spec table with sizes chips)
+- Edit: `src/lib/i18n.ts` (add `sizes` key)
