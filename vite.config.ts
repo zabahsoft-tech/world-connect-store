@@ -27,6 +27,8 @@ export default defineConfig(
         tanstackStart: {
           spa: {
             enabled: true,
+            // Emit the shell as index.html (default would be _shell.html).
+            prerender: { outputPath: "/index" },
           },
         },
       }
