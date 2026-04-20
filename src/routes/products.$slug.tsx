@@ -10,7 +10,7 @@ import { pickLang } from "@/lib/i18n";
 import { SiteLayout } from "@/components/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+
 import { buildQuickOrderMessage, openWhatsApp } from "@/lib/whatsapp";
 import { NotFoundState, ErrorState } from "@/components/ErrorState";
 import {
