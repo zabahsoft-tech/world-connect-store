@@ -23,7 +23,9 @@ export default defineConfig(
           },
           build: {
             // Emit standard Node ESM output to dist/server (client goes to dist/client).
-            target: "node20",
+            // Targeting Node 24 (current release line) — esbuild can emit modern
+            // syntax (e.g. newer ES features) without unnecessary down-leveling.
+            target: "node24",
           },
         },
       }
