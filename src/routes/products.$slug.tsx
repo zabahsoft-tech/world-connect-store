@@ -281,7 +281,9 @@ function ProductPage() {
             </Badge>
           </div>
           <h1 className="mt-3 text-3xl font-bold md:text-4xl">{name}</h1>
-          <p className="mt-2 text-3xl font-bold text-primary">{effectivePrice.toFixed(2)}</p>
+          {effectivePrice > 0 && (
+            <p className="mt-2 text-3xl font-bold text-primary">{effectivePrice.toFixed(2)}</p>
+          )}
 
           {desc && <p className="mt-6 whitespace-pre-line text-muted-foreground">{desc}</p>}
 

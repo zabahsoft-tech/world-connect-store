@@ -48,7 +48,11 @@ export function ProductCard({ product }: { product: Product }) {
           <h3 className="line-clamp-2 font-semibold leading-tight hover:text-primary">{name}</h3>
         </Link>
         <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-          <span className="text-lg font-bold text-primary">{Number(product.price).toFixed(2)}</span>
+          {Number(product.price) > 0 ? (
+            <span className="text-lg font-bold text-primary">{Number(product.price).toFixed(2)}</span>
+          ) : (
+            <span />
+          )}
           <Button
             size="sm"
             disabled={!product.in_stock}
