@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 import { buildQuickOrderMessage, openWhatsApp } from "@/lib/whatsapp";
-import DOMPurify from "isomorphic-dompurify";
+import { SafeHtml } from "@/components/SafeHtml";
 import { NotFoundState, ErrorState } from "@/components/ErrorState";
 import {
   buildMeta,
@@ -287,15 +287,10 @@ function ProductPage() {
           )}
 
           {desc && (
-            <div
+            <SafeHtml
+              html={desc}
               className="prose prose-sm mt-6 max-w-none text-muted-foreground prose-headings:text-foreground prose-strong:text-foreground prose-a:text-primary prose-table:border prose-th:border prose-th:bg-muted prose-th:p-2 prose-td:border prose-td:p-2"
               dir={lang === "en" ? "ltr" : "rtl"}
-              // eslint-disable-next-line react/no-danger
-              dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(desc, {
-                  USE_PROFILES: { html: true },
-                }),
-              }}
             />
           )}
 
