@@ -314,23 +314,20 @@ function ProductPage() {
 
           {attributes.length > 0 && (
             <div className="mt-6">
-              <h2 className="mb-2 text-sm font-semibold">{tr("specifications")}</h2>
-              <div className="overflow-hidden rounded-lg border">
-                <Table>
-                  <TableBody>
-                    {attributes.map((a, i) => {
-                      const label = pickLang(a, "label", lang);
-                      const value = pickLang(a, "value", lang);
-                      if (!label && !value) return null;
-                      return (
-                        <TableRow key={i}>
-                          <TableCell className="w-1/3 bg-muted/40 font-medium">{label}</TableCell>
-                          <TableCell>{value}</TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+              <h2 className="mb-2 text-sm font-semibold">{tr("sizes")}</h2>
+              <div className="flex flex-wrap gap-2">
+                {attributes.map((a, i) => {
+                  const value = pickLang(a, "value", lang);
+                  if (!value) return null;
+                  return (
+                    <span
+                      key={i}
+                      className="rounded-full border border-border bg-muted/40 px-3 py-1 text-sm"
+                    >
+                      {value}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           )}
