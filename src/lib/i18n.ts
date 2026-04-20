@@ -103,6 +103,7 @@ export const t: Dict = {
   allPosts: { en: "All posts", fa: "همه مطالب", ps: "ټولې لیکنې" },
   excerpt: { en: "Excerpt", fa: "خلاصه", ps: "لنډیز" },
   coverImage: { en: "Cover image", fa: "تصویر کاور", ps: "پوښ انځور" },
+  import: { en: "Import", fa: "وارد کردن", ps: "واردول" },
 };
 
 export function tr(key: keyof typeof t, lang: Lang): string {
