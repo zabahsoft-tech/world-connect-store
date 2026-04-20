@@ -110,14 +110,14 @@ export function Header() {
             <img
               src={s.logo_url}
               alt={storeName}
-              className="h-9 w-9 rounded-lg object-cover ring-2 ring-white/20 transition-transform group-hover:scale-105"
+              className="h-12 w-12 rounded-lg object-cover ring-2 ring-white/20 transition-transform group-hover:scale-105"
             />
           ) : (
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/15 ring-1 ring-white/25 text-primary-foreground font-bold transition-transform group-hover:scale-105">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/15 ring-1 ring-white/25 text-primary-foreground text-lg font-bold transition-transform group-hover:scale-105">
               {storeName.charAt(0).toUpperCase()}
             </div>
           )}
-          <span className="text-lg font-bold tracking-tight">{storeName}</span>
+          <span className="text-xl font-bold tracking-tight">{storeName}</span>
         </Link>
 
         <nav className="hidden items-center gap-0.5 md:flex">
