@@ -1,46 +1,48 @@
 
-## Plan: Replace product Specifications with a simple Sizes textarea
+## Plan: Old-site → New-site CSV migration
 
-### What changes
+You'll get **two things**:
 
-**Admin (`src/routes/admin.products.tsx`)**
-- Rename the "Specifications table" block to **"Sizes"** inside the Variations tab.
-- Replace the 6-input-per-row UI with a **single `Textarea`** — one size per line.
-- Per-line format: `English | فارسی | پښتو` (the `|` separator is optional — if a line has no `|`, the same value is used for all 3 languages).
-- Add a short helper hint above the textarea showing the format and an example:
-  ```
-  Small | کوچک | کوچنی
-  Medium | متوسط | منځنی
-  Large | بزرگ | لوی
-  ```
-- On open: convert existing `attributes` rows → textarea lines using `value_en | value_fa | value_ps` (falling back across languages when one is empty). This auto-migrates legacy specs.
-- On save: parse the textarea back into the existing `attributes` JSONB shape so we don't need a DB migration. Each non-empty line becomes:
-  ```
-  { label_en: "Size", label_fa: "اندازه", label_ps: "اندازه",
-    value_en: "...", value_fa: "...", value_ps: "..." }
-  ```
+### 1. A ready-to-paste Codex prompt (the main deliverable)
+A single markdown file at `/mnt/documents/codex-migration-prompt.md` that you give to Codex. The prompt tells Codex exactly:
 
-**Product page (`src/routes/products.$slug.tsx`)**
-- Replace the Specifications `<Table>` (label/value rows) with a clean **chip/pill list of sizes** under a heading translated as "Sizes".
-- Reads from the same `attributes` JSONB — picks `value_<lang>` per line.
-- If a line has only one language filled in, falls back to whichever is non-empty (matches `pickLang` behaviour).
+- **Input**: your old Laravel CSV exports (any columns / any names — Codex inspects them).
+- **Output**: two CSVs matching this site's schema exactly:
+  - `categories.csv` — columns: `slug, name_en, name_fa, name_ps, image, sort_order`
+  - `products.csv` — columns: `slug, name_en, name_fa, name_ps, description_en, description_fa, description_ps, price, image_url, gallery, category_slug, featured, in_stock, video_url, attributes, sizes, variants`
+- **Relations**: products link to categories by **`category_slug`** (not UUID — the importer resolves it on insert, so Codex doesn't need DB access).
+- **JSONB fields** explained with examples:
+  - `gallery` → JSON array of image URLs: `["https://...","https://..."]`
+  - `attributes` (legacy specs) → JSON array of `{label_en,label_fa,label_ps,value_en,value_fa,value_ps}`
+  - `sizes` → simple newline string (`Small | کوچک | کوچنی\nLarge | بزرگ | لوی`) that the importer converts to `attributes` automatically
+  - `variants` → JSON array of `{name_en,name_fa,name_ps,sku,price,in_stock,image_url}`
+- **Slug rules**: lowercase, kebab-case, ASCII-only, unique.
+- **Multilingual fallback**: if old site only has one language, copy the same value into all 3 (`_en`, `_fa`, `_ps`) so nothing renders blank.
+- **Price**: numeric, no currency symbol.
+- **Images**: keep absolute URLs from the old site (don't try to re-upload).
+- **Edge cases**: blank rows, duplicate slugs, missing categories, escaped quotes/commas, BOM, RTL text — all listed.
 
-**i18n (`src/lib/i18n.ts`)**
-- Add new key `sizes`: `{ en: "Sizes", fa: "اندازه‌ها", ps: "اندازې" }`.
-- Keep `specifications` key (still used elsewhere if needed; harmless).
+### 2. A simple Admin Import page
+New route `/admin/import` (linked from the admin sidebar) that:
+- Lets you upload `categories.csv` first, then `products.csv`.
+- Shows a **dry-run preview** (row counts, errors, missing categories) before committing.
+- On import: parses CSV → validates → resolves `category_slug` → upserts by `slug` (so re-running is safe).
+- Uses the existing admin RLS (you must be logged in as admin).
 
-### What does NOT change
-- **Database**: no schema change. We reuse the existing `attributes` JSONB column — every line is stored as one row with `label_*` set to "Size" / "اندازه" / "اندازه".
-- **Variants** (sellable size options with price/stock) stay exactly as they are — this change only touches the display-only specs block.
-- No new dependencies, no RLS changes.
+### Files to add/touch
+- **New**: `/mnt/documents/codex-migration-prompt.md` (the prompt — generated now via exec, no app code change)
+- **New**: `src/routes/admin.import.tsx` (upload UI + dry-run + commit)
+- **New dep**: `papaparse` (CSV parser, ~7KB, browser-safe)
+- **Edit**: `src/routes/admin.tsx` — add "Import" link to admin nav
+- **Edit**: `src/lib/i18n.ts` — add `import` label
 
-### Edge cases handled
-- Blank lines in the textarea → ignored.
-- Line with no `|` → same text used for all 3 languages.
-- Line with 1 or 2 segments → missing langs left blank, page falls back to whichever is filled.
-- Existing products with multi-attribute specs (e.g. Material, Color) → all values merged into the sizes list on first edit; admin can prune. (User chose auto-migrate.)
+### Why this shape
+- Codex never touches your DB — it only reshapes CSV → CSV. Safe and offline.
+- `category_slug` (text) is more forgiving than UUIDs across migrations.
+- Upsert-by-slug means you can re-run the import after fixing a bad row.
+- Sizes captured as plain text means non-technical users can edit the CSV in Excel.
 
-### Files touched
-- Edit: `src/routes/admin.products.tsx` (replace Specifications block + add parse/serialize helpers)
-- Edit: `src/routes/products.$slug.tsx` (replace spec table with sizes chips)
-- Edit: `src/lib/i18n.ts` (add `sizes` key)
+### What I'll deliver in the implementation step
+1. Write the Codex prompt file to `/mnt/documents/codex-migration-prompt.md` and surface it as a `<lov-artifact>` so you can download it.
+2. Build the `/admin/import` page with dry-run + commit.
+3. Add the nav link and i18n key.
