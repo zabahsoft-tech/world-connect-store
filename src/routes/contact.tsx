@@ -327,7 +327,7 @@ function ContactPage() {
             ) : hasEmbed ? (
               <div className="relative overflow-hidden rounded-xl border shadow-[var(--shadow-soft)]">
                 <iframe
-                  src={s!.google_maps_embed_url!}
+                  src={embedUrl!}
                   title="Map"
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
