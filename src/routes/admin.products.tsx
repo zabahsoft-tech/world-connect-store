@@ -204,6 +204,18 @@ function AdminProducts() {
         throw new Error("Name is required in all 3 languages");
       }
       const cleanAttrs = sizesTextToAttrs(f.sizesText);
+      const cleanSpecs = f.specifications
+        .filter((s) =>
+          (s.label_en + s.label_fa + s.label_ps + s.value_en + s.value_fa + s.value_ps).trim().length > 0,
+        )
+        .map((s) => ({
+          label_en: s.label_en.trim(),
+          label_fa: s.label_fa.trim(),
+          label_ps: s.label_ps.trim(),
+          value_en: s.value_en.trim(),
+          value_fa: s.value_fa.trim(),
+          value_ps: s.value_ps.trim(),
+        }));
       const cleanVariants = f.variants
         .filter((v) => (v.name_en + v.name_fa + v.name_ps).trim().length > 0)
         .map((v) => ({
@@ -228,6 +240,7 @@ function AdminProducts() {
         video_url: f.video_url || null,
         attributes: cleanAttrs as unknown as never,
         variants: cleanVariants as unknown as never,
+        specifications: cleanSpecs as unknown as never,
         category_id: f.category_id || null,
         in_stock: f.in_stock,
         featured: f.featured,
@@ -275,6 +288,9 @@ function AdminProducts() {
     const merged = p.image_url && !galleryArr.includes(p.image_url) ? [p.image_url, ...galleryArr] : galleryArr;
     const attrsRaw = (Array.isArray(p.attributes) ? p.attributes : []) as Partial<AttributeRow>[];
     const variantsRaw = (Array.isArray(p.variants) ? p.variants : []) as Array<Partial<VariantRow> & { price?: number | string | null }>;
+    const specsRaw = (Array.isArray((p as { specifications?: unknown }).specifications)
+      ? ((p as { specifications: unknown[] }).specifications as Partial<SpecRow>[])
+      : []);
     setEditing({
       id: p.id, slug: p.slug,
       name_en: p.name_en, name_fa: p.name_fa, name_ps: p.name_ps,
@@ -292,6 +308,7 @@ function AdminProducts() {
         id: v.id ?? crypto.randomUUID(),
         price: v.price == null ? "" : String(v.price),
       })),
+      specifications: specsRaw.map((s) => ({ ...emptySpec(), ...s })),
     });
     setTab("general");
     setVideoMode(p.video_url && /^https?:\/\//.test(p.video_url) && !p.video_url.includes("supabase") ? "url" : "upload");
