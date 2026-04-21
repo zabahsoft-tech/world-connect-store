@@ -10,6 +10,12 @@ import { pickLang } from "@/lib/i18n";
 import { SiteLayout } from "@/components/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+} from "@/components/ui/table";
 
 import { buildQuickOrderMessage, openWhatsApp } from "@/lib/whatsapp";
 import { SafeHtml } from "@/components/SafeHtml";
@@ -35,6 +41,15 @@ interface Variant {
 }
 
 interface AttributeRow {
+  label_en: string;
+  label_fa: string;
+  label_ps: string;
+  value_en: string;
+  value_fa: string;
+  value_ps: string;
+}
+
+interface SpecRow {
   label_en: string;
   label_fa: string;
   label_ps: string;
@@ -164,6 +179,9 @@ function ProductPage() {
 
   const attributes: AttributeRow[] = Array.isArray(p.attributes) ? (p.attributes as unknown as AttributeRow[]) : [];
   const variants: Variant[] = Array.isArray(p.variants) ? (p.variants as unknown as Variant[]) : [];
+  const specifications: SpecRow[] = Array.isArray((p as { specifications?: unknown }).specifications)
+    ? ((p as { specifications: unknown[] }).specifications as SpecRow[])
+    : [];
 
   const selectedVariant = variants.find((v) => v.id === selectedVariantId) || null;
   const effectivePrice = selectedVariant?.price != null ? Number(selectedVariant.price) : Number(p.price);
@@ -292,6 +310,29 @@ function ProductPage() {
               className="prose prose-sm mt-6 max-w-none text-muted-foreground prose-headings:text-foreground prose-strong:text-foreground prose-a:text-primary prose-table:border prose-th:border prose-th:bg-muted prose-th:p-2 prose-td:border prose-td:p-2"
               dir={lang === "en" ? "ltr" : "rtl"}
             />
+          )}
+
+          {specifications.length > 0 && (
+            <div className="mt-6">
+              <h2 className="mb-2 text-sm font-semibold">{tr("specifications")}</h2>
+              <div className="overflow-hidden rounded-lg border">
+                <Table>
+                  <TableBody>
+                    {specifications.map((s, i) => {
+                      const label = pickLang(s, "label", lang);
+                      const value = pickLang(s, "value", lang);
+                      if (!label && !value) return null;
+                      return (
+                        <TableRow key={i} className="even:bg-muted/30">
+                          <TableCell className="w-1/3 font-medium">{label}</TableCell>
+                          <TableCell className="text-muted-foreground">{value}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
           )}
 
           {variants.length > 0 && (

@@ -413,6 +413,105 @@ function AdminProducts() {
                         </Field>
                       </div>
                     ))}
+
+                    <div className="space-y-3 rounded-md border p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-semibold">Specifications</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            Build a side-by-side spec table (e.g. Material, Weight, Warranty). Leave a language blank to fall back to English.
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setEditing({ ...editing, specifications: [...editing.specifications, emptySpec()] })}
+                        >
+                          <Plus className="me-1 h-3.5 w-3.5" /> Add row
+                        </Button>
+                      </div>
+                      {editing.specifications.length === 0 && (
+                        <p className="text-xs text-muted-foreground">No specifications yet.</p>
+                      )}
+                      {editing.specifications.map((s, i) => (
+                        <div key={i} className="space-y-2 rounded border bg-muted/30 p-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-medium text-muted-foreground">Row {i + 1}</span>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7"
+                                disabled={i === 0}
+                                onClick={() => {
+                                  const next = editing.specifications.slice();
+                                  [next[i - 1], next[i]] = [next[i], next[i - 1]];
+                                  setEditing({ ...editing, specifications: next });
+                                }}
+                              >
+                                <ArrowUp className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7"
+                                disabled={i === editing.specifications.length - 1}
+                                onClick={() => {
+                                  const next = editing.specifications.slice();
+                                  [next[i + 1], next[i]] = [next[i], next[i + 1]];
+                                  setEditing({ ...editing, specifications: next });
+                                }}
+                              >
+                                <ArrowDown className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7"
+                                onClick={() =>
+                                  setEditing({
+                                    ...editing,
+                                    specifications: editing.specifications.filter((_, idx) => idx !== i),
+                                  })
+                                }
+                              >
+                                <X className="h-3.5 w-3.5 text-destructive" />
+                              </Button>
+                            </div>
+                          </div>
+                          {(["en", "fa", "ps"] as const).map((lng) => (
+                            <div key={lng} className="grid gap-2 md:grid-cols-2">
+                              <Input
+                                placeholder={`Label (${lng.toUpperCase()})`}
+                                dir={lng === "en" ? "ltr" : "rtl"}
+                                value={s[`label_${lng}`]}
+                                onChange={(e) => {
+                                  const next = editing.specifications.slice();
+                                  next[i] = { ...next[i], [`label_${lng}`]: e.target.value };
+                                  setEditing({ ...editing, specifications: next });
+                                }}
+                                className="text-xs"
+                              />
+                              <Input
+                                placeholder={`Value (${lng.toUpperCase()})`}
+                                dir={lng === "en" ? "ltr" : "rtl"}
+                                value={s[`value_${lng}`]}
+                                onChange={(e) => {
+                                  const next = editing.specifications.slice();
+                                  next[i] = { ...next[i], [`value_${lng}`]: e.target.value };
+                                  setEditing({ ...editing, specifications: next });
+                                }}
+                                className="text-xs"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
                   </TabsContent>
 
                   <TabsContent value="media" className="space-y-5">
