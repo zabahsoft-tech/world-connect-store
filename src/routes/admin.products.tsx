@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Plus, Pencil, Trash2, Search, Package as PackageIcon, ImageOff, X, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Package as PackageIcon, ImageOff, X, ArrowUp, ArrowDown, Heading, GripVertical, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -44,6 +44,15 @@ interface AttributeRow {
 }
 
 interface SpecRow {
+  type?: "row" | "section";
+  // section title fields
+  title_en?: string;
+  title_fa?: string;
+  title_ps?: string;
+  // optional group ("main col")
+  group_en?: string;
+  group_fa?: string;
+  group_ps?: string;
   label_en: string;
   label_fa: string;
   label_ps: string;
@@ -92,6 +101,16 @@ const empty: ProductForm = {
 };
 
 const emptySpec = (): SpecRow => ({
+  type: "row",
+  group_en: "", group_fa: "", group_ps: "",
+  label_en: "", label_fa: "", label_ps: "",
+  value_en: "", value_fa: "", value_ps: "",
+});
+
+const emptySection = (): SpecRow => ({
+  type: "section",
+  title_en: "", title_fa: "", title_ps: "",
+  group_en: "", group_fa: "", group_ps: "",
   label_en: "", label_fa: "", label_ps: "",
   value_en: "", value_fa: "", value_ps: "",
 });
