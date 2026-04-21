@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Minus, Plus, ShoppingCart, MessageCircle, Play } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -333,7 +333,7 @@ function ProductPage() {
                       );
                       const colCount = hasGroup ? 3 : 2;
                       let stripeIdx = 0;
-                      const out: React.ReactNode[] = [];
+                      const out: ReactNode[] = [];
                       for (let i = 0; i < specifications.length; i++) {
                         const s = specifications[i];
                         const kind = s.type ?? "row";
