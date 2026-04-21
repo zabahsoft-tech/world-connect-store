@@ -224,17 +224,34 @@ function AdminProducts() {
       }
       const cleanAttrs = sizesTextToAttrs(f.sizesText);
       const cleanSpecs = f.specifications
-        .filter((s) =>
-          (s.label_en + s.label_fa + s.label_ps + s.value_en + s.value_fa + s.value_ps).trim().length > 0,
-        )
-        .map((s) => ({
-          label_en: s.label_en.trim(),
-          label_fa: s.label_fa.trim(),
-          label_ps: s.label_ps.trim(),
-          value_en: s.value_en.trim(),
-          value_fa: s.value_fa.trim(),
-          value_ps: s.value_ps.trim(),
-        }));
+        .filter((s) => {
+          if (s.type === "section") {
+            return ((s.title_en ?? "") + (s.title_fa ?? "") + (s.title_ps ?? "")).trim().length > 0;
+          }
+          return (s.label_en + s.label_fa + s.label_ps + s.value_en + s.value_fa + s.value_ps).trim().length > 0;
+        })
+        .map((s) => {
+          if (s.type === "section") {
+            return {
+              type: "section" as const,
+              title_en: (s.title_en ?? "").trim(),
+              title_fa: (s.title_fa ?? "").trim(),
+              title_ps: (s.title_ps ?? "").trim(),
+            };
+          }
+          return {
+            type: "row" as const,
+            group_en: (s.group_en ?? "").trim(),
+            group_fa: (s.group_fa ?? "").trim(),
+            group_ps: (s.group_ps ?? "").trim(),
+            label_en: s.label_en.trim(),
+            label_fa: s.label_fa.trim(),
+            label_ps: s.label_ps.trim(),
+            value_en: s.value_en.trim(),
+            value_fa: s.value_fa.trim(),
+            value_ps: s.value_ps.trim(),
+          };
+        });
       const cleanVariants = f.variants
         .filter((v) => (v.name_en + v.name_fa + v.name_ps).trim().length > 0)
         .map((v) => ({
