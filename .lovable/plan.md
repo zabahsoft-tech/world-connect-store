@@ -1,74 +1,86 @@
 
 
-## Add a dedicated "Specifications" table field to Products
+## Enhance the Specifications editor — spreadsheet-style with section rows
 
-A new structured **Specifications** table will be added to product editing, completely separate from the rich-text Description. Admins fill in rows of `Label → Value` per language. On the storefront product page, those rows render as a clean two-column spec table under the Description.
-
-### What changes (admin)
-
-`src/routes/admin.products.tsx` — Edit Product dialog → "Translations" tab:
+Make the Specifications field much faster to fill in by switching from the current "stacked card per row" layout into a **compact spreadsheet-style grid**, and add support for **section header rows** ("main row") and an optional **group column** ("main col") so admins can build richer spec sheets like:
 
 ```
-┌─ Description ────────────────────────────┐
-│  [ Rich text editor (unchanged) ]        │
-└──────────────────────────────────────────┘
-┌─ Specifications ────────────── + Add row ┐
-│ # │ Label (en) │ Value (en) │ ✕ │       │
-│ # │ Label (fa) │ Value (fa) │ ✕ │       │
-│ # │ Label (ps) │ Value (ps) │ ✕ │       │
-└──────────────────────────────────────────┘
+┌─ DIMENSIONS ────────────────────────────┐  ← section row (full width)
+│ Group   │ Label      │ Value             │
+│ Body    │ Width      │ 80 cm             │
+│ Body    │ Height     │ 120 cm            │
+├─ POWER ─────────────────────────────────┤  ← section row
+│ Input   │ Voltage    │ 220V              │
+│ Input   │ Frequency  │ 50Hz              │
+└─────────────────────────────────────────┘
 ```
 
-- A single shared specifications block (not per-language tab) — each row holds 6 inputs: `label_en, label_fa, label_ps, value_en, value_fa, value_ps`.
-- Up/Down arrows to reorder rows, ✕ to delete, "+ Add row" at the bottom.
-- Empty rows are stripped on save. Empty specifications save as `[]`.
-- Helper text: *"Build a side-by-side spec table (e.g. Material, Weight, Warranty). Leave a language blank to fall back to English."*
+### What changes (admin — `src/routes/admin.products.tsx`)
 
-### What changes (storefront)
+**New row kinds** (stored in the same `specifications` JSON, with a `type` field):
 
-`src/routes/products.$slug.tsx`:
+```ts
+type SpecRowKind = "section" | "row";
 
-- New section under the Description, above the existing "Sizes" pills, titled **"Specifications"** (translated).
-- Renders as a real `<table>` (using existing `@/components/ui/table`) with two columns: **Label** | **Value**, picked in the active language with English fallback.
-- Hidden when no specifications exist.
-- Striped rows, RTL-aware.
+interface SpecRow {
+  type: "row";              // default — backward compatible if missing
+  group_en, group_fa, group_ps: string;   // NEW optional "main column"
+  label_en, label_fa, label_ps: string;
+  value_en, value_fa, value_ps: string;
+}
+interface SpecSection {
+  type: "section";          // full-width header band
+  title_en, title_fa, title_ps: string;
+}
+```
+
+Backward compatible — existing rows without `type` are treated as `"row"` and existing data keeps working.
+
+**New editor UI** (replaces the current stacked cards):
+
+- A single **table grid** with one visible row per spec, columns: `↕ | Group | Label | Value | ⋯`
+- Language selector pills at the top of the block: **EN / FA / PS** — the grid shows the columns for the active language only (much less visual noise than the current 6-input-per-row layout). Switch language to edit other locales; data is preserved.
+- A small "Show all languages" toggle expands a row to reveal all 3 language inputs side-by-side (for fine-tuning).
+- Toolbar buttons: **+ Add row**, **+ Add section**, **+ Duplicate selected**, **Clear group column** (if no row uses Group, it auto-collapses).
+- **Drag handle (↕)** on the left for reordering (uses native HTML5 drag-and-drop, no new deps). Up/Down arrow buttons remain as a fallback in the row's `⋯` menu.
+- **Section rows** render as a single full-width input with a tinted background — visually obvious they're headers.
+- **Group column auto-fill**: typing the same group name in 2+ rows shows a small "Apply to rows below until next section" shortcut.
+- **Keyboard**: Tab moves to next cell, Enter adds a new row below, Shift+Enter inserts a section above current row.
+- Empty rows/sections are stripped on save.
+
+**Helper text** updated:
+> *Build a spec sheet. Use **sections** to group rows (e.g. "Dimensions", "Power"). The optional **Group** column lets you label sub-categories within a section. Switch the EN/FA/PS pills to translate.*
+
+### What changes (storefront — `src/routes/products.$slug.tsx`)
+
+- Section rows render as a full-width `<TableRow>` with a single bolded `<TableCell colSpan>` and a muted background band.
+- If ANY row uses the Group column, the table renders **3 columns**: Group | Label | Value (with vertical group cells merged via `rowSpan` for consecutive identical groups). If no row uses Group, falls back to the existing 2-column Label | Value layout.
+- RTL preserved; English fallback preserved.
+- Striped rows skip section bands.
 
 ### Database
 
-New column on `products`:
+**No schema change.** All new fields live inside the existing `specifications jsonb` column. A short migration comment is added describing the supported shape, but no DDL.
 
-```sql
-ALTER TABLE public.products
-  ADD COLUMN specifications jsonb NOT NULL DEFAULT '[]'::jsonb;
-```
+### i18n (`src/lib/i18n.ts`)
 
-JSON shape:
-```json
-[
-  { "label_en": "Material", "label_fa": "جنس", "label_ps": "توکی",
-    "value_en": "Cotton",   "value_fa": "پنبه", "value_ps": "پنبه" }
-]
-```
-
-No RLS change needed — inherits the existing `products` policies. Existing `attributes` (legacy sizes) is **untouched** to avoid breaking any product currently using it.
-
-### i18n
-
-Add three keys in `src/lib/i18n.ts`:
-- `specifications` → "Specifications" / "مشخصات" / "ځانګړتیاوې"
-- `spec_label` → "Label" / "عنوان" / "سرلیک"
-- `spec_value` → "Value" / "مقدار" / "ارزښت"
+Add keys:
+- `spec_section` → "Section" / "بخش" / "برخه"
+- `spec_group` → "Group" / "گروه" / "ډله"
+- `spec_add_row` → "Add row"
+- `spec_add_section` → "Add section"
+- `spec_show_all_langs` → "Show all languages"
 
 ### Files touched
 
-- `supabase/migrations/<new>.sql` — add `specifications` column
-- `src/routes/admin.products.tsx` — form state, UI block, save mapper, load mapper
-- `src/routes/products.$slug.tsx` — render spec table
-- `src/lib/i18n.ts` — 3 new keys
+- `src/routes/admin.products.tsx` — replace the specifications block with the new grid editor; update load/save mappers to handle `type`, `group_*`, and `title_*` fields; strip empties.
+- `src/routes/products.$slug.tsx` — render sections as banded rows and conditionally render the Group column with `rowSpan` merging.
+- `src/lib/i18n.ts` — 5 new keys.
 
 ### Out of scope
 
-- Description rich editor itself stays unchanged (no built-in table tool added).
-- `attributes` / sizes / variants are not migrated or removed.
-- No CSV import column added for specifications in this pass.
+- No DB migration, no breaking change to existing specifications.
+- No CSV import for specs.
+- No nested sections (one level only).
+- No per-row icons or images.
 
