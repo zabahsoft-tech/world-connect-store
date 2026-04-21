@@ -1,56 +1,74 @@
 
 
-## Enhance Contact Page Layout & Map Wireframe
+## Add a dedicated "Specifications" table field to Products
 
-Polish the `/contact` page into a more premium, visually balanced layout, and upgrade the map wireframe placeholder so it looks intentional rather than empty.
+A new structured **Specifications** table will be added to product editing, completely separate from the rich-text Description. Admins fill in rows of `Label → Value` per language. On the storefront product page, those rows render as a clean two-column spec table under the Description.
 
-### What changes (visual)
+### What changes (admin)
 
-**Page header**
-- Add a soft gradient hero band behind the title (using existing `--primary-soft` token), with an icon chip, breadcrumb-style eyebrow ("Get in touch"), larger title, and a one-line description.
-- Center the header on mobile, left-align on desktop.
+`src/routes/admin.products.tsx` — Edit Product dialog → "Translations" tab:
 
-**Layout grid**
-- Keep the 5-column grid on `lg`, but tighten spacing and align card heights.
-- On mobile, info tiles appear FIRST (so phone/WhatsApp are tappable immediately), form second, map third. On desktop, form left / info+map right (current order).
+```
+┌─ Description ────────────────────────────┐
+│  [ Rich text editor (unchanged) ]        │
+└──────────────────────────────────────────┘
+┌─ Specifications ────────────── + Add row ┐
+│ # │ Label (en) │ Value (en) │ ✕ │       │
+│ # │ Label (fa) │ Value (fa) │ ✕ │       │
+│ # │ Label (ps) │ Value (ps) │ ✕ │       │
+└──────────────────────────────────────────┘
+```
 
-**Contact form card**
-- Add a subtle top border accent (2px primary gradient) and a small "We reply within X hours" helper above the submit button (uses `business_hours` if set, else generic copy).
-- Inputs get slightly larger touch targets (h-11) and focus rings using `--ring`.
-- Submit button becomes full-width on mobile, auto on desktop, with an arrow icon shift on hover.
+- A single shared specifications block (not per-language tab) — each row holds 6 inputs: `label_en, label_fa, label_ps, value_en, value_fa, value_ps`.
+- Up/Down arrows to reorder rows, ✕ to delete, "+ Add row" at the bottom.
+- Empty rows are stripped on save. Empty specifications save as `[]`.
+- Helper text: *"Build a side-by-side spec table (e.g. Material, Weight, Warranty). Leave a language blank to fall back to English."*
 
-**Info tiles**
-- Convert the single stacked list into a 2-column grid of "info chips" on `sm+` (WhatsApp, Phone, Email, Address, Hours each in its own rounded card).
-- Each tile: icon chip top-left, label, value, and a tiny chevron on hover for actionable ones (tel/mailto/wa.me).
-- Address & Hours tiles span 2 columns (longer text).
+### What changes (storefront)
 
-**Map wireframe (the highlight)**
-Upgrade the current grid placeholder into a more "map-like" mock:
-- Same grid background, but add 2–3 faint curved "road" SVG paths in muted foreground.
-- A larger central pin with a pulsing ring animation (CSS `@keyframes` already supported via Tailwind `animate-ping`).
-- Floating mini-card overlay in the bottom-left showing the business name (from `settings.site_name`) + address (from `settings.address`) + a "Get directions" button that opens `https://www.google.com/maps/search/?api=1&query=<encoded address>` in a new tab.
-- Top-right corner badge: "Preview" so it's clear this is a placeholder when no embed URL is set.
-- When a real embed URL IS set, keep the current iframe but wrap it in the same rounded border + add a "Get directions" floating button overlay (bottom-right) using the address.
+`src/routes/products.$slug.tsx`:
 
-**Socials card**
-- Title becomes "Follow us" with a small icon, social buttons get a subtle hover lift (`hover:-translate-y-0.5`) and brand-tinted hover backgrounds.
+- New section under the Description, above the existing "Sizes" pills, titled **"Specifications"** (translated).
+- Renders as a real `<table>` (using existing `@/components/ui/table`) with two columns: **Label** | **Value**, picked in the active language with English fallback.
+- Hidden when no specifications exist.
+- Striped rows, RTL-aware.
 
-**Empty/loading states**
-- While `settings` query loads, show skeleton placeholders for info tiles and map (uses existing `Skeleton` component).
+### Database
 
-### Technical notes
+New column on `products`:
 
-- File touched: `src/routes/contact.tsx` only.
-- No new dependencies. All styling via existing Tailwind tokens (`primary`, `primary-soft`, `muted`, `border`, `ring`, `--shadow-soft`).
-- The "Get directions" link is built as: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address)}` — only rendered when `s.address` exists.
-- The decorative SVG roads are inline, ~30 lines, no external asset.
-- Pulse ring uses Tailwind `animate-ping` on an absolute-positioned sibling of the pin dot.
-- RTL is preserved — no hard-coded `left/right`, uses logical spacing classes already in use elsewhere.
-- Mobile order swap done with `order-1 / order-2` utility classes on the grid children.
+```sql
+ALTER TABLE public.products
+  ADD COLUMN specifications jsonb NOT NULL DEFAULT '[]'::jsonb;
+```
+
+JSON shape:
+```json
+[
+  { "label_en": "Material", "label_fa": "جنس", "label_ps": "توکی",
+    "value_en": "Cotton",   "value_fa": "پنبه", "value_ps": "پنبه" }
+]
+```
+
+No RLS change needed — inherits the existing `products` policies. Existing `attributes` (legacy sizes) is **untouched** to avoid breaking any product currently using it.
+
+### i18n
+
+Add three keys in `src/lib/i18n.ts`:
+- `specifications` → "Specifications" / "مشخصات" / "ځانګړتیاوې"
+- `spec_label` → "Label" / "عنوان" / "سرلیک"
+- `spec_value` → "Value" / "مقدار" / "ارزښت"
+
+### Files touched
+
+- `supabase/migrations/<new>.sql` — add `specifications` column
+- `src/routes/admin.products.tsx` — form state, UI block, save mapper, load mapper
+- `src/routes/products.$slug.tsx` — render spec table
+- `src/lib/i18n.ts` — 3 new keys
 
 ### Out of scope
 
-- No schema changes, no new settings fields.
-- No actual Google Maps API integration (still iframe embed when URL is configured).
-- No changes to the form submission logic or validation.
+- Description rich editor itself stays unchanged (no built-in table tool added).
+- `attributes` / sizes / variants are not migrated or removed.
+- No CSV import column added for specifications in this pass.
 
