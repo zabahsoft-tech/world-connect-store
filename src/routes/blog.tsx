@@ -37,9 +37,10 @@ interface BlogListItem {
 const sb = supabase as any;
 
 export const Route = createFileRoute("/blog")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    tag: typeof search.tag === "string" ? search.tag : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { tag?: string } => {
+    const tag = typeof search.tag === "string" ? search.tag : undefined;
+    return tag ? { tag } : {};
+  },
   loader: async () => {
     const { data, error } = await sb
       .from("blog_posts")
