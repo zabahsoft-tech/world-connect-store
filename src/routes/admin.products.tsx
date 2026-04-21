@@ -182,6 +182,10 @@ function AdminProducts() {
   const [filterStock, setFilterStock] = useState<string>("all");
   const [filterFeatured, setFilterFeatured] = useState<string>("all");
 
+  const [specLang, setSpecLang] = useState<"en" | "fa" | "ps">("en");
+  const [specShowAll, setSpecShowAll] = useState(false);
+  const [specDragIdx, setSpecDragIdx] = useState<number | null>(null);
+
   const products = useQuery({
     queryKey: ["admin-products"],
     queryFn: async () => {
