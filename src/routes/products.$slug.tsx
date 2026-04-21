@@ -50,6 +50,15 @@ interface AttributeRow {
 }
 
 interface SpecRow {
+  type?: "row" | "section";
+  // section title fields
+  title_en?: string;
+  title_fa?: string;
+  title_ps?: string;
+  // optional group ("main col")
+  group_en?: string;
+  group_fa?: string;
+  group_ps?: string;
   label_en: string;
   label_fa: string;
   label_ps: string;
