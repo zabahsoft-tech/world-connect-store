@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Plus, Pencil, Trash2, Search, Package as PackageIcon, ImageOff, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Package as PackageIcon, ImageOff, X, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,15 @@ interface AttributeRow {
   value_ps: string;
 }
 
+interface SpecRow {
+  label_en: string;
+  label_fa: string;
+  label_ps: string;
+  value_en: string;
+  value_fa: string;
+  value_ps: string;
+}
+
 interface VariantRow {
   id: string;
   name_en: string;
@@ -72,14 +81,20 @@ interface ProductForm {
   attributes: AttributeRow[];
   sizesText: string;
   variants: VariantRow[];
+  specifications: SpecRow[];
 }
 
 const empty: ProductForm = {
   slug: "", name_en: "", name_fa: "", name_ps: "",
   description_en: "", description_fa: "", description_ps: "",
   price: "0", gallery: [], video_url: "", category_id: "",
-  in_stock: true, featured: false, attributes: [], sizesText: "", variants: [],
+  in_stock: true, featured: false, attributes: [], sizesText: "", variants: [], specifications: [],
 };
+
+const emptySpec = (): SpecRow => ({
+  label_en: "", label_fa: "", label_ps: "",
+  value_en: "", value_fa: "", value_ps: "",
+});
 
 const emptyAttr = (): AttributeRow => ({
   label_en: "", label_fa: "", label_ps: "",
@@ -189,6 +204,18 @@ function AdminProducts() {
         throw new Error("Name is required in all 3 languages");
       }
       const cleanAttrs = sizesTextToAttrs(f.sizesText);
+      const cleanSpecs = f.specifications
+        .filter((s) =>
+          (s.label_en + s.label_fa + s.label_ps + s.value_en + s.value_fa + s.value_ps).trim().length > 0,
+        )
+        .map((s) => ({
+          label_en: s.label_en.trim(),
+          label_fa: s.label_fa.trim(),
+          label_ps: s.label_ps.trim(),
+          value_en: s.value_en.trim(),
+          value_fa: s.value_fa.trim(),
+          value_ps: s.value_ps.trim(),
+        }));
       const cleanVariants = f.variants
         .filter((v) => (v.name_en + v.name_fa + v.name_ps).trim().length > 0)
         .map((v) => ({
@@ -213,6 +240,7 @@ function AdminProducts() {
         video_url: f.video_url || null,
         attributes: cleanAttrs as unknown as never,
         variants: cleanVariants as unknown as never,
+        specifications: cleanSpecs as unknown as never,
         category_id: f.category_id || null,
         in_stock: f.in_stock,
         featured: f.featured,
@@ -260,6 +288,9 @@ function AdminProducts() {
     const merged = p.image_url && !galleryArr.includes(p.image_url) ? [p.image_url, ...galleryArr] : galleryArr;
     const attrsRaw = (Array.isArray(p.attributes) ? p.attributes : []) as Partial<AttributeRow>[];
     const variantsRaw = (Array.isArray(p.variants) ? p.variants : []) as Array<Partial<VariantRow> & { price?: number | string | null }>;
+    const specsRaw = (Array.isArray((p as { specifications?: unknown }).specifications)
+      ? ((p as { specifications: unknown[] }).specifications as Partial<SpecRow>[])
+      : []);
     setEditing({
       id: p.id, slug: p.slug,
       name_en: p.name_en, name_fa: p.name_fa, name_ps: p.name_ps,
@@ -277,6 +308,7 @@ function AdminProducts() {
         id: v.id ?? crypto.randomUUID(),
         price: v.price == null ? "" : String(v.price),
       })),
+      specifications: specsRaw.map((s) => ({ ...emptySpec(), ...s })),
     });
     setTab("general");
     setVideoMode(p.video_url && /^https?:\/\//.test(p.video_url) && !p.video_url.includes("supabase") ? "url" : "upload");
@@ -381,6 +413,105 @@ function AdminProducts() {
                         </Field>
                       </div>
                     ))}
+
+                    <div className="space-y-3 rounded-md border p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-semibold">Specifications</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            Build a side-by-side spec table (e.g. Material, Weight, Warranty). Leave a language blank to fall back to English.
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setEditing({ ...editing, specifications: [...editing.specifications, emptySpec()] })}
+                        >
+                          <Plus className="me-1 h-3.5 w-3.5" /> Add row
+                        </Button>
+                      </div>
+                      {editing.specifications.length === 0 && (
+                        <p className="text-xs text-muted-foreground">No specifications yet.</p>
+                      )}
+                      {editing.specifications.map((s, i) => (
+                        <div key={i} className="space-y-2 rounded border bg-muted/30 p-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-medium text-muted-foreground">Row {i + 1}</span>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7"
+                                disabled={i === 0}
+                                onClick={() => {
+                                  const next = editing.specifications.slice();
+                                  [next[i - 1], next[i]] = [next[i], next[i - 1]];
+                                  setEditing({ ...editing, specifications: next });
+                                }}
+                              >
+                                <ArrowUp className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7"
+                                disabled={i === editing.specifications.length - 1}
+                                onClick={() => {
+                                  const next = editing.specifications.slice();
+                                  [next[i + 1], next[i]] = [next[i], next[i + 1]];
+                                  setEditing({ ...editing, specifications: next });
+                                }}
+                              >
+                                <ArrowDown className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7"
+                                onClick={() =>
+                                  setEditing({
+                                    ...editing,
+                                    specifications: editing.specifications.filter((_, idx) => idx !== i),
+                                  })
+                                }
+                              >
+                                <X className="h-3.5 w-3.5 text-destructive" />
+                              </Button>
+                            </div>
+                          </div>
+                          {(["en", "fa", "ps"] as const).map((lng) => (
+                            <div key={lng} className="grid gap-2 md:grid-cols-2">
+                              <Input
+                                placeholder={`Label (${lng.toUpperCase()})`}
+                                dir={lng === "en" ? "ltr" : "rtl"}
+                                value={s[`label_${lng}`]}
+                                onChange={(e) => {
+                                  const next = editing.specifications.slice();
+                                  next[i] = { ...next[i], [`label_${lng}`]: e.target.value };
+                                  setEditing({ ...editing, specifications: next });
+                                }}
+                                className="text-xs"
+                              />
+                              <Input
+                                placeholder={`Value (${lng.toUpperCase()})`}
+                                dir={lng === "en" ? "ltr" : "rtl"}
+                                value={s[`value_${lng}`]}
+                                onChange={(e) => {
+                                  const next = editing.specifications.slice();
+                                  next[i] = { ...next[i], [`value_${lng}`]: e.target.value };
+                                  setEditing({ ...editing, specifications: next });
+                                }}
+                                className="text-xs"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
                   </TabsContent>
 
                   <TabsContent value="media" className="space-y-5">
