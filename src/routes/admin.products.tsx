@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Plus, Pencil, Trash2, Search, Package as PackageIcon, ImageOff, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Package as PackageIcon, ImageOff, X, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,15 @@ interface AttributeRow {
   value_ps: string;
 }
 
+interface SpecRow {
+  label_en: string;
+  label_fa: string;
+  label_ps: string;
+  value_en: string;
+  value_fa: string;
+  value_ps: string;
+}
+
 interface VariantRow {
   id: string;
   name_en: string;
@@ -72,14 +81,20 @@ interface ProductForm {
   attributes: AttributeRow[];
   sizesText: string;
   variants: VariantRow[];
+  specifications: SpecRow[];
 }
 
 const empty: ProductForm = {
   slug: "", name_en: "", name_fa: "", name_ps: "",
   description_en: "", description_fa: "", description_ps: "",
   price: "0", gallery: [], video_url: "", category_id: "",
-  in_stock: true, featured: false, attributes: [], sizesText: "", variants: [],
+  in_stock: true, featured: false, attributes: [], sizesText: "", variants: [], specifications: [],
 };
+
+const emptySpec = (): SpecRow => ({
+  label_en: "", label_fa: "", label_ps: "",
+  value_en: "", value_fa: "", value_ps: "",
+});
 
 const emptyAttr = (): AttributeRow => ({
   label_en: "", label_fa: "", label_ps: "",
