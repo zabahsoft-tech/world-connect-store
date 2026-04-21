@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState, type ComponentType } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Mail, Phone, MapPin, Clock, Facebook, Instagram, Twitter, Youtube, Send, Loader2 } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, Facebook, Instagram, Twitter, Youtube, Send, Loader2, Map as MapIcon } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
@@ -223,7 +223,7 @@ function ContactPage() {
               </div>
             )}
 
-            {s?.google_maps_embed_url && /^https:\/\/www\.google\.com\/maps\/embed/.test(s.google_maps_embed_url) && (
+            {s?.google_maps_embed_url && /^https:\/\/www\.google\.com\/maps\/embed/.test(s.google_maps_embed_url) ? (
               <div className="overflow-hidden rounded-xl border shadow-[var(--shadow-soft)]">
                 <iframe
                   src={s.google_maps_embed_url}
@@ -233,6 +233,31 @@ function ContactPage() {
                   allowFullScreen
                   className="h-[220px] w-full border-0 md:h-[280px]"
                 />
+              </div>
+            ) : (
+              <div
+                className="relative overflow-hidden rounded-xl border bg-muted/30 shadow-[var(--shadow-soft)]"
+                aria-label="Map placeholder"
+              >
+                <div
+                  className="h-[220px] w-full md:h-[280px]"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(to right, color-mix(in oklab, var(--border) 60%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklab, var(--border) 60%, transparent) 1px, transparent 1px)",
+                    backgroundSize: "32px 32px, 32px 32px",
+                  }}
+                >
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft text-primary">
+                      <MapIcon className="h-6 w-6" />
+                    </div>
+                    <p className="text-sm font-semibold">Map preview</p>
+                    <p className="px-6 text-xs text-muted-foreground">
+                      Add a Google Maps embed URL in settings to display the map here.
+                    </p>
+                  </div>
+                  <div className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary ring-4 ring-primary/20" />
+                </div>
               </div>
             )}
 
