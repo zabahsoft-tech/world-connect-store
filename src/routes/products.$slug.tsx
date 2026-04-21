@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Minus, Plus, ShoppingCart, MessageCircle, Play } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,6 +50,15 @@ interface AttributeRow {
 }
 
 interface SpecRow {
+  type?: "row" | "section";
+  // section title fields
+  title_en?: string;
+  title_fa?: string;
+  title_ps?: string;
+  // optional group ("main col")
+  group_en?: string;
+  group_fa?: string;
+  group_ps?: string;
   label_en: string;
   label_fa: string;
   label_ps: string;
@@ -318,17 +327,76 @@ function ProductPage() {
               <div className="overflow-hidden rounded-lg border">
                 <Table>
                   <TableBody>
-                    {specifications.map((s, i) => {
-                      const label = pickLang(s, "label", lang);
-                      const value = pickLang(s, "value", lang);
-                      if (!label && !value) return null;
-                      return (
-                        <TableRow key={i} className="even:bg-muted/30">
-                          <TableCell className="w-1/3 font-medium">{label}</TableCell>
-                          <TableCell className="text-muted-foreground">{value}</TableCell>
-                        </TableRow>
+                    {(() => {
+                      const hasGroup = specifications.some(
+                        (s) => (s.type ?? "row") === "row" && (s.group_en || s.group_fa || s.group_ps),
                       );
-                    })}
+                      const colCount = hasGroup ? 3 : 2;
+                      let stripeIdx = 0;
+                      const out: ReactNode[] = [];
+                      for (let i = 0; i < specifications.length; i++) {
+                        const s = specifications[i];
+                        const kind = s.type ?? "row";
+                        if (kind === "section") {
+                          const title = pickLang(s, "title", lang);
+                          if (!title) continue;
+                          out.push(
+                            <TableRow key={`sec-${i}`} className="bg-muted/60 hover:bg-muted/60">
+                              <TableCell colSpan={colCount} className="py-2 text-xs font-semibold uppercase tracking-wide text-foreground">
+                                {title}
+                              </TableCell>
+                            </TableRow>,
+                          );
+                          stripeIdx = 0;
+                          continue;
+                        }
+                        const label = pickLang(s, "label", lang);
+                        const value = pickLang(s, "value", lang);
+                        if (!label && !value) continue;
+                        const stripe = stripeIdx % 2 === 1 ? "bg-muted/30" : "";
+                        stripeIdx++;
+                        // group rowSpan: count consecutive following rows with same group (until section/different group)
+                        let groupCell: React.ReactNode = null;
+                        if (hasGroup) {
+                          const myGroup = pickLang(s, "group", lang);
+                          const prev = specifications[i - 1];
+                          const prevKind = prev?.type ?? "row";
+                          const prevGroup =
+                            prev && prevKind === "row" ? pickLang(prev, "group", lang) : "";
+                          const startsBlock = !prev || prevKind === "section" || prevGroup !== myGroup;
+                          if (startsBlock) {
+                            let span = 1;
+                            for (let j = i + 1; j < specifications.length; j++) {
+                              const n = specifications[j];
+                              if ((n.type ?? "row") !== "row") break;
+                              if (pickLang(n, "group", lang) !== myGroup) break;
+                              const nLabel = pickLang(n, "label", lang);
+                              const nValue = pickLang(n, "value", lang);
+                              if (!nLabel && !nValue) break;
+                              span++;
+                            }
+                            groupCell = (
+                              <TableCell
+                                rowSpan={span}
+                                className="w-1/4 border-e bg-muted/20 align-top text-sm font-semibold"
+                              >
+                                {myGroup}
+                              </TableCell>
+                            );
+                          }
+                        }
+                        out.push(
+                          <TableRow key={`row-${i}`} className={stripe}>
+                            {groupCell}
+                            <TableCell className={hasGroup ? "w-1/3 font-medium" : "w-1/3 font-medium"}>
+                              {label}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">{value}</TableCell>
+                          </TableRow>,
+                        );
+                      }
+                      return out;
+                    })()}
                   </TableBody>
                 </Table>
               </div>

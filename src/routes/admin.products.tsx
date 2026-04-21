@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Plus, Pencil, Trash2, Search, Package as PackageIcon, ImageOff, X, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Package as PackageIcon, ImageOff, X, ArrowUp, ArrowDown, Heading, GripVertical, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -44,6 +44,15 @@ interface AttributeRow {
 }
 
 interface SpecRow {
+  type?: "row" | "section";
+  // section title fields
+  title_en?: string;
+  title_fa?: string;
+  title_ps?: string;
+  // optional group ("main col")
+  group_en?: string;
+  group_fa?: string;
+  group_ps?: string;
   label_en: string;
   label_fa: string;
   label_ps: string;
@@ -92,6 +101,16 @@ const empty: ProductForm = {
 };
 
 const emptySpec = (): SpecRow => ({
+  type: "row",
+  group_en: "", group_fa: "", group_ps: "",
+  label_en: "", label_fa: "", label_ps: "",
+  value_en: "", value_fa: "", value_ps: "",
+});
+
+const emptySection = (): SpecRow => ({
+  type: "section",
+  title_en: "", title_fa: "", title_ps: "",
+  group_en: "", group_fa: "", group_ps: "",
   label_en: "", label_fa: "", label_ps: "",
   value_en: "", value_fa: "", value_ps: "",
 });
@@ -163,6 +182,10 @@ function AdminProducts() {
   const [filterStock, setFilterStock] = useState<string>("all");
   const [filterFeatured, setFilterFeatured] = useState<string>("all");
 
+  const [specLang, setSpecLang] = useState<"en" | "fa" | "ps">("en");
+  const [specShowAll, setSpecShowAll] = useState(false);
+  const [specDragIdx, setSpecDragIdx] = useState<number | null>(null);
+
   const products = useQuery({
     queryKey: ["admin-products"],
     queryFn: async () => {
@@ -205,17 +228,34 @@ function AdminProducts() {
       }
       const cleanAttrs = sizesTextToAttrs(f.sizesText);
       const cleanSpecs = f.specifications
-        .filter((s) =>
-          (s.label_en + s.label_fa + s.label_ps + s.value_en + s.value_fa + s.value_ps).trim().length > 0,
-        )
-        .map((s) => ({
-          label_en: s.label_en.trim(),
-          label_fa: s.label_fa.trim(),
-          label_ps: s.label_ps.trim(),
-          value_en: s.value_en.trim(),
-          value_fa: s.value_fa.trim(),
-          value_ps: s.value_ps.trim(),
-        }));
+        .filter((s) => {
+          if (s.type === "section") {
+            return ((s.title_en ?? "") + (s.title_fa ?? "") + (s.title_ps ?? "")).trim().length > 0;
+          }
+          return (s.label_en + s.label_fa + s.label_ps + s.value_en + s.value_fa + s.value_ps).trim().length > 0;
+        })
+        .map((s) => {
+          if (s.type === "section") {
+            return {
+              type: "section" as const,
+              title_en: (s.title_en ?? "").trim(),
+              title_fa: (s.title_fa ?? "").trim(),
+              title_ps: (s.title_ps ?? "").trim(),
+            };
+          }
+          return {
+            type: "row" as const,
+            group_en: (s.group_en ?? "").trim(),
+            group_fa: (s.group_fa ?? "").trim(),
+            group_ps: (s.group_ps ?? "").trim(),
+            label_en: s.label_en.trim(),
+            label_fa: s.label_fa.trim(),
+            label_ps: s.label_ps.trim(),
+            value_en: s.value_en.trim(),
+            value_fa: s.value_fa.trim(),
+            value_ps: s.value_ps.trim(),
+          };
+        });
       const cleanVariants = f.variants
         .filter((v) => (v.name_en + v.name_fa + v.name_ps).trim().length > 0)
         .map((v) => ({
@@ -414,104 +454,16 @@ function AdminProducts() {
                       </div>
                     ))}
 
-                    <div className="space-y-3 rounded-md border p-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <div>
-                          <p className="text-sm font-semibold">Specifications</p>
-                          <p className="text-[11px] text-muted-foreground">
-                            Build a side-by-side spec table (e.g. Material, Weight, Warranty). Leave a language blank to fall back to English.
-                          </p>
-                        </div>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setEditing({ ...editing, specifications: [...editing.specifications, emptySpec()] })}
-                        >
-                          <Plus className="me-1 h-3.5 w-3.5" /> Add row
-                        </Button>
-                      </div>
-                      {editing.specifications.length === 0 && (
-                        <p className="text-xs text-muted-foreground">No specifications yet.</p>
-                      )}
-                      {editing.specifications.map((s, i) => (
-                        <div key={i} className="space-y-2 rounded border bg-muted/30 p-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-medium text-muted-foreground">Row {i + 1}</span>
-                            <div className="flex items-center gap-1">
-                              <Button
-                                type="button"
-                                size="icon"
-                                variant="ghost"
-                                className="h-7 w-7"
-                                disabled={i === 0}
-                                onClick={() => {
-                                  const next = editing.specifications.slice();
-                                  [next[i - 1], next[i]] = [next[i], next[i - 1]];
-                                  setEditing({ ...editing, specifications: next });
-                                }}
-                              >
-                                <ArrowUp className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button
-                                type="button"
-                                size="icon"
-                                variant="ghost"
-                                className="h-7 w-7"
-                                disabled={i === editing.specifications.length - 1}
-                                onClick={() => {
-                                  const next = editing.specifications.slice();
-                                  [next[i + 1], next[i]] = [next[i], next[i + 1]];
-                                  setEditing({ ...editing, specifications: next });
-                                }}
-                              >
-                                <ArrowDown className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button
-                                type="button"
-                                size="icon"
-                                variant="ghost"
-                                className="h-7 w-7"
-                                onClick={() =>
-                                  setEditing({
-                                    ...editing,
-                                    specifications: editing.specifications.filter((_, idx) => idx !== i),
-                                  })
-                                }
-                              >
-                                <X className="h-3.5 w-3.5 text-destructive" />
-                              </Button>
-                            </div>
-                          </div>
-                          {(["en", "fa", "ps"] as const).map((lng) => (
-                            <div key={lng} className="grid gap-2 md:grid-cols-2">
-                              <Input
-                                placeholder={`Label (${lng.toUpperCase()})`}
-                                dir={lng === "en" ? "ltr" : "rtl"}
-                                value={s[`label_${lng}`]}
-                                onChange={(e) => {
-                                  const next = editing.specifications.slice();
-                                  next[i] = { ...next[i], [`label_${lng}`]: e.target.value };
-                                  setEditing({ ...editing, specifications: next });
-                                }}
-                                className="text-xs"
-                              />
-                              <Input
-                                placeholder={`Value (${lng.toUpperCase()})`}
-                                dir={lng === "en" ? "ltr" : "rtl"}
-                                value={s[`value_${lng}`]}
-                                onChange={(e) => {
-                                  const next = editing.specifications.slice();
-                                  next[i] = { ...next[i], [`value_${lng}`]: e.target.value };
-                                  setEditing({ ...editing, specifications: next });
-                                }}
-                                className="text-xs"
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
+                    <SpecEditor
+                      specs={editing.specifications}
+                      onChange={(next) => setEditing({ ...editing, specifications: next })}
+                      lang={specLang}
+                      onLangChange={setSpecLang}
+                      showAll={specShowAll}
+                      onShowAllChange={setSpecShowAll}
+                      dragIdx={specDragIdx}
+                      onDragIdxChange={setSpecDragIdx}
+                    />
                   </TabsContent>
 
                   <TabsContent value="media" className="space-y-5">
@@ -909,6 +861,284 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
       <Label className="text-xs">{label}</Label>
       {children}
       {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
+    </div>
+  );
+}
+
+type SpecLang = "en" | "fa" | "ps";
+
+function SpecEditor({
+  specs,
+  onChange,
+  lang,
+  onLangChange,
+  showAll,
+  onShowAllChange,
+  dragIdx,
+  onDragIdxChange,
+}: {
+  specs: SpecRow[];
+  onChange: (next: SpecRow[]) => void;
+  lang: SpecLang;
+  onLangChange: (l: SpecLang) => void;
+  showAll: boolean;
+  onShowAllChange: (v: boolean) => void;
+  dragIdx: number | null;
+  onDragIdxChange: (i: number | null) => void;
+}) {
+  const hasGroup = specs.some(
+    (s) => (s.type ?? "row") === "row" && ((s.group_en ?? "") + (s.group_fa ?? "") + (s.group_ps ?? "")).trim().length > 0,
+  );
+
+  const update = (i: number, patch: Partial<SpecRow>) => {
+    const next = specs.slice();
+    next[i] = { ...next[i], ...patch };
+    onChange(next);
+  };
+  const remove = (i: number) => onChange(specs.filter((_, idx) => idx !== i));
+  const move = (from: number, to: number) => {
+    if (to < 0 || to >= specs.length || from === to) return;
+    const next = specs.slice();
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item);
+    onChange(next);
+  };
+  const duplicate = (i: number) => {
+    const next = specs.slice();
+    next.splice(i + 1, 0, { ...specs[i] });
+    onChange(next);
+  };
+  const clearGroups = () => {
+    onChange(specs.map((s) => ((s.type ?? "row") === "row" ? { ...s, group_en: "", group_fa: "", group_ps: "" } : s)));
+  };
+
+  const dirOf = (l: SpecLang): "ltr" | "rtl" => (l === "en" ? "ltr" : "rtl");
+  const langPills: SpecLang[] = ["en", "fa", "ps"];
+
+  return (
+    <div className="space-y-2 rounded-md border p-3">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold">Specifications</p>
+          <p className="text-[11px] text-muted-foreground">
+            Build a spec sheet. Use <strong>sections</strong> to group rows (e.g. "Dimensions", "Power"). The optional <strong>Group</strong> column labels sub-categories within a section. Switch the EN/FA/PS pills to translate.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-1">
+          <div className="flex overflow-hidden rounded-md border">
+            {langPills.map((l) => (
+              <button
+                key={l}
+                type="button"
+                onClick={() => onLangChange(l)}
+                className={`px-2 py-1 text-[11px] font-medium uppercase transition-colors ${
+                  lang === l ? "bg-primary text-primary-foreground" : "bg-background hover:bg-muted"
+                }`}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant={showAll ? "default" : "outline"}
+            onClick={() => onShowAllChange(!showAll)}
+            className="h-7 text-[11px]"
+          >
+            All langs
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-1">
+        <Button type="button" size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => onChange([...specs, emptySpec()])}>
+          <Plus className="me-1 h-3 w-3" /> Add row
+        </Button>
+        <Button type="button" size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => onChange([...specs, emptySection()])}>
+          <Heading className="me-1 h-3 w-3" /> Add section
+        </Button>
+        {hasGroup && (
+          <Button type="button" size="sm" variant="ghost" className="h-7 text-[11px]" onClick={clearGroups}>
+            Clear group column
+          </Button>
+        )}
+      </div>
+
+      {specs.length === 0 && (
+        <p className="rounded border border-dashed p-3 text-center text-xs text-muted-foreground">
+          No specifications yet. Click <strong>Add row</strong> or <strong>Add section</strong> to start.
+        </p>
+      )}
+
+      {specs.length > 0 && (
+        <div className="overflow-hidden rounded-md border">
+          <table className="w-full text-xs">
+            <thead className="bg-muted/40 text-[11px] uppercase text-muted-foreground">
+              <tr>
+                <th className="w-8 p-1.5"></th>
+                {hasGroup && <th className="p-1.5 text-left font-medium">Group</th>}
+                <th className="p-1.5 text-left font-medium">Label</th>
+                <th className="p-1.5 text-left font-medium">Value</th>
+                <th className="w-24 p-1.5"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {specs.map((s, i) => {
+                const kind = s.type ?? "row";
+                const isSection = kind === "section";
+                const dragging = dragIdx === i;
+                const rowProps = {
+                  draggable: true,
+                  onDragStart: () => onDragIdxChange(i),
+                  onDragOver: (e: React.DragEvent) => e.preventDefault(),
+                  onDrop: (e: React.DragEvent) => {
+                    e.preventDefault();
+                    if (dragIdx != null && dragIdx !== i) move(dragIdx, i);
+                    onDragIdxChange(null);
+                  },
+                  onDragEnd: () => onDragIdxChange(null),
+                  className: `border-t ${dragging ? "opacity-50" : ""} ${isSection ? "bg-accent/40" : "even:bg-muted/20"}`,
+                };
+                if (isSection) {
+                  const colSpan = hasGroup ? 3 : 2;
+                  return (
+                    <tr key={i} {...rowProps}>
+                      <td className="cursor-move p-1.5 align-middle text-muted-foreground"><GripVertical className="h-3.5 w-3.5" /></td>
+                      <td colSpan={colSpan} className="p-1.5">
+                        {showAll ? (
+                          <div className="grid gap-1 md:grid-cols-3">
+                            {langPills.map((l) => (
+                              <Input
+                                key={l}
+                                placeholder={`Section title (${l.toUpperCase()})`}
+                                dir={dirOf(l)}
+                                value={s[`title_${l}`] ?? ""}
+                                onChange={(e) => update(i, { [`title_${l}`]: e.target.value } as Partial<SpecRow>)}
+                                className="h-8 text-xs font-semibold"
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <Input
+                            placeholder={`Section title (${lang.toUpperCase()})`}
+                            dir={dirOf(lang)}
+                            value={s[`title_${lang}`] ?? ""}
+                            onChange={(e) => update(i, { [`title_${lang}`]: e.target.value } as Partial<SpecRow>)}
+                            className="h-8 text-xs font-semibold"
+                          />
+                        )}
+                      </td>
+                      <td className="p-1.5">
+                        <RowActions i={i} total={specs.length} onUp={() => move(i, i - 1)} onDown={() => move(i, i + 1)} onDup={() => duplicate(i)} onDel={() => remove(i)} />
+                      </td>
+                    </tr>
+                  );
+                }
+                return (
+                  <tr key={i} {...rowProps}>
+                    <td className="cursor-move p-1.5 align-top text-muted-foreground"><GripVertical className="h-3.5 w-3.5" /></td>
+                    {hasGroup && (
+                      <td className="p-1.5 align-top">
+                        <SpecCell field="group" lang={lang} showAll={showAll} row={s} onPatch={(p) => update(i, p)} />
+                      </td>
+                    )}
+                    <td className="p-1.5 align-top">
+                      <SpecCell field="label" lang={lang} showAll={showAll} row={s} onPatch={(p) => update(i, p)} />
+                    </td>
+                    <td className="p-1.5 align-top">
+                      <SpecCell field="value" lang={lang} showAll={showAll} row={s} onPatch={(p) => update(i, p)} />
+                    </td>
+                    <td className="p-1.5 align-top">
+                      <RowActions i={i} total={specs.length} onUp={() => move(i, i - 1)} onDown={() => move(i, i + 1)} onDup={() => duplicate(i)} onDel={() => remove(i)} />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SpecCell({
+  field,
+  lang,
+  showAll,
+  row,
+  onPatch,
+}: {
+  field: "group" | "label" | "value";
+  lang: SpecLang;
+  showAll: boolean;
+  row: SpecRow;
+  onPatch: (patch: Partial<SpecRow>) => void;
+}) {
+  const dirOf = (l: SpecLang): "ltr" | "rtl" => (l === "en" ? "ltr" : "rtl");
+  const langs: SpecLang[] = ["en", "fa", "ps"];
+  const placeholder = field === "group" ? "Group" : field === "label" ? "Label" : "Value";
+  if (showAll) {
+    return (
+      <div className="space-y-1">
+        {langs.map((l) => {
+          const key = `${field}_${l}` as keyof SpecRow;
+          return (
+            <Input
+              key={l}
+              placeholder={`${placeholder} (${l.toUpperCase()})`}
+              dir={dirOf(l)}
+              value={(row[key] as string | undefined) ?? ""}
+              onChange={(e) => onPatch({ [key]: e.target.value } as Partial<SpecRow>)}
+              className="h-7 text-xs"
+            />
+          );
+        })}
+      </div>
+    );
+  }
+  const key = `${field}_${lang}` as keyof SpecRow;
+  return (
+    <Input
+      placeholder={placeholder}
+      dir={dirOf(lang)}
+      value={(row[key] as string | undefined) ?? ""}
+      onChange={(e) => onPatch({ [key]: e.target.value } as Partial<SpecRow>)}
+      className="h-7 text-xs"
+    />
+  );
+}
+
+function RowActions({
+  i,
+  total,
+  onUp,
+  onDown,
+  onDup,
+  onDel,
+}: {
+  i: number;
+  total: number;
+  onUp: () => void;
+  onDown: () => void;
+  onDup: () => void;
+  onDel: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-0.5">
+      <Button type="button" size="icon" variant="ghost" className="h-6 w-6" disabled={i === 0} onClick={onUp}>
+        <ArrowUp className="h-3 w-3" />
+      </Button>
+      <Button type="button" size="icon" variant="ghost" className="h-6 w-6" disabled={i === total - 1} onClick={onDown}>
+        <ArrowDown className="h-3 w-3" />
+      </Button>
+      <Button type="button" size="icon" variant="ghost" className="h-6 w-6" onClick={onDup}>
+        <Copy className="h-3 w-3" />
+      </Button>
+      <Button type="button" size="icon" variant="ghost" className="h-6 w-6" onClick={onDel}>
+        <X className="h-3 w-3 text-destructive" />
+      </Button>
     </div>
   );
 }
