@@ -171,7 +171,26 @@ function ContactPage() {
   const directionsHref = s?.address
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address)}`
     : null;
-  const hasEmbed = !!(s?.google_maps_embed_url && /^https:\/\/www\.google\.com\/maps\/embed/.test(s.google_maps_embed_url));
+  // Accept any Google Maps URL the user pastes and convert it to an embeddable iframe URL.
+  // - /maps/embed?... → use as-is (official embed)
+  // - /maps/place/... or /maps/...@lat,lng,zoom → extract coords and use maps.google.com/maps?q=...&output=embed
+  // - fallback: query by address
+  const buildEmbedUrl = (raw: string | null | undefined, address: string | null | undefined): string | null => {
+    const url = raw?.trim();
+    if (url && /^https:\/\/www\.google\.[^/]+\/maps\/embed/.test(url)) return url;
+    const coordMatch = url?.match(/@(-?\d+\.\d+),(-?\d+\.\d+)(?:,(\d+(?:\.\d+)?)z)?/);
+    if (coordMatch) {
+      const [, lat, lng, zoom] = coordMatch;
+      const z = zoom ?? "16";
+      return `https://maps.google.com/maps?q=${lat},${lng}&z=${z}&output=embed`;
+    }
+    if (address?.trim()) {
+      return `https://maps.google.com/maps?q=${encodeURIComponent(address)}&output=embed`;
+    }
+    return null;
+  };
+  const embedUrl = buildEmbedUrl(s?.google_maps_embed_url, s?.address);
+  const hasEmbed = !!embedUrl;
   const replyHelper = s?.business_hours
     ? `We usually reply during ${s.business_hours}.`
     : "We usually reply within a few hours.";
@@ -308,7 +327,7 @@ function ContactPage() {
             ) : hasEmbed ? (
               <div className="relative overflow-hidden rounded-xl border shadow-[var(--shadow-soft)]">
                 <iframe
-                  src={s!.google_maps_embed_url!}
+                  src={embedUrl!}
                   title="Map"
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
