@@ -3,7 +3,23 @@ import { useQuery } from "@tanstack/react-query";
 import { useState, type ComponentType } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Mail, Phone, MapPin, Clock, Facebook, Instagram, Twitter, Youtube, Send, Loader2, Map as MapIcon } from "lucide-react";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Clock,
+  Facebook,
+  Instagram,
+  Twitter,
+  Youtube,
+  Send,
+  Loader2,
+  MessageCircle,
+  ChevronRight,
+  Navigation,
+  Share2,
+  ArrowRight,
+} from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
@@ -14,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { openWhatsApp } from "@/lib/whatsapp";
 
 import {
