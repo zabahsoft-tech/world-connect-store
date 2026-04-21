@@ -265,11 +265,13 @@ function AdminSlides() {
 
             <TabsContent value="general" className="space-y-4">
               <div className="space-y-2">
-                <Label>Image URL</Label>
-                <Input
+                <Label>Slide image</Label>
+                <ImageUpload
                   value={form.image}
-                  onChange={(e) => setForm({ ...form, image: e.target.value })}
-                  placeholder="https://..."
+                  onChange={(url) => setForm({ ...form, image: url })}
+                  bucket="site-assets"
+                  folder="hero-slides"
+                  previewSize="lg"
                 />
                 {form.image && (
                   <div className="aspect-[16/7] overflow-hidden rounded-lg border bg-muted">
