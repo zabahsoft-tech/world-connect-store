@@ -152,13 +152,29 @@ function ContactPage() {
   ];
   const visibleSocials = socials.filter((x) => x.url && x.url.trim());
 
-  const infoTiles: { href?: string; icon: ComponentType<{ className?: string }>; label: string; value: string }[] = [];
+  type InfoTile = {
+    href?: string;
+    icon: ComponentType<{ className?: string }>;
+    label: string;
+    value: string;
+    wide?: boolean;
+  };
+  const infoTiles: InfoTile[] = [];
   if (wa) infoTiles.push({ href: `https://wa.me/${wa.replace(/[^\d]/g, "")}`, icon: WhatsAppIcon, label: "WhatsApp", value: wa });
   if (wa2) infoTiles.push({ href: `https://wa.me/${wa2.replace(/[^\d]/g, "")}`, icon: WhatsAppIcon, label: "WhatsApp 2", value: wa2 });
   if (s?.phone) infoTiles.push({ href: `tel:${s.phone}`, icon: Phone, label: tr("phone"), value: s.phone });
   if (s?.email) infoTiles.push({ href: `mailto:${s.email}`, icon: Mail, label: tr("email"), value: s.email });
-  if (s?.address) infoTiles.push({ icon: MapPin, label: "Address", value: s.address });
-  if (s?.business_hours) infoTiles.push({ icon: Clock, label: "Hours", value: s.business_hours });
+  if (s?.address) infoTiles.push({ icon: MapPin, label: "Address", value: s.address, wide: true });
+  if (s?.business_hours) infoTiles.push({ icon: Clock, label: "Hours", value: s.business_hours, wide: true });
+
+  const storeName = s ? pickLang(s, "store_name", lang) : "";
+  const directionsHref = s?.address
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address)}`
+    : null;
+  const hasEmbed = !!(s?.google_maps_embed_url && /^https:\/\/www\.google\.com\/maps\/embed/.test(s.google_maps_embed_url));
+  const replyHelper = s?.business_hours
+    ? `We usually reply during ${s.business_hours}.`
+    : "We usually reply within a few hours.";
 
   return (
     <SiteLayout>
