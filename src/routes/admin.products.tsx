@@ -1333,3 +1333,90 @@ function RowActions({
     </div>
   );
 }
+
+function ExtraCell({
+  lang,
+  showAll,
+  extra,
+  onPatch,
+}: {
+  lang: SpecLang;
+  showAll: boolean;
+  extra: SpecValueExtra | undefined;
+  onPatch: (patch: Partial<SpecValueExtra>) => void;
+}) {
+  const dirOf = (l: SpecLang): "ltr" | "rtl" => (l === "en" ? "ltr" : "rtl");
+  const langs: SpecLang[] = ["en", "fa", "ps"];
+  const e: SpecValueExtra = extra ?? {};
+  if (showAll) {
+    return (
+      <div className="space-y-1">
+        {langs.map((l) => {
+          const key = `value_${l}` as keyof SpecValueExtra;
+          return (
+            <Input
+              key={l}
+              placeholder={`Value (${l.toUpperCase()})`}
+              dir={dirOf(l)}
+              value={(e[key] as string | undefined) ?? ""}
+              onChange={(ev) => onPatch({ [key]: ev.target.value } as Partial<SpecValueExtra>)}
+              className="h-7 text-xs"
+            />
+          );
+        })}
+      </div>
+    );
+  }
+  const key = `value_${lang}` as keyof SpecValueExtra;
+  return (
+    <Input
+      placeholder="Value"
+      dir={dirOf(lang)}
+      value={(e[key] as string | undefined) ?? ""}
+      onChange={(ev) => onPatch({ [key]: ev.target.value } as Partial<SpecValueExtra>)}
+      className="h-7 text-xs"
+    />
+  );
+}
+
+function HeaderCell({
+  lang,
+  showAll,
+  readValue,
+  onChange,
+  placeholder,
+}: {
+  lang: SpecLang;
+  showAll: boolean;
+  readValue: (l: SpecLang) => string;
+  onChange: (l: SpecLang, value: string) => void;
+  placeholder: string;
+}) {
+  const dirOf = (l: SpecLang): "ltr" | "rtl" => (l === "en" ? "ltr" : "rtl");
+  const langs: SpecLang[] = ["en", "fa", "ps"];
+  if (showAll) {
+    return (
+      <div className="space-y-1">
+        {langs.map((l) => (
+          <Input
+            key={l}
+            placeholder={`${placeholder} (${l.toUpperCase()})`}
+            dir={dirOf(l)}
+            value={readValue(l)}
+            onChange={(e) => onChange(l, e.target.value)}
+            className="h-7 text-xs font-semibold"
+          />
+        ))}
+      </div>
+    );
+  }
+  return (
+    <Input
+      placeholder={placeholder}
+      dir={dirOf(lang)}
+      value={readValue(lang)}
+      onChange={(e) => onChange(lang, e.target.value)}
+      className="h-7 text-xs font-semibold"
+    />
+  );
+}
