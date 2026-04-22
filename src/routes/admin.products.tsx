@@ -249,12 +249,34 @@ function AdminProducts() {
         throw new Error("Name is required in all 3 languages");
       }
       const cleanAttrs = sizesTextToAttrs(f.sizesText);
+      // Determine how many extra columns to keep — drop any trailing column
+      // where every row's value is empty AND the column header is empty.
+      const rowOnly = f.specifications.filter((s) => (s.type ?? "row") === "row");
+      const maxExtras = rowOnly.reduce((m, s) => Math.max(m, s.extras?.length ?? 0), 0);
+      let keepExtras = maxExtras;
+      while (keepExtras > 0) {
+        const colIdx = keepExtras - 1;
+        const headerEmpty = rowOnly.every((s) => {
+          const ex = s.extras?.[colIdx];
+          return !ex || !((ex.header_en ?? "") + (ex.header_fa ?? "") + (ex.header_ps ?? "")).trim();
+        });
+        const valuesEmpty = rowOnly.every((s) => {
+          const ex = s.extras?.[colIdx];
+          return !ex || !((ex.value_en ?? "") + (ex.value_fa ?? "") + (ex.value_ps ?? "")).trim();
+        });
+        if (headerEmpty && valuesEmpty) keepExtras--;
+        else break;
+      }
       const cleanSpecs = f.specifications
         .filter((s) => {
           if (s.type === "section") {
             return ((s.title_en ?? "") + (s.title_fa ?? "") + (s.title_ps ?? "")).trim().length > 0;
           }
-          return (s.label_en + s.label_fa + s.label_ps + s.value_en + s.value_fa + s.value_ps).trim().length > 0;
+          const extrasText = (s.extras ?? [])
+            .slice(0, keepExtras)
+            .map((e) => (e.value_en ?? "") + (e.value_fa ?? "") + (e.value_ps ?? ""))
+            .join("");
+          return (s.label_en + s.label_fa + s.label_ps + s.value_en + s.value_fa + s.value_ps + extrasText).trim().length > 0;
         })
         .map((s) => {
           if (s.type === "section") {
@@ -265,6 +287,14 @@ function AdminProducts() {
               title_ps: (s.title_ps ?? "").trim(),
             };
           }
+          const extras = (s.extras ?? []).slice(0, keepExtras).map((e) => ({
+            header_en: (e.header_en ?? "").trim(),
+            header_fa: (e.header_fa ?? "").trim(),
+            header_ps: (e.header_ps ?? "").trim(),
+            value_en: (e.value_en ?? "").trim(),
+            value_fa: (e.value_fa ?? "").trim(),
+            value_ps: (e.value_ps ?? "").trim(),
+          }));
           return {
             type: "row" as const,
             group_en: (s.group_en ?? "").trim(),
@@ -276,6 +306,10 @@ function AdminProducts() {
             value_en: s.value_en.trim(),
             value_fa: s.value_fa.trim(),
             value_ps: s.value_ps.trim(),
+            value_header_en: (s.value_header_en ?? "").trim(),
+            value_header_fa: (s.value_header_fa ?? "").trim(),
+            value_header_ps: (s.value_header_ps ?? "").trim(),
+            extras,
           };
         });
       const cleanVariants = f.variants
