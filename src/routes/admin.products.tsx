@@ -404,7 +404,13 @@ function AdminProducts() {
         id: v.id ?? crypto.randomUUID(),
         price: v.price == null ? "" : String(v.price),
       })),
-      specifications: specsRaw.map((s) => ({ ...emptySpec(), ...s })),
+      specifications: specsRaw.map((s) => ({
+        ...emptySpec(),
+        ...s,
+        extras: Array.isArray((s as { extras?: unknown }).extras)
+          ? ((s as { extras: SpecValueExtra[] }).extras).map((e) => ({ ...emptyExtra(), ...e }))
+          : [],
+      })),
     });
     setTab("general");
     setVideoMode(p.video_url && /^https?:\/\//.test(p.video_url) && !p.video_url.includes("supabase") ? "url" : "upload");
