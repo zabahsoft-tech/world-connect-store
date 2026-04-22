@@ -999,7 +999,8 @@ function SpecEditor({
   };
   const duplicate = (i: number) => {
     const next = specs.slice();
-    next.splice(i + 1, 0, { ...specs[i] });
+    const src = specs[i];
+    next.splice(i + 1, 0, { ...src, extras: (src.extras ?? []).map((e) => ({ ...e })) });
     onChange(next);
   };
   const clearGroups = () => {
