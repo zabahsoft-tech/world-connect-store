@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Plus, Pencil, Trash2, Search, Package as PackageIcon, ImageOff, X, ArrowUp, ArrowDown, Heading, GripVertical, Copy } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Package as PackageIcon, ImageOff, X, ArrowUp, ArrowDown, Heading, GripVertical, Copy, Columns3, Minus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,15 @@ interface AttributeRow {
   value_ps: string;
 }
 
+interface SpecValueExtra {
+  header_en?: string;
+  header_fa?: string;
+  header_ps?: string;
+  value_en?: string;
+  value_fa?: string;
+  value_ps?: string;
+}
+
 interface SpecRow {
   type?: "row" | "section";
   // section title fields
@@ -59,6 +68,12 @@ interface SpecRow {
   value_en: string;
   value_fa: string;
   value_ps: string;
+  // optional first-value column header (only used when extras > 0)
+  value_header_en?: string;
+  value_header_fa?: string;
+  value_header_ps?: string;
+  // additional value columns
+  extras?: SpecValueExtra[];
 }
 
 interface VariantRow {
