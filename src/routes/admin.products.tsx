@@ -1120,7 +1120,7 @@ function SpecEditor({
       )}
 
       {specs.length > 0 && (
-        <div className="overflow-hidden rounded-md border">
+        <div className="overflow-x-auto rounded-md border">
           <table className="w-full text-xs">
             <thead className="bg-muted/40 text-[11px] uppercase text-muted-foreground">
               <tr>
@@ -1128,9 +1128,42 @@ function SpecEditor({
                 {hasGroup && <th className="p-1.5 text-left font-medium">Group</th>}
                 <th className="p-1.5 text-left font-medium">Label</th>
                 <th className="p-1.5 text-left font-medium">Value</th>
+                {Array.from({ length: extrasCount }).map((_, idx) => (
+                  <th key={idx} className="p-1.5 text-left font-medium">Col {idx + 2}</th>
+                ))}
                 <th className="w-24 p-1.5"></th>
               </tr>
             </thead>
+            {extrasCount > 0 && (
+              <thead className="bg-muted/20">
+                <tr>
+                  <th className="p-1.5"></th>
+                  {hasGroup && <th className="p-1.5"></th>}
+                  <th className="p-1.5"></th>
+                  <th className="p-1.5">
+                    <HeaderCell
+                      lang={lang}
+                      showAll={showAll}
+                      readValue={(l) => readFirstHeader(l)}
+                      onChange={(l, v) => setColumnHeader("first", { [`header_${l}`]: v } as Partial<SpecValueExtra>)}
+                      placeholder="Value header"
+                    />
+                  </th>
+                  {Array.from({ length: extrasCount }).map((_, idx) => (
+                    <th key={idx} className="p-1.5">
+                      <HeaderCell
+                        lang={lang}
+                        showAll={showAll}
+                        readValue={(l) => readExtraHeader(idx, l)}
+                        onChange={(l, v) => setColumnHeader(idx, { [`header_${l}`]: v } as Partial<SpecValueExtra>)}
+                        placeholder={`Col ${idx + 2} header`}
+                      />
+                    </th>
+                  ))}
+                  <th className="p-1.5"></th>
+                </tr>
+              </thead>
+            )}
             <tbody>
               {specs.map((s, i) => {
                 const kind = s.type ?? "row";
