@@ -1,86 +1,75 @@
 
 
-## Enhance the Specifications editor — spreadsheet-style with section rows
+## Add multiple value columns to Specifications
 
-Make the Specifications field much faster to fill in by switching from the current "stacked card per row" layout into a **compact spreadsheet-style grid**, and add support for **section header rows** ("main row") and an optional **group column** ("main col") so admins can build richer spec sheets like:
+Currently each row has one Label + one Value. The user wants multiple columns per row — i.e. true table-like behavior where you can compare several attributes side-by-side, e.g.:
 
 ```
-┌─ DIMENSIONS ────────────────────────────┐  ← section row (full width)
-│ Group   │ Label      │ Value             │
-│ Body    │ Width      │ 80 cm             │
-│ Body    │ Height     │ 120 cm            │
-├─ POWER ─────────────────────────────────┤  ← section row
-│ Input   │ Voltage    │ 220V              │
-│ Input   │ Frequency  │ 50Hz              │
-└─────────────────────────────────────────┘
+┌────────── DIMENSIONS ──────────────────────────────┐
+│ Group │ Label   │ Small  │ Medium │ Large │ XL    │
+│ Body  │ Width   │ 60 cm  │ 80 cm  │ 100   │ 120   │
+│ Body  │ Height  │ 90 cm  │ 120 cm │ 150   │ 180   │
+└────────────────────────────────────────────────────┘
 ```
 
-### What changes (admin — `src/routes/admin.products.tsx`)
+### Data model (backward compatible)
 
-**New row kinds** (stored in the same `specifications` JSON, with a `type` field):
+The `specifications` JSON keeps `type`, `group_*`, `label_*`, `value_*` exactly as today — but each row gains an optional `extras` array of additional value cells:
 
 ```ts
-type SpecRowKind = "section" | "row";
+interface SpecValueExtra {
+  // header for this column (shown above the column)
+  header_en?: string; header_fa?: string; header_ps?: string;
+  // value for this row in this column
+  value_en?: string; value_fa?: string; value_ps?: string;
+}
 
 interface SpecRow {
-  type: "row";              // default — backward compatible if missing
-  group_en, group_fa, group_ps: string;   // NEW optional "main column"
-  label_en, label_fa, label_ps: string;
-  value_en, value_fa, value_ps: string;
-}
-interface SpecSection {
-  type: "section";          // full-width header band
-  title_en, title_fa, title_ps: string;
+  type?: "row" | "section";
+  title_en?, title_fa?, title_ps?: string;   // section
+  group_en?, group_fa?, group_ps?: string;   // optional Group col
+  label_en, label_fa, label_ps: string;      // Label col
+  value_en, value_fa, value_ps: string;      // first Value col
+  extras?: SpecValueExtra[];                 // NEW — extra Value cols
 }
 ```
 
-Backward compatible — existing rows without `type` are treated as `"row"` and existing data keeps working.
+The first value column has no header by default (column header is implicit "Value"). When extras are present, both the first and extra value columns get a header input. Old data with no `extras` continues to render as the existing 2-column layout.
 
-**New editor UI** (replaces the current stacked cards):
+### Admin (`src/routes/admin.products.tsx`)
 
-- A single **table grid** with one visible row per spec, columns: `↕ | Group | Label | Value | ⋯`
-- Language selector pills at the top of the block: **EN / FA / PS** — the grid shows the columns for the active language only (much less visual noise than the current 6-input-per-row layout). Switch language to edit other locales; data is preserved.
-- A small "Show all languages" toggle expands a row to reveal all 3 language inputs side-by-side (for fine-tuning).
-- Toolbar buttons: **+ Add row**, **+ Add section**, **+ Duplicate selected**, **Clear group column** (if no row uses Group, it auto-collapses).
-- **Drag handle (↕)** on the left for reordering (uses native HTML5 drag-and-drop, no new deps). Up/Down arrow buttons remain as a fallback in the row's `⋯` menu.
-- **Section rows** render as a single full-width input with a tinted background — visually obvious they're headers.
-- **Group column auto-fill**: typing the same group name in 2+ rows shows a small "Apply to rows below until next section" shortcut.
-- **Keyboard**: Tab moves to next cell, Enter adds a new row below, Shift+Enter inserts a section above current row.
-- Empty rows/sections are stripped on save.
+- New toolbar button: **+ Add column** — appends an empty extra to every existing `row` (and seeds new rows with the same shape).
+- New toolbar button: **Remove last column** — shown only when extras > 0.
+- Above the data rows, a **column-header row** appears whenever extras > 0 with editable headers for the first Value column and each extra. Headers use the same EN/FA/PS pill + "All langs" toggle.
+- Each data row renders one input per column (Group | Label | Value | Extra1 | Extra2 …).
+- Section rows still span all data columns.
+- Drag/reorder/duplicate/delete unchanged.
+- "Add column" is disabled if there are zero rows (asks user to add a row first).
+- Empty trailing columns are stripped on save (a column is dropped only if it's empty across every row AND its header is empty).
 
-**Helper text** updated:
-> *Build a spec sheet. Use **sections** to group rows (e.g. "Dimensions", "Power"). The optional **Group** column lets you label sub-categories within a section. Switch the EN/FA/PS pills to translate.*
+### Storefront (`src/routes/products.$slug.tsx`)
 
-### What changes (storefront — `src/routes/products.$slug.tsx`)
-
-- Section rows render as a full-width `<TableRow>` with a single bolded `<TableCell colSpan>` and a muted background band.
-- If ANY row uses the Group column, the table renders **3 columns**: Group | Label | Value (with vertical group cells merged via `rowSpan` for consecutive identical groups). If no row uses Group, falls back to the existing 2-column Label | Value layout.
-- RTL preserved; English fallback preserved.
-- Striped rows skip section bands.
-
-### Database
-
-**No schema change.** All new fields live inside the existing `specifications jsonb` column. A short migration comment is added describing the supported shape, but no DDL.
+- If any row has `extras`, render the spec table with `(hasGroup ? 1 : 0) + 1 (label) + 1 (value) + extras.length` columns, plus a `<TableHeader>` row showing column headers (Label / Value / extra headers, in active language with EN fallback). Group column header stays empty.
+- Without extras → unchanged 2-col (or 3-col with Group) layout, no `<TableHeader>` (matches today).
+- Section rows use `colSpan` over all data columns.
+- Group `rowSpan` merging continues to work.
 
 ### i18n (`src/lib/i18n.ts`)
 
-Add keys:
-- `spec_section` → "Section" / "بخش" / "برخه"
-- `spec_group` → "Group" / "گروه" / "ډله"
-- `spec_add_row` → "Add row"
-- `spec_add_section` → "Add section"
-- `spec_show_all_langs` → "Show all languages"
+Add:
+- `spec_add_column` → "Add column" / "افزودن ستون" / "ستن زیات کړئ"
+- `spec_remove_column` → "Remove last column" / "حذف ستون آخر" / "وروستی ستن لرې کړئ"
+- `spec_column` → "Column" / "ستون" / "ستن"
 
 ### Files touched
 
-- `src/routes/admin.products.tsx` — replace the specifications block with the new grid editor; update load/save mappers to handle `type`, `group_*`, and `title_*` fields; strip empties.
-- `src/routes/products.$slug.tsx` — render sections as banded rows and conditionally render the Group column with `rowSpan` merging.
-- `src/lib/i18n.ts` — 5 new keys.
+- `src/routes/admin.products.tsx` — extend `SpecRow` with `extras`, add column toolbar, add column-header row, render extras inputs, add column add/remove helpers, update save/load mappers to clean & preserve extras.
+- `src/routes/products.$slug.tsx` — extend `SpecRow` type with `extras`, render extra columns + header row when present.
+- `src/lib/i18n.ts` — 3 new keys.
 
 ### Out of scope
 
-- No DB migration, no breaking change to existing specifications.
+- No per-column drag reordering of extras (add to end / remove last only).
 - No CSV import for specs.
-- No nested sections (one level only).
-- No per-row icons or images.
+- No nested sections.
 
