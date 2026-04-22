@@ -120,6 +120,7 @@ const emptySpec = (): SpecRow => ({
   group_en: "", group_fa: "", group_ps: "",
   label_en: "", label_fa: "", label_ps: "",
   value_en: "", value_fa: "", value_ps: "",
+  extras: [],
 });
 
 const emptySection = (): SpecRow => ({
@@ -127,6 +128,12 @@ const emptySection = (): SpecRow => ({
   title_en: "", title_fa: "", title_ps: "",
   group_en: "", group_fa: "", group_ps: "",
   label_en: "", label_fa: "", label_ps: "",
+  value_en: "", value_fa: "", value_ps: "",
+  extras: [],
+});
+
+const emptyExtra = (): SpecValueExtra => ({
+  header_en: "", header_fa: "", header_ps: "",
   value_en: "", value_fa: "", value_ps: "",
 });
 
