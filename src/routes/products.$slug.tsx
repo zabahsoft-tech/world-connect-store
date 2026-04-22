@@ -14,6 +14,8 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableHead,
+  TableHeader,
   TableRow,
 } from "@/components/ui/table";
 
@@ -49,6 +51,15 @@ interface AttributeRow {
   value_ps: string;
 }
 
+interface SpecValueExtra {
+  header_en?: string;
+  header_fa?: string;
+  header_ps?: string;
+  value_en?: string;
+  value_fa?: string;
+  value_ps?: string;
+}
+
 interface SpecRow {
   type?: "row" | "section";
   // section title fields
@@ -65,6 +76,11 @@ interface SpecRow {
   value_en: string;
   value_fa: string;
   value_ps: string;
+  // optional first-value column header (only shown when extras present)
+  value_header_en?: string;
+  value_header_fa?: string;
+  value_header_ps?: string;
+  extras?: SpecValueExtra[];
 }
 
 function getVideoEmbed(url: string): { type: "youtube" | "vimeo" | "file"; src: string } | null {
