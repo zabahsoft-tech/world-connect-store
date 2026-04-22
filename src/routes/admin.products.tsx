@@ -1010,6 +1010,43 @@ function SpecEditor({
   const dirOf = (l: SpecLang): "ltr" | "rtl" => (l === "en" ? "ltr" : "rtl");
   const langPills: SpecLang[] = ["en", "fa", "ps"];
 
+  const setColumnHeader = (extraIdx: number | "first", patch: Partial<SpecValueExtra>) => {
+    if (extraIdx === "first") {
+      const headerPatch: Partial<SpecRow> = {};
+      if ("header_en" in patch) headerPatch.value_header_en = patch.header_en;
+      if ("header_fa" in patch) headerPatch.value_header_fa = patch.header_fa;
+      if ("header_ps" in patch) headerPatch.value_header_ps = patch.header_ps;
+      onChange(specs.map((s) => ((s.type ?? "row") === "row" ? { ...s, ...headerPatch } : s)));
+      return;
+    }
+    onChange(
+      specs.map((s) => {
+        if ((s.type ?? "row") !== "row") return s;
+        const ex = (s.extras ?? []).slice();
+        while (ex.length <= extraIdx) ex.push(emptyExtra());
+        ex[extraIdx] = { ...ex[extraIdx], ...patch };
+        return { ...s, extras: ex };
+      }),
+    );
+  };
+  const readFirstHeader = (l: SpecLang): string => {
+    for (const s of specs) {
+      if ((s.type ?? "row") !== "row") continue;
+      const v = s[`value_header_${l}` as const];
+      if (v) return v;
+    }
+    return "";
+  };
+  const readExtraHeader = (extraIdx: number, l: SpecLang): string => {
+    for (const s of specs) {
+      if ((s.type ?? "row") !== "row") continue;
+      const ex = s.extras?.[extraIdx];
+      const v = ex?.[`header_${l}` as const];
+      if (v) return v;
+    }
+    return "";
+  };
+
   return (
     <div className="space-y-2 rounded-md border p-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
