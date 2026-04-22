@@ -1182,7 +1182,7 @@ function SpecEditor({
                   className: `border-t ${dragging ? "opacity-50" : ""} ${isSection ? "bg-accent/40" : "even:bg-muted/20"}`,
                 };
                 if (isSection) {
-                  const colSpan = hasGroup ? 3 : 2;
+                  const colSpan = (hasGroup ? 1 : 0) + 2 + extrasCount;
                   return (
                     <tr key={i} {...rowProps}>
                       <td className="cursor-move p-1.5 align-middle text-muted-foreground"><GripVertical className="h-3.5 w-3.5" /></td>
