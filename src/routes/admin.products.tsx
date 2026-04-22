@@ -951,11 +951,43 @@ function SpecEditor({
   const hasGroup = specs.some(
     (s) => (s.type ?? "row") === "row" && ((s.group_en ?? "") + (s.group_fa ?? "") + (s.group_ps ?? "")).trim().length > 0,
   );
+  const extrasCount = specs.reduce(
+    (m, s) => ((s.type ?? "row") === "row" ? Math.max(m, s.extras?.length ?? 0) : m),
+    0,
+  );
+  const hasRows = specs.some((s) => (s.type ?? "row") === "row");
 
   const update = (i: number, patch: Partial<SpecRow>) => {
     const next = specs.slice();
     next[i] = { ...next[i], ...patch };
     onChange(next);
+  };
+  const updateExtra = (i: number, extraIdx: number, patch: Partial<SpecValueExtra>) => {
+    const next = specs.slice();
+    const row = { ...next[i] };
+    const ex = (row.extras ?? []).slice();
+    while (ex.length <= extraIdx) ex.push(emptyExtra());
+    ex[extraIdx] = { ...ex[extraIdx], ...patch };
+    row.extras = ex;
+    next[i] = row;
+    onChange(next);
+  };
+  const addColumn = () => {
+    onChange(
+      specs.map((s) =>
+        (s.type ?? "row") !== "row" ? s : { ...s, extras: [...(s.extras ?? []), emptyExtra()] },
+      ),
+    );
+  };
+  const removeLastColumn = () => {
+    if (extrasCount === 0) return;
+    onChange(
+      specs.map((s) => {
+        if ((s.type ?? "row") !== "row") return s;
+        const ex = (s.extras ?? []).slice(0, Math.max(0, (s.extras?.length ?? 0) - 1));
+        return { ...s, extras: ex };
+      }),
+    );
   };
   const remove = (i: number) => onChange(specs.filter((_, idx) => idx !== i));
   const move = (from: number, to: number) => {
