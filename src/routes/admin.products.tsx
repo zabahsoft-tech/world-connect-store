@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Plus, Pencil, Trash2, Search, Package as PackageIcon, ImageOff, X, ArrowUp, ArrowDown, Heading, GripVertical, Copy } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Package as PackageIcon, ImageOff, X, ArrowUp, ArrowDown, Heading, GripVertical, Copy, Columns3, Minus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,15 @@ interface AttributeRow {
   value_ps: string;
 }
 
+interface SpecValueExtra {
+  header_en?: string;
+  header_fa?: string;
+  header_ps?: string;
+  value_en?: string;
+  value_fa?: string;
+  value_ps?: string;
+}
+
 interface SpecRow {
   type?: "row" | "section";
   // section title fields
@@ -59,6 +68,12 @@ interface SpecRow {
   value_en: string;
   value_fa: string;
   value_ps: string;
+  // optional first-value column header (only used when extras > 0)
+  value_header_en?: string;
+  value_header_fa?: string;
+  value_header_ps?: string;
+  // additional value columns
+  extras?: SpecValueExtra[];
 }
 
 interface VariantRow {
@@ -105,6 +120,7 @@ const emptySpec = (): SpecRow => ({
   group_en: "", group_fa: "", group_ps: "",
   label_en: "", label_fa: "", label_ps: "",
   value_en: "", value_fa: "", value_ps: "",
+  extras: [],
 });
 
 const emptySection = (): SpecRow => ({
@@ -112,6 +128,12 @@ const emptySection = (): SpecRow => ({
   title_en: "", title_fa: "", title_ps: "",
   group_en: "", group_fa: "", group_ps: "",
   label_en: "", label_fa: "", label_ps: "",
+  value_en: "", value_fa: "", value_ps: "",
+  extras: [],
+});
+
+const emptyExtra = (): SpecValueExtra => ({
+  header_en: "", header_fa: "", header_ps: "",
   value_en: "", value_fa: "", value_ps: "",
 });
 
@@ -227,12 +249,34 @@ function AdminProducts() {
         throw new Error("Name is required in all 3 languages");
       }
       const cleanAttrs = sizesTextToAttrs(f.sizesText);
+      // Determine how many extra columns to keep — drop any trailing column
+      // where every row's value is empty AND the column header is empty.
+      const rowOnly = f.specifications.filter((s) => (s.type ?? "row") === "row");
+      const maxExtras = rowOnly.reduce((m, s) => Math.max(m, s.extras?.length ?? 0), 0);
+      let keepExtras = maxExtras;
+      while (keepExtras > 0) {
+        const colIdx = keepExtras - 1;
+        const headerEmpty = rowOnly.every((s) => {
+          const ex = s.extras?.[colIdx];
+          return !ex || !((ex.header_en ?? "") + (ex.header_fa ?? "") + (ex.header_ps ?? "")).trim();
+        });
+        const valuesEmpty = rowOnly.every((s) => {
+          const ex = s.extras?.[colIdx];
+          return !ex || !((ex.value_en ?? "") + (ex.value_fa ?? "") + (ex.value_ps ?? "")).trim();
+        });
+        if (headerEmpty && valuesEmpty) keepExtras--;
+        else break;
+      }
       const cleanSpecs = f.specifications
         .filter((s) => {
           if (s.type === "section") {
             return ((s.title_en ?? "") + (s.title_fa ?? "") + (s.title_ps ?? "")).trim().length > 0;
           }
-          return (s.label_en + s.label_fa + s.label_ps + s.value_en + s.value_fa + s.value_ps).trim().length > 0;
+          const extrasText = (s.extras ?? [])
+            .slice(0, keepExtras)
+            .map((e) => (e.value_en ?? "") + (e.value_fa ?? "") + (e.value_ps ?? ""))
+            .join("");
+          return (s.label_en + s.label_fa + s.label_ps + s.value_en + s.value_fa + s.value_ps + extrasText).trim().length > 0;
         })
         .map((s) => {
           if (s.type === "section") {
@@ -243,6 +287,14 @@ function AdminProducts() {
               title_ps: (s.title_ps ?? "").trim(),
             };
           }
+          const extras = (s.extras ?? []).slice(0, keepExtras).map((e) => ({
+            header_en: (e.header_en ?? "").trim(),
+            header_fa: (e.header_fa ?? "").trim(),
+            header_ps: (e.header_ps ?? "").trim(),
+            value_en: (e.value_en ?? "").trim(),
+            value_fa: (e.value_fa ?? "").trim(),
+            value_ps: (e.value_ps ?? "").trim(),
+          }));
           return {
             type: "row" as const,
             group_en: (s.group_en ?? "").trim(),
@@ -254,6 +306,10 @@ function AdminProducts() {
             value_en: s.value_en.trim(),
             value_fa: s.value_fa.trim(),
             value_ps: s.value_ps.trim(),
+            value_header_en: (s.value_header_en ?? "").trim(),
+            value_header_fa: (s.value_header_fa ?? "").trim(),
+            value_header_ps: (s.value_header_ps ?? "").trim(),
+            extras,
           };
         });
       const cleanVariants = f.variants
@@ -348,7 +404,13 @@ function AdminProducts() {
         id: v.id ?? crypto.randomUUID(),
         price: v.price == null ? "" : String(v.price),
       })),
-      specifications: specsRaw.map((s) => ({ ...emptySpec(), ...s })),
+      specifications: specsRaw.map((s) => ({
+        ...emptySpec(),
+        ...s,
+        extras: Array.isArray((s as { extras?: unknown }).extras)
+          ? ((s as { extras: SpecValueExtra[] }).extras).map((e) => ({ ...emptyExtra(), ...e }))
+          : [],
+      })),
     });
     setTab("general");
     setVideoMode(p.video_url && /^https?:\/\//.test(p.video_url) && !p.video_url.includes("supabase") ? "url" : "upload");
@@ -889,11 +951,43 @@ function SpecEditor({
   const hasGroup = specs.some(
     (s) => (s.type ?? "row") === "row" && ((s.group_en ?? "") + (s.group_fa ?? "") + (s.group_ps ?? "")).trim().length > 0,
   );
+  const extrasCount = specs.reduce(
+    (m, s) => ((s.type ?? "row") === "row" ? Math.max(m, s.extras?.length ?? 0) : m),
+    0,
+  );
+  const hasRows = specs.some((s) => (s.type ?? "row") === "row");
 
   const update = (i: number, patch: Partial<SpecRow>) => {
     const next = specs.slice();
     next[i] = { ...next[i], ...patch };
     onChange(next);
+  };
+  const updateExtra = (i: number, extraIdx: number, patch: Partial<SpecValueExtra>) => {
+    const next = specs.slice();
+    const row = { ...next[i] };
+    const ex = (row.extras ?? []).slice();
+    while (ex.length <= extraIdx) ex.push(emptyExtra());
+    ex[extraIdx] = { ...ex[extraIdx], ...patch };
+    row.extras = ex;
+    next[i] = row;
+    onChange(next);
+  };
+  const addColumn = () => {
+    onChange(
+      specs.map((s) =>
+        (s.type ?? "row") !== "row" ? s : { ...s, extras: [...(s.extras ?? []), emptyExtra()] },
+      ),
+    );
+  };
+  const removeLastColumn = () => {
+    if (extrasCount === 0) return;
+    onChange(
+      specs.map((s) => {
+        if ((s.type ?? "row") !== "row") return s;
+        const ex = (s.extras ?? []).slice(0, Math.max(0, (s.extras?.length ?? 0) - 1));
+        return { ...s, extras: ex };
+      }),
+    );
   };
   const remove = (i: number) => onChange(specs.filter((_, idx) => idx !== i));
   const move = (from: number, to: number) => {
@@ -905,7 +999,8 @@ function SpecEditor({
   };
   const duplicate = (i: number) => {
     const next = specs.slice();
-    next.splice(i + 1, 0, { ...specs[i] });
+    const src = specs[i];
+    next.splice(i + 1, 0, { ...src, extras: (src.extras ?? []).map((e) => ({ ...e })) });
     onChange(next);
   };
   const clearGroups = () => {
@@ -914,6 +1009,43 @@ function SpecEditor({
 
   const dirOf = (l: SpecLang): "ltr" | "rtl" => (l === "en" ? "ltr" : "rtl");
   const langPills: SpecLang[] = ["en", "fa", "ps"];
+
+  const setColumnHeader = (extraIdx: number | "first", patch: Partial<SpecValueExtra>) => {
+    if (extraIdx === "first") {
+      const headerPatch: Partial<SpecRow> = {};
+      if ("header_en" in patch) headerPatch.value_header_en = patch.header_en;
+      if ("header_fa" in patch) headerPatch.value_header_fa = patch.header_fa;
+      if ("header_ps" in patch) headerPatch.value_header_ps = patch.header_ps;
+      onChange(specs.map((s) => ((s.type ?? "row") === "row" ? { ...s, ...headerPatch } : s)));
+      return;
+    }
+    onChange(
+      specs.map((s) => {
+        if ((s.type ?? "row") !== "row") return s;
+        const ex = (s.extras ?? []).slice();
+        while (ex.length <= extraIdx) ex.push(emptyExtra());
+        ex[extraIdx] = { ...ex[extraIdx], ...patch };
+        return { ...s, extras: ex };
+      }),
+    );
+  };
+  const readFirstHeader = (l: SpecLang): string => {
+    for (const s of specs) {
+      if ((s.type ?? "row") !== "row") continue;
+      const v = s[`value_header_${l}` as const];
+      if (v) return v;
+    }
+    return "";
+  };
+  const readExtraHeader = (extraIdx: number, l: SpecLang): string => {
+    for (const s of specs) {
+      if ((s.type ?? "row") !== "row") continue;
+      const ex = s.extras?.[extraIdx];
+      const v = ex?.[`header_${l}` as const];
+      if (v) return v;
+    }
+    return "";
+  };
 
   return (
     <div className="space-y-2 rounded-md border p-3">
@@ -958,6 +1090,22 @@ function SpecEditor({
         <Button type="button" size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => onChange([...specs, emptySection()])}>
           <Heading className="me-1 h-3 w-3" /> Add section
         </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="h-7 text-[11px]"
+          onClick={addColumn}
+          disabled={!hasRows}
+          title={!hasRows ? "Add a row first" : "Add an extra value column"}
+        >
+          <Columns3 className="me-1 h-3 w-3" /> Add column
+        </Button>
+        {extrasCount > 0 && (
+          <Button type="button" size="sm" variant="ghost" className="h-7 text-[11px]" onClick={removeLastColumn}>
+            <Minus className="me-1 h-3 w-3" /> Remove last column
+          </Button>
+        )}
         {hasGroup && (
           <Button type="button" size="sm" variant="ghost" className="h-7 text-[11px]" onClick={clearGroups}>
             Clear group column
@@ -972,7 +1120,7 @@ function SpecEditor({
       )}
 
       {specs.length > 0 && (
-        <div className="overflow-hidden rounded-md border">
+        <div className="overflow-x-auto rounded-md border">
           <table className="w-full text-xs">
             <thead className="bg-muted/40 text-[11px] uppercase text-muted-foreground">
               <tr>
@@ -980,9 +1128,42 @@ function SpecEditor({
                 {hasGroup && <th className="p-1.5 text-left font-medium">Group</th>}
                 <th className="p-1.5 text-left font-medium">Label</th>
                 <th className="p-1.5 text-left font-medium">Value</th>
+                {Array.from({ length: extrasCount }).map((_, idx) => (
+                  <th key={idx} className="p-1.5 text-left font-medium">Col {idx + 2}</th>
+                ))}
                 <th className="w-24 p-1.5"></th>
               </tr>
             </thead>
+            {extrasCount > 0 && (
+              <thead className="bg-muted/20">
+                <tr>
+                  <th className="p-1.5"></th>
+                  {hasGroup && <th className="p-1.5"></th>}
+                  <th className="p-1.5"></th>
+                  <th className="p-1.5">
+                    <HeaderCell
+                      lang={lang}
+                      showAll={showAll}
+                      readValue={(l) => readFirstHeader(l)}
+                      onChange={(l, v) => setColumnHeader("first", { [`header_${l}`]: v } as Partial<SpecValueExtra>)}
+                      placeholder="Value header"
+                    />
+                  </th>
+                  {Array.from({ length: extrasCount }).map((_, idx) => (
+                    <th key={idx} className="p-1.5">
+                      <HeaderCell
+                        lang={lang}
+                        showAll={showAll}
+                        readValue={(l) => readExtraHeader(idx, l)}
+                        onChange={(l, v) => setColumnHeader(idx, { [`header_${l}`]: v } as Partial<SpecValueExtra>)}
+                        placeholder={`Col ${idx + 2} header`}
+                      />
+                    </th>
+                  ))}
+                  <th className="p-1.5"></th>
+                </tr>
+              </thead>
+            )}
             <tbody>
               {specs.map((s, i) => {
                 const kind = s.type ?? "row";
@@ -1001,7 +1182,7 @@ function SpecEditor({
                   className: `border-t ${dragging ? "opacity-50" : ""} ${isSection ? "bg-accent/40" : "even:bg-muted/20"}`,
                 };
                 if (isSection) {
-                  const colSpan = hasGroup ? 3 : 2;
+                  const colSpan = (hasGroup ? 1 : 0) + 2 + extrasCount;
                   return (
                     <tr key={i} {...rowProps}>
                       <td className="cursor-move p-1.5 align-middle text-muted-foreground"><GripVertical className="h-3.5 w-3.5" /></td>
@@ -1049,6 +1230,16 @@ function SpecEditor({
                     <td className="p-1.5 align-top">
                       <SpecCell field="value" lang={lang} showAll={showAll} row={s} onPatch={(p) => update(i, p)} />
                     </td>
+                    {Array.from({ length: extrasCount }).map((_, idx) => (
+                      <td key={idx} className="p-1.5 align-top">
+                        <ExtraCell
+                          lang={lang}
+                          showAll={showAll}
+                          extra={s.extras?.[idx]}
+                          onPatch={(p) => updateExtra(i, idx, p)}
+                        />
+                      </td>
+                    ))}
                     <td className="p-1.5 align-top">
                       <RowActions i={i} total={specs.length} onUp={() => move(i, i - 1)} onDown={() => move(i, i + 1)} onDup={() => duplicate(i)} onDel={() => remove(i)} />
                     </td>
@@ -1140,5 +1331,92 @@ function RowActions({
         <X className="h-3 w-3 text-destructive" />
       </Button>
     </div>
+  );
+}
+
+function ExtraCell({
+  lang,
+  showAll,
+  extra,
+  onPatch,
+}: {
+  lang: SpecLang;
+  showAll: boolean;
+  extra: SpecValueExtra | undefined;
+  onPatch: (patch: Partial<SpecValueExtra>) => void;
+}) {
+  const dirOf = (l: SpecLang): "ltr" | "rtl" => (l === "en" ? "ltr" : "rtl");
+  const langs: SpecLang[] = ["en", "fa", "ps"];
+  const e: SpecValueExtra = extra ?? {};
+  if (showAll) {
+    return (
+      <div className="space-y-1">
+        {langs.map((l) => {
+          const key = `value_${l}` as keyof SpecValueExtra;
+          return (
+            <Input
+              key={l}
+              placeholder={`Value (${l.toUpperCase()})`}
+              dir={dirOf(l)}
+              value={(e[key] as string | undefined) ?? ""}
+              onChange={(ev) => onPatch({ [key]: ev.target.value } as Partial<SpecValueExtra>)}
+              className="h-7 text-xs"
+            />
+          );
+        })}
+      </div>
+    );
+  }
+  const key = `value_${lang}` as keyof SpecValueExtra;
+  return (
+    <Input
+      placeholder="Value"
+      dir={dirOf(lang)}
+      value={(e[key] as string | undefined) ?? ""}
+      onChange={(ev) => onPatch({ [key]: ev.target.value } as Partial<SpecValueExtra>)}
+      className="h-7 text-xs"
+    />
+  );
+}
+
+function HeaderCell({
+  lang,
+  showAll,
+  readValue,
+  onChange,
+  placeholder,
+}: {
+  lang: SpecLang;
+  showAll: boolean;
+  readValue: (l: SpecLang) => string;
+  onChange: (l: SpecLang, value: string) => void;
+  placeholder: string;
+}) {
+  const dirOf = (l: SpecLang): "ltr" | "rtl" => (l === "en" ? "ltr" : "rtl");
+  const langs: SpecLang[] = ["en", "fa", "ps"];
+  if (showAll) {
+    return (
+      <div className="space-y-1">
+        {langs.map((l) => (
+          <Input
+            key={l}
+            placeholder={`${placeholder} (${l.toUpperCase()})`}
+            dir={dirOf(l)}
+            value={readValue(l)}
+            onChange={(e) => onChange(l, e.target.value)}
+            className="h-7 text-xs font-semibold"
+          />
+        ))}
+      </div>
+    );
+  }
+  return (
+    <Input
+      placeholder={placeholder}
+      dir={dirOf(lang)}
+      value={readValue(lang)}
+      onChange={(e) => onChange(lang, e.target.value)}
+      className="h-7 text-xs font-semibold"
+    />
   );
 }

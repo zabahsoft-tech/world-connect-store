@@ -14,6 +14,8 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableHead,
+  TableHeader,
   TableRow,
 } from "@/components/ui/table";
 
@@ -49,6 +51,15 @@ interface AttributeRow {
   value_ps: string;
 }
 
+interface SpecValueExtra {
+  header_en?: string;
+  header_fa?: string;
+  header_ps?: string;
+  value_en?: string;
+  value_fa?: string;
+  value_ps?: string;
+}
+
 interface SpecRow {
   type?: "row" | "section";
   // section title fields
@@ -65,6 +76,11 @@ interface SpecRow {
   value_en: string;
   value_fa: string;
   value_ps: string;
+  // optional first-value column header (only shown when extras present)
+  value_header_en?: string;
+  value_header_fa?: string;
+  value_header_ps?: string;
+  extras?: SpecValueExtra[];
 }
 
 function getVideoEmbed(url: string): { type: "youtube" | "vimeo" | "file"; src: string } | null {
@@ -326,14 +342,37 @@ function ProductPage() {
               <h2 className="mb-2 text-sm font-semibold">{tr("specifications")}</h2>
               <div className="overflow-hidden rounded-lg border">
                 <Table>
-                  <TableBody>
-                    {(() => {
-                      const hasGroup = specifications.some(
-                        (s) => (s.type ?? "row") === "row" && (s.group_en || s.group_fa || s.group_ps),
-                      );
-                      const colCount = hasGroup ? 3 : 2;
-                      let stripeIdx = 0;
-                      const out: ReactNode[] = [];
+                  {(() => {
+                    const hasGroup = specifications.some(
+                      (s) => (s.type ?? "row") === "row" && (s.group_en || s.group_fa || s.group_ps),
+                    );
+                    const extrasCount = specifications.reduce(
+                      (m, s) => ((s.type ?? "row") === "row" ? Math.max(m, s.extras?.length ?? 0) : m),
+                      0,
+                    );
+                    const hasExtras = extrasCount > 0;
+                    const colCount = (hasGroup ? 1 : 0) + 1 + 1 + extrasCount;
+                    // Build column headers (only shown when extras exist)
+                    const firstValHeader = (() => {
+                      for (const s of specifications) {
+                        if ((s.type ?? "row") !== "row") continue;
+                        const v = pickLang(s, "value_header", lang);
+                        if (v) return v;
+                      }
+                      return "";
+                    })();
+                    const extraHeaders = Array.from({ length: extrasCount }).map((_, idx) => {
+                      for (const s of specifications) {
+                        if ((s.type ?? "row") !== "row") continue;
+                        const ex = s.extras?.[idx];
+                        if (!ex) continue;
+                        const v = pickLang(ex, "header", lang);
+                        if (v) return v;
+                      }
+                      return "";
+                    });
+                    let stripeIdx = 0;
+                    const out: ReactNode[] = [];
                       for (let i = 0; i < specifications.length; i++) {
                         const s = specifications[i];
                         const kind = s.type ?? "row";
@@ -352,7 +391,9 @@ function ProductPage() {
                         }
                         const label = pickLang(s, "label", lang);
                         const value = pickLang(s, "value", lang);
-                        if (!label && !value) continue;
+                        const extraVals = (s.extras ?? []).map((ex) => pickLang(ex, "value", lang));
+                        const anyExtra = extraVals.some((v) => v);
+                        if (!label && !value && !anyExtra) continue;
                         const stripe = stripeIdx % 2 === 1 ? "bg-muted/30" : "";
                         stripeIdx++;
                         // group rowSpan: count consecutive following rows with same group (until section/different group)
@@ -372,7 +413,8 @@ function ProductPage() {
                               if (pickLang(n, "group", lang) !== myGroup) break;
                               const nLabel = pickLang(n, "label", lang);
                               const nValue = pickLang(n, "value", lang);
-                              if (!nLabel && !nValue) break;
+                              const nExtras = (n.extras ?? []).map((ex) => pickLang(ex, "value", lang));
+                              if (!nLabel && !nValue && !nExtras.some((v) => v)) break;
                               span++;
                             }
                             groupCell = (
@@ -388,16 +430,36 @@ function ProductPage() {
                         out.push(
                           <TableRow key={`row-${i}`} className={stripe}>
                             {groupCell}
-                            <TableCell className={hasGroup ? "w-1/3 font-medium" : "w-1/3 font-medium"}>
+                            <TableCell className="font-medium">
                               {label}
                             </TableCell>
                             <TableCell className="text-muted-foreground">{value}</TableCell>
+                            {Array.from({ length: extrasCount }).map((_, idx) => (
+                              <TableCell key={idx} className="text-muted-foreground">
+                                {extraVals[idx] ?? ""}
+                              </TableCell>
+                            ))}
                           </TableRow>,
                         );
                       }
-                      return out;
-                    })()}
-                  </TableBody>
+                    return (
+                      <>
+                        {hasExtras && (
+                          <TableHeader>
+                            <TableRow>
+                              {hasGroup && <TableHead />}
+                              <TableHead>{tr("spec_label")}</TableHead>
+                              <TableHead>{firstValHeader || tr("spec_value")}</TableHead>
+                              {extraHeaders.map((h, idx) => (
+                                <TableHead key={idx}>{h || `${tr("spec_column")} ${idx + 2}`}</TableHead>
+                              ))}
+                            </TableRow>
+                          </TableHeader>
+                        )}
+                        <TableBody>{out}</TableBody>
+                      </>
+                    );
+                  })()}
                 </Table>
               </div>
             </div>
