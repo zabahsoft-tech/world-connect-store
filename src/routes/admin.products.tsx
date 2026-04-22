@@ -1090,6 +1090,22 @@ function SpecEditor({
         <Button type="button" size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => onChange([...specs, emptySection()])}>
           <Heading className="me-1 h-3 w-3" /> Add section
         </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="h-7 text-[11px]"
+          onClick={addColumn}
+          disabled={!hasRows}
+          title={!hasRows ? "Add a row first" : "Add an extra value column"}
+        >
+          <Columns3 className="me-1 h-3 w-3" /> Add column
+        </Button>
+        {extrasCount > 0 && (
+          <Button type="button" size="sm" variant="ghost" className="h-7 text-[11px]" onClick={removeLastColumn}>
+            <Minus className="me-1 h-3 w-3" /> Remove last column
+          </Button>
+        )}
         {hasGroup && (
           <Button type="button" size="sm" variant="ghost" className="h-7 text-[11px]" onClick={clearGroups}>
             Clear group column
