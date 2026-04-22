@@ -1230,6 +1230,16 @@ function SpecEditor({
                     <td className="p-1.5 align-top">
                       <SpecCell field="value" lang={lang} showAll={showAll} row={s} onPatch={(p) => update(i, p)} />
                     </td>
+                    {Array.from({ length: extrasCount }).map((_, idx) => (
+                      <td key={idx} className="p-1.5 align-top">
+                        <ExtraCell
+                          lang={lang}
+                          showAll={showAll}
+                          extra={s.extras?.[idx]}
+                          onPatch={(p) => updateExtra(i, idx, p)}
+                        />
+                      </td>
+                    ))}
                     <td className="p-1.5 align-top">
                       <RowActions i={i} total={specs.length} onUp={() => move(i, i - 1)} onDown={() => move(i, i + 1)} onDup={() => duplicate(i)} onDel={() => remove(i)} />
                     </td>
