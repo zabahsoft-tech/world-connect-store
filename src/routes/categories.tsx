@@ -63,7 +63,7 @@ function CategoriesPage() {
                 search={{ category: c.slug }}
                 className="group overflow-hidden rounded-xl border bg-card transition-all hover:shadow-[var(--shadow-soft)]"
               >
-                <div className="aspect-square overflow-hidden bg-muted">
+                <div className="aspect-square overflow-hidden bg-white">
                   {c.image && (
                     <img
                       src={c.image}

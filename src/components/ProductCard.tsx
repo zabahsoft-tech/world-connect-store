@@ -28,7 +28,7 @@ export function ProductCard({ product }: { product: Product }) {
       <Link
         to="/products/$slug"
         params={{ slug: product.slug }}
-        className="block aspect-square w-full overflow-hidden bg-muted"
+        className="block aspect-square w-full overflow-hidden bg-white"
         aria-label={name}
       >
         {product.image_url ? (
