@@ -70,7 +70,7 @@ function CategoriesPage() {
                       alt={pickLang(c, "name", lang)}
                       loading="lazy"
                       decoding="async"
-                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                      className="h-full w-full object-contain p-4 transition-transform group-hover:scale-105"
                     />
                   )}
                 </div>
