@@ -212,7 +212,7 @@ function HomePage() {
                   search={{ category: c.slug }}
                   className="group relative aspect-square overflow-hidden rounded-2xl ring-1 ring-border transition-all hover:ring-2 hover:ring-primary/40"
                 >
-                  <div className="h-full w-full bg-muted">
+                  <div className="h-full w-full bg-white">
                     {c.image && (
                       <img
                         src={c.image}
