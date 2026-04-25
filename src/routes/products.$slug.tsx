@@ -264,8 +264,8 @@ function ProductPage() {
 
   return (
     <SiteLayout>
-      <section className="container mx-auto grid gap-8 px-4 py-8 md:grid-cols-2">
-        <div className="space-y-3">
+      <section className="container mx-auto grid gap-8 px-4 py-8 md:grid-cols-[minmax(0,420px)_1fr] md:items-start">
+        <div className="mx-auto w-full max-w-sm space-y-3 md:max-w-[420px]">
           <div className="aspect-square overflow-hidden rounded-2xl bg-white">
             {isVideoSlot && videoEmbed ? (
               videoEmbed.type === "file" ? (
