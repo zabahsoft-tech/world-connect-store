@@ -1,7 +1,8 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState, type ReactNode } from "react";
-import { Minus, Plus, ShoppingCart, MessageCircle, Play } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Play } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
@@ -537,12 +538,11 @@ function ProductPage() {
               </Button>
               <Button
                 size="lg"
-                variant="outline"
-                className="flex-1 gap-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                className="flex-1 gap-2 bg-[#25D366] text-white hover:bg-[#1EBE5D]"
                 disabled={!canBuy}
                 onClick={handleQuickOrder}
               >
-                <MessageCircle className="h-5 w-5" /> {tr("quickOrder")}
+                <WhatsAppIcon className="h-5 w-5" /> {tr("quickOrder")}
               </Button>
             </div>
           </div>
