@@ -179,7 +179,7 @@ function ShareRow({ url, title }: { url: string; title: string }) {
     {
       label: "WhatsApp",
       href: `https://wa.me/?text=${enc(`${title} ${url}`)}`,
-      icon: <WhatsAppIcon className="h-4 w-4" />,
+      icon: <WhatsAppIcon className="h-4 w-4 text-[#25D366]" />,
     },
     {
       label: "Telegram",
