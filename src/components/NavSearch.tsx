@@ -5,7 +5,7 @@ import { Search, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
 import { pickLang } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
+import { cn, mainImage } from "@/lib/utils";
 
 interface NavSearchProps {
   className?: string;
@@ -56,7 +56,7 @@ export function NavSearch({ className, variant = "navbar", onNavigate }: NavSear
       const term = debounced.replace(/[%,]/g, "");
       const { data, error } = await supabase
         .from("products")
-        .select("id, slug, name_en, name_fa, name_ps, image_url, price")
+        .select("id, slug, name_en, name_fa, name_ps, images, price")
         .or(`name_en.ilike.%${term}%,name_fa.ilike.%${term}%,name_ps.ilike.%${term}%`)
         .limit(6);
       if (error) throw error;
@@ -180,6 +180,7 @@ export function NavSearch({ className, variant = "navbar", onNavigate }: NavSear
             <ul className="max-h-[60vh] overflow-y-auto py-1">
               {results.map((p, i) => {
                 const name = pickLang(p, "name", lang) || p.slug;
+                const img = mainImage(p.images);
                 return (
                   <li key={p.id}>
                     <button
@@ -192,9 +193,9 @@ export function NavSearch({ className, variant = "navbar", onNavigate }: NavSear
                       )}
                     >
                       <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-muted">
-                        {p.image_url ? (
+                        {img ? (
                           <img
-                            src={p.image_url}
+                            src={img}
                             alt={name}
                             loading="lazy"
                             className="h-full w-full object-cover"
