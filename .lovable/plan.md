@@ -1,64 +1,47 @@
 
 
-## Make WhatsApp buttons green and use the official WhatsApp icon
+## Add image upload to the rich text editor (used by Pages)
 
-Replace the generic `MessageCircle` (lucide) icon with the existing official `WhatsAppIcon` component (`src/components/icons/WhatsAppIcon.tsx`) on every WhatsApp action, and color those buttons in WhatsApp brand green so users instantly recognize them.
+Add image insertion to `RichTextEditor` so admins can embed images inside page content (and any other place the editor is used). Images are uploaded to the existing `site-assets` Supabase bucket using the same path/code as `ImageUpload`, then inserted into the editor at the cursor.
 
-### Brand color
+### Changes
 
-Use the official WhatsApp green for solid buttons:
-- Background: `#25D366` (WhatsApp brand green)
-- Hover: `#1EBE5D` (slightly darker)
-- Text: `white`
+**1. Add Tiptap image extension dependency**
+- Run `bun add @tiptap/extension-image@^3.22.4` (matches the version of the other `@tiptap/*` packages already installed).
 
-Implementation: apply via Tailwind arbitrary values directly on the `<Button>`, e.g.
-`className="bg-[#25D366] text-white hover:bg-[#1EBE5D]"`. No `tailwind.config.js` change needed (Tailwind v4 supports arbitrary values out of the box), and no design-token edit, since this is a brand-locked color that should look the same in light and dark mode.
+**2. `src/components/RichTextEditor.tsx` — add Image extension + toolbar button**
+- Import `Image` from `@tiptap/extension-image` and add it to the `extensions` array, configured with `inline: false`, `allowBase64: false`, and an `HTMLAttributes` class so embedded images get sensible styling: `class: "rounded-md max-w-full h-auto"`.
+- Import `ImageIcon` (lucide) and `Loader2` for the upload spinner.
+- Import `supabase` from `@/integrations/supabase/client` and `toast` from `sonner`.
+- Add a hidden `<input type="file" accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml" />` ref + an `uploading` state.
+- Add an `uploadImage(file)` helper mirroring `ImageUpload.handleFile`:
+  - 5 MB limit (toast on overflow).
+  - Upload to `site-assets` bucket at path `editor/{Date.now()}-{rand}.{ext}`.
+  - Get public URL and call `editor.chain().focus().setImage({ src: url, alt: file.name }).run()`.
+  - Toast success / failure.
+- Add a new toolbar `ToolBtn` next to the Link buttons:
+  - Icon: `ImageIcon` (or `Loader2` spinner while uploading).
+  - Title: "Insert image".
+  - Click: opens the hidden file input.
+  - Disabled while uploading.
+- Add a new prop (optional) `imageFolder?: string` defaulted to `"editor"` so callers can route uploads into a different subfolder if they want — `admin.pages.tsx` will pass `imageFolder="pages/content"`.
 
-For outline-style WhatsApp buttons (used as a secondary action, e.g. in admin messages), use a green-tinted outline instead of solid:
-`className="border-[#25D366] text-[#25D366] hover:bg-[#25D366] hover:text-white"`.
+**3. `src/routes/admin.pages.tsx` — pass folder**
+- Pass `imageFolder="pages/content"` to each of the three `<RichTextEditor>` instances (EN/FA/PS) so embedded page images live under `site-assets/pages/content/`.
 
-### Files & exact button changes
+**4. `src/components/SafeHtml.tsx` — confirm images are kept**
+- DOMPurify with `USE_PROFILES: { html: true }` keeps `<img>` with `src/alt/width/height` by default, so no change needed. Public-page rendering (`/p/$slug`, `/about`, `/contact`) will display embedded images correctly through the existing `SafeHtml`.
 
-**1. `src/routes/checkout.tsx` — main "Place order via WhatsApp" CTA**
-- Remove `import { MessageCircle } from "lucide-react";`
-- Add `import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";`
-- In the submit `<Button>`, swap `<MessageCircle className="h-5 w-5" />` → `<WhatsAppIcon className="h-5 w-5" />`
-- Add green styling: `className="w-full gap-2 bg-[#25D366] text-white hover:bg-[#1EBE5D]"`
+### Notes / out of scope
 
-**2. `src/routes/products.$slug.tsx` — "Quick order on WhatsApp" CTA**
-- Remove `MessageCircle` from the lucide import (keep `Minus, Plus, ShoppingCart, Play`).
-- Add `import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";`
-- Swap the icon in the Quick Order button and apply the green solid styling, same scheme as checkout.
-
-**3. `src/routes/admin.messages.tsx` — "WhatsApp" outline button in the message dialog**
-- Remove `MessageCircle` from the lucide import (keep the others: `Mail, Trash2, Archive, ArchiveRestore, Eye, EyeOff, Inbox`).
-- Add `import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";`
-- Swap the icon and add the outline-green classes:
-  `className="border-[#25D366] text-[#25D366] hover:bg-[#25D366] hover:text-white"`
-
-**4. `src/routes/contact.tsx` — "Send via WhatsApp" submit button**
-- The icon import is already there (`WhatsAppIcon` is already imported). Verify the contact form's WhatsApp submit button uses `WhatsAppIcon` (or swap `MessageCircle` → `WhatsAppIcon` if it doesn't), and add the green solid styling so it matches the rest of the app.
-- The info-tile WhatsApp links (already use `WhatsAppIcon`) get a green icon tint: add `text-[#25D366]` to the WhatsApp tile icon (or wrap it) so the icon visibly reads as WhatsApp at a glance, while the surrounding tile keeps its neutral background. The WhatsApp 2 tile gets the same treatment.
-
-**5. `src/components/Footer.tsx` — "Chat with us anytime" line**
-- This currently shows `MessageCircle` next to the whatsappSupportDesc label. Swap to `WhatsAppIcon` and tint it green: `className="h-4 w-4 text-[#25D366]"`. Remove `MessageCircle` from the lucide import if it becomes unused after this change.
-
-**6. `src/routes/blog.$slug.tsx` — share-on-WhatsApp button**
-- Already uses `WhatsAppIcon`. Add green tint to the icon (`text-[#25D366]`) so the share row visually identifies WhatsApp at a glance. Button itself stays in its current row layout (no full green fill, since it sits in a row of share targets that should remain visually consistent).
-
-### Notes / consistency
-
-- Every primary CTA that triggers a WhatsApp action becomes a solid WhatsApp-green button (checkout, product quick order, contact form submit).
-- Every secondary/utility WhatsApp affordance (admin messages dialog, footer line, blog share row, contact info tiles) keeps its existing layout but uses the official `WhatsAppIcon` and a green icon/border tint so it's instantly recognizable.
-- `MessageCircle` is fully removed wherever it stood in for WhatsApp; it's no longer imported in `checkout.tsx`, `products.$slug.tsx`, `admin.messages.tsx`, and `Footer.tsx` (kept in any file where it's still used for non-WhatsApp purposes — none in the searched files).
-- No DB / i18n / dependency changes. No new files. Brand green is hard-coded so it stays correct in both light and dark mode.
+- Uses the existing `site-assets` bucket — assumes it is already public and writable for admins (it is, since `ImageUpload` already uses it for hero images).
+- No drag-and-drop or paste-from-clipboard image upload in this pass — only the toolbar button. Easy to add later by attaching `editor.view.props.handlePaste` / `handleDrop` to the same `uploadImage` helper.
+- No image resize/alignment controls — Tiptap renders images at natural width capped to `max-w-full`. Can be added later with `tiptap-extension-resize-image` if needed.
+- No alt-text prompt — alt defaults to the original filename. Can be promoted to a `window.prompt` later if desired.
 
 ### Files touched
 
-- `src/routes/checkout.tsx`
-- `src/routes/products.$slug.tsx`
-- `src/routes/admin.messages.tsx`
-- `src/routes/contact.tsx`
-- `src/components/Footer.tsx`
-- `src/routes/blog.$slug.tsx`
+- `package.json` (via `bun add @tiptap/extension-image`)
+- `src/components/RichTextEditor.tsx`
+- `src/routes/admin.pages.tsx`
 
