@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { Minus, Plus, ShoppingCart, Play } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { toast } from "sonner";
@@ -11,14 +11,7 @@ import { pickLang } from "@/lib/i18n";
 import { SiteLayout } from "@/components/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { productImages } from "@/lib/utils";
 
 import { buildQuickOrderMessage, openWhatsApp } from "@/lib/whatsapp";
 import { SafeHtml } from "@/components/SafeHtml";
@@ -31,58 +24,6 @@ import {
   jsonLdScript,
   SITE_URL,
 } from "@/lib/seo";
-
-interface Variant {
-  id: string;
-  name_en: string;
-  name_fa: string;
-  name_ps: string;
-  sku?: string | null;
-  price?: number | null;
-  in_stock: boolean;
-  image_url?: string | null;
-}
-
-interface AttributeRow {
-  label_en: string;
-  label_fa: string;
-  label_ps: string;
-  value_en: string;
-  value_fa: string;
-  value_ps: string;
-}
-
-interface SpecValueExtra {
-  header_en?: string;
-  header_fa?: string;
-  header_ps?: string;
-  value_en?: string;
-  value_fa?: string;
-  value_ps?: string;
-}
-
-interface SpecRow {
-  type?: "row" | "section";
-  // section title fields
-  title_en?: string;
-  title_fa?: string;
-  title_ps?: string;
-  // optional group ("main col")
-  group_en?: string;
-  group_fa?: string;
-  group_ps?: string;
-  label_en: string;
-  label_fa: string;
-  label_ps: string;
-  value_en: string;
-  value_fa: string;
-  value_ps: string;
-  // optional first-value column header (only shown when extras present)
-  value_header_en?: string;
-  value_header_fa?: string;
-  value_header_ps?: string;
-  extras?: SpecValueExtra[];
-}
 
 function getVideoEmbed(url: string): { type: "youtube" | "vimeo" | "file"; src: string } | null {
   if (!url) return null;
@@ -118,7 +59,8 @@ export const Route = createFileRoute("/products/$slug")({
     }
     const nameEn = p.name_en || "Product";
     const descEn = p.description_en || `Buy ${nameEn} on World Connect Store. Order on WhatsApp with delivery across Afghanistan.`;
-    const image = p.image_url || undefined;
+    const imgs = productImages(p.images);
+    const image = imgs[0];
     return {
       meta: [
         ...buildMeta({
