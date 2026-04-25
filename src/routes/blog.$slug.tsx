@@ -239,8 +239,21 @@ function BlogPost() {
   const { lang, tr } = useLang();
   const articleRef = useRef<HTMLElement>(null);
 
-  const title = pickLang(post, "title", lang) || post.slug;
-  const content = pickLang(post, "content", lang);
+  // Fall back to any available language if the current one is empty.
+  const title =
+    pickLang(post, "title", lang) ||
+    post.title_en ||
+    post.title_fa ||
+    post.title_ps ||
+    post.slug;
+  const content =
+    pickLang(post, "content", lang) ||
+    post.content_en ||
+    post.content_fa ||
+    post.content_ps ||
+    "";
+  const usingFallback =
+    !pickLang(post, "content", lang) && !!content;
   const date = formatDate(post.published_at || post.created_at, lang);
   const readingTime = computeReadingTime(content || post.content_en || "");
   const [views, setViews] = useState<number>(post.views ?? 0);
@@ -324,13 +337,20 @@ function BlogPost() {
 
           <div className="relative z-10 -mt-2 rounded-2xl border bg-card p-6 shadow-sm md:-mt-6 md:p-10">
             {content ? (
-              <div
-                className="prose prose-lg max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed prose-a:text-primary prose-img:rounded-lg prose-img:shadow-md prose-blockquote:border-primary"
-                dangerouslySetInnerHTML={{ __html: content }}
-              />
+              <>
+                {usingFallback && (
+                  <div className="mb-6 rounded-md border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
+                    Translation not available in your selected language — showing the original version.
+                  </div>
+                )}
+                <div
+                  className="prose prose-lg max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed prose-a:text-primary prose-img:rounded-lg prose-img:shadow-md prose-blockquote:border-primary"
+                  dangerouslySetInnerHTML={{ __html: content }}
+                />
+              </>
             ) : (
               <div className="py-10 text-center">
-                <p className="mb-4 text-muted-foreground">No content yet for this language.</p>
+                <p className="mb-4 text-muted-foreground">This post does not have any content yet.</p>
                 <Button asChild variant="outline">
                   <Link to="/blog">← {tr("blog")}</Link>
                 </Button>
