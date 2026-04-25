@@ -2,7 +2,8 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
-import { useEffect } from "react";
+import Image from "@tiptap/extension-image";
+import { useEffect, useRef, useState } from "react";
 import {
   Bold,
   Italic,
@@ -19,9 +20,13 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
+  Image as ImageIcon,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface RichTextEditorProps {
   value: string;
@@ -29,14 +34,21 @@ interface RichTextEditorProps {
   dir?: "ltr" | "rtl";
   placeholder?: string;
   minHeight?: number;
+  imageFolder?: string;
 }
+
+const MAX_IMAGE_MB = 5;
 
 export function RichTextEditor({
   value,
   onChange,
   dir = "ltr",
   minHeight = 180,
+  imageFolder = "editor",
 }: RichTextEditorProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [2, 3] } }),
@@ -45,6 +57,11 @@ export function RichTextEditor({
         HTMLAttributes: { class: "text-primary underline" },
       }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
+      Image.configure({
+        inline: false,
+        allowBase64: false,
+        HTMLAttributes: { class: "rounded-md max-w-full h-auto" },
+      }),
     ],
     content: value || "",
     editorProps: {
@@ -87,6 +104,31 @@ export function RichTextEditor({
       return;
     }
     editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+  };
+
+  const uploadImage = async (file: File) => {
+    if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
+      toast.error(`Image too large. Max ${MAX_IMAGE_MB}MB.`);
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "png";
+      const safeName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const path = `${imageFolder}/${safeName}`;
+      const { error: upErr } = await supabase.storage
+        .from("site-assets")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from("site-assets").getPublicUrl(path);
+      editor.chain().focus().setImage({ src: data.publicUrl, alt: file.name }).run();
+      toast.success("Image inserted");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const ToolBtn = ({
@@ -161,6 +203,13 @@ export function RichTextEditor({
         <ToolBtn onClick={() => editor.chain().focus().unsetLink().run()} disabled={!editor.isActive("link")} title="Remove link">
           <Unlink className="h-4 w-4" />
         </ToolBtn>
+        <ToolBtn
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          title="Insert image"
+        >
+          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+        </ToolBtn>
         <div className="mx-1 h-5 w-px bg-border" />
         <ToolBtn onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo">
           <Undo2 className="h-4 w-4" />
@@ -172,6 +221,16 @@ export function RichTextEditor({
       <div className="px-3 py-2">
         <EditorContent editor={editor} />
       </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) uploadImage(f);
+        }}
+      />
     </div>
   );
 }
