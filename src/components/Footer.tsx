@@ -1,6 +1,7 @@
 import { useLang } from "@/contexts/LangContext";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import type { ComponentType } from "react";
 import {
   Facebook,
   Instagram,
@@ -58,7 +59,7 @@ export function Footer() {
   const visibleSocials = socials.filter((x) => x.url && x.url.trim());
 
   const trustItems: {
-    icon: React.ComponentType<{ className?: string }>;
+    icon: ComponentType<{ className?: string }>;
     label: string;
     iconClassName?: string;
     tileClassName?: string;
