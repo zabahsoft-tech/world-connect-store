@@ -296,6 +296,7 @@ function AdminPages() {
                       value={editing.content_en}
                       onChange={(html) => setEditing({ ...editing, content_en: html })}
                       minHeight={220}
+                      imageFolder="pages/content"
                     />
                   </div>
                   <div>
@@ -305,6 +306,7 @@ function AdminPages() {
                       onChange={(html) => setEditing({ ...editing, content_fa: html })}
                       dir="rtl"
                       minHeight={220}
+                      imageFolder="pages/content"
                     />
                   </div>
                   <div>
@@ -314,6 +316,7 @@ function AdminPages() {
                       onChange={(html) => setEditing({ ...editing, content_ps: html })}
                       dir="rtl"
                       minHeight={220}
+                      imageFolder="pages/content"
                     />
                   </div>
                 </TabsContent>
