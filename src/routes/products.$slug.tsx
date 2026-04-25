@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { Minus, Plus, ShoppingCart, Play } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { toast } from "sonner";
@@ -11,14 +11,7 @@ import { pickLang } from "@/lib/i18n";
 import { SiteLayout } from "@/components/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { productImages } from "@/lib/utils";
 
 import { buildQuickOrderMessage, openWhatsApp } from "@/lib/whatsapp";
 import { SafeHtml } from "@/components/SafeHtml";
@@ -31,58 +24,6 @@ import {
   jsonLdScript,
   SITE_URL,
 } from "@/lib/seo";
-
-interface Variant {
-  id: string;
-  name_en: string;
-  name_fa: string;
-  name_ps: string;
-  sku?: string | null;
-  price?: number | null;
-  in_stock: boolean;
-  image_url?: string | null;
-}
-
-interface AttributeRow {
-  label_en: string;
-  label_fa: string;
-  label_ps: string;
-  value_en: string;
-  value_fa: string;
-  value_ps: string;
-}
-
-interface SpecValueExtra {
-  header_en?: string;
-  header_fa?: string;
-  header_ps?: string;
-  value_en?: string;
-  value_fa?: string;
-  value_ps?: string;
-}
-
-interface SpecRow {
-  type?: "row" | "section";
-  // section title fields
-  title_en?: string;
-  title_fa?: string;
-  title_ps?: string;
-  // optional group ("main col")
-  group_en?: string;
-  group_fa?: string;
-  group_ps?: string;
-  label_en: string;
-  label_fa: string;
-  label_ps: string;
-  value_en: string;
-  value_fa: string;
-  value_ps: string;
-  // optional first-value column header (only shown when extras present)
-  value_header_en?: string;
-  value_header_fa?: string;
-  value_header_ps?: string;
-  extras?: SpecValueExtra[];
-}
 
 function getVideoEmbed(url: string): { type: "youtube" | "vimeo" | "file"; src: string } | null {
   if (!url) return null;
@@ -118,7 +59,8 @@ export const Route = createFileRoute("/products/$slug")({
     }
     const nameEn = p.name_en || "Product";
     const descEn = p.description_en || `Buy ${nameEn} on World Connect Store. Order on WhatsApp with delivery across Afghanistan.`;
-    const image = p.image_url || undefined;
+    const imgs = productImages(p.images);
+    const image = imgs[0];
     return {
       meta: [
         ...buildMeta({
@@ -183,7 +125,6 @@ function ProductPage() {
   const { add } = useCart();
   const [qty, setQty] = useState(1);
   const [activeIdx, setActiveIdx] = useState(0);
-  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
 
   const settings = useQuery({
     queryKey: ["settings"],
@@ -193,26 +134,14 @@ function ProductPage() {
     },
   });
 
-  const gallery: string[] = useMemo(() => (Array.isArray(p.gallery) ? (p.gallery as string[]) : []), [p.gallery]);
-  const allImages = useMemo(() => {
-    const merged = p.image_url && !gallery.includes(p.image_url) ? [p.image_url, ...gallery] : gallery;
-    return merged.filter(Boolean) as string[];
-  }, [gallery, p.image_url]);
+  const allImages = useMemo(() => productImages(p.images), [p.images]);
 
   const videoEmbed = p.video_url ? getVideoEmbed(p.video_url) : null;
   const totalSlots = allImages.length + (videoEmbed ? 1 : 0);
   const isVideoSlot = videoEmbed && activeIdx === allImages.length;
 
-  const attributes: AttributeRow[] = Array.isArray(p.attributes) ? (p.attributes as unknown as AttributeRow[]) : [];
-  const variants: Variant[] = Array.isArray(p.variants) ? (p.variants as unknown as Variant[]) : [];
-  const specifications: SpecRow[] = Array.isArray((p as { specifications?: unknown }).specifications)
-    ? ((p as { specifications: unknown[] }).specifications as SpecRow[])
-    : [];
-
-  const selectedVariant = variants.find((v) => v.id === selectedVariantId) || null;
-  const effectivePrice = selectedVariant?.price != null ? Number(selectedVariant.price) : Number(p.price);
-  const variantInStock = selectedVariant ? selectedVariant.in_stock : true;
-  const canBuy = p.in_stock && variantInStock && (variants.length === 0 || !!selectedVariant);
+  const effectivePrice = Number(p.price);
+  const canBuy = p.in_stock;
 
   const name = pickLang(p, "name", lang);
   const desc = pickLang(p, "description", lang);
@@ -223,22 +152,13 @@ function ProductPage() {
       toast.error("WhatsApp number not configured");
       return;
     }
-    if (variants.length > 0 && !selectedVariant) {
-      toast.error(tr("selectVariant"));
-      return;
-    }
-    const variantName = selectedVariant ? pickLang(selectedVariant, "name", lang) : undefined;
     openWhatsApp(
       wa,
-      buildQuickOrderMessage({ lang, productName: name, price: effectivePrice * qty, variantName }),
+      buildQuickOrderMessage({ lang, productName: name, price: effectivePrice * qty }),
     );
   };
 
   const handleAddToCart = () => {
-    if (variants.length > 0 && !selectedVariant) {
-      toast.error(tr("selectVariant"));
-      return;
-    }
     add(
       {
         id: p.id,
@@ -247,15 +167,7 @@ function ProductPage() {
         name_fa: p.name_fa,
         name_ps: p.name_ps,
         price: effectivePrice,
-        image_url: selectedVariant?.image_url || p.image_url,
-        ...(selectedVariant
-          ? {
-              variantId: selectedVariant.id,
-              variantName_en: selectedVariant.name_en,
-              variantName_fa: selectedVariant.name_fa,
-              variantName_ps: selectedVariant.name_ps,
-            }
-          : {}),
+        image_url: allImages[0] ?? null,
       },
       qty,
     );
@@ -321,8 +233,8 @@ function ProductPage() {
         <div className="flex flex-col">
           <div className="flex flex-wrap items-center gap-2">
             {p.featured && <Badge variant="default">{tr("featured")}</Badge>}
-            <Badge variant={p.in_stock && variantInStock ? "secondary" : "destructive"}>
-              {p.in_stock && variantInStock ? tr("inStock") : tr("outOfStock")}
+            <Badge variant={p.in_stock ? "secondary" : "destructive"}>
+              {p.in_stock ? tr("inStock") : tr("outOfStock")}
             </Badge>
           </div>
           <h1 className="mt-3 text-3xl font-bold md:text-4xl">{name}</h1>
@@ -336,181 +248,6 @@ function ProductPage() {
               className="prose prose-sm mt-6 max-w-none text-muted-foreground prose-headings:text-foreground prose-strong:text-foreground prose-a:text-primary prose-table:border prose-th:border prose-th:bg-muted prose-th:p-2 prose-td:border prose-td:p-2"
               dir={lang === "en" ? "ltr" : "rtl"}
             />
-          )}
-
-          {specifications.length > 0 && (
-            <div className="mt-6">
-              <h2 className="mb-2 text-sm font-semibold">{tr("specifications")}</h2>
-              <div className="overflow-hidden rounded-lg border">
-                <Table>
-                  {(() => {
-                    const hasGroup = specifications.some(
-                      (s) => (s.type ?? "row") === "row" && (s.group_en || s.group_fa || s.group_ps),
-                    );
-                    const extrasCount = specifications.reduce(
-                      (m, s) => ((s.type ?? "row") === "row" ? Math.max(m, s.extras?.length ?? 0) : m),
-                      0,
-                    );
-                    const hasExtras = extrasCount > 0;
-                    const colCount = (hasGroup ? 1 : 0) + 1 + 1 + extrasCount;
-                    // Build column headers (only shown when extras exist)
-                    const firstValHeader = (() => {
-                      for (const s of specifications) {
-                        if ((s.type ?? "row") !== "row") continue;
-                        const v = pickLang(s, "value_header", lang);
-                        if (v) return v;
-                      }
-                      return "";
-                    })();
-                    const extraHeaders = Array.from({ length: extrasCount }).map((_, idx) => {
-                      for (const s of specifications) {
-                        if ((s.type ?? "row") !== "row") continue;
-                        const ex = s.extras?.[idx];
-                        if (!ex) continue;
-                        const v = pickLang(ex, "header", lang);
-                        if (v) return v;
-                      }
-                      return "";
-                    });
-                    let stripeIdx = 0;
-                    const out: ReactNode[] = [];
-                      for (let i = 0; i < specifications.length; i++) {
-                        const s = specifications[i];
-                        const kind = s.type ?? "row";
-                        if (kind === "section") {
-                          const title = pickLang(s, "title", lang);
-                          if (!title) continue;
-                          out.push(
-                            <TableRow key={`sec-${i}`} className="bg-muted/60 hover:bg-muted/60">
-                              <TableCell colSpan={colCount} className="py-2 text-xs font-semibold uppercase tracking-wide text-foreground">
-                                {title}
-                              </TableCell>
-                            </TableRow>,
-                          );
-                          stripeIdx = 0;
-                          continue;
-                        }
-                        const label = pickLang(s, "label", lang);
-                        const value = pickLang(s, "value", lang);
-                        const extraVals = (s.extras ?? []).map((ex) => pickLang(ex, "value", lang));
-                        const anyExtra = extraVals.some((v) => v);
-                        if (!label && !value && !anyExtra) continue;
-                        const stripe = stripeIdx % 2 === 1 ? "bg-muted/30" : "";
-                        stripeIdx++;
-                        // group rowSpan: count consecutive following rows with same group (until section/different group)
-                        let groupCell: React.ReactNode = null;
-                        if (hasGroup) {
-                          const myGroup = pickLang(s, "group", lang);
-                          const prev = specifications[i - 1];
-                          const prevKind = prev?.type ?? "row";
-                          const prevGroup =
-                            prev && prevKind === "row" ? pickLang(prev, "group", lang) : "";
-                          const startsBlock = !prev || prevKind === "section" || prevGroup !== myGroup;
-                          if (startsBlock) {
-                            let span = 1;
-                            for (let j = i + 1; j < specifications.length; j++) {
-                              const n = specifications[j];
-                              if ((n.type ?? "row") !== "row") break;
-                              if (pickLang(n, "group", lang) !== myGroup) break;
-                              const nLabel = pickLang(n, "label", lang);
-                              const nValue = pickLang(n, "value", lang);
-                              const nExtras = (n.extras ?? []).map((ex) => pickLang(ex, "value", lang));
-                              if (!nLabel && !nValue && !nExtras.some((v) => v)) break;
-                              span++;
-                            }
-                            groupCell = (
-                              <TableCell
-                                rowSpan={span}
-                                className="w-1/4 border-e bg-muted/20 align-top text-sm font-semibold"
-                              >
-                                {myGroup}
-                              </TableCell>
-                            );
-                          }
-                        }
-                        out.push(
-                          <TableRow key={`row-${i}`} className={stripe}>
-                            {groupCell}
-                            <TableCell className="font-medium">
-                              {label}
-                            </TableCell>
-                            <TableCell className="text-muted-foreground">{value}</TableCell>
-                            {Array.from({ length: extrasCount }).map((_, idx) => (
-                              <TableCell key={idx} className="text-muted-foreground">
-                                {extraVals[idx] ?? ""}
-                              </TableCell>
-                            ))}
-                          </TableRow>,
-                        );
-                      }
-                    return (
-                      <>
-                        {hasExtras && (
-                          <TableHeader>
-                            <TableRow>
-                              {hasGroup && <TableHead />}
-                              <TableHead>{tr("spec_label")}</TableHead>
-                              <TableHead>{firstValHeader || tr("spec_value")}</TableHead>
-                              {extraHeaders.map((h, idx) => (
-                                <TableHead key={idx}>{h || `${tr("spec_column")} ${idx + 2}`}</TableHead>
-                              ))}
-                            </TableRow>
-                          </TableHeader>
-                        )}
-                        <TableBody>{out}</TableBody>
-                      </>
-                    );
-                  })()}
-                </Table>
-              </div>
-            </div>
-          )}
-
-          {variants.length > 0 && (
-            <div className="mt-6 space-y-2">
-              <p className="text-sm font-medium">{tr("variant")}:</p>
-              <div className="flex flex-wrap gap-2">
-                {variants.map((v) => {
-                  const vname = pickLang(v, "name", lang);
-                  const isSelected = v.id === selectedVariantId;
-                  return (
-                    <button
-                      key={v.id}
-                      type="button"
-                      disabled={!v.in_stock}
-                      onClick={() => setSelectedVariantId(v.id)}
-                      className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
-                        isSelected
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-background hover:border-primary"
-                      } ${!v.in_stock ? "cursor-not-allowed line-through opacity-50" : ""}`}
-                    >
-                      {vname}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {attributes.length > 0 && (
-            <div className="mt-6">
-              <h2 className="mb-2 text-sm font-semibold">{tr("sizes")}</h2>
-              <div className="flex flex-wrap gap-2">
-                {attributes.map((a, i) => {
-                  const value = pickLang(a, "value", lang);
-                  if (!value) return null;
-                  return (
-                    <span
-                      key={i}
-                      className="rounded-full border border-border bg-muted/40 px-3 py-1 text-sm"
-                    >
-                      {value}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
           )}
 
           <div className="mt-8 space-y-4">

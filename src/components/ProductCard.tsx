@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
+import { mainImage } from "@/lib/utils";
 
 interface Product {
   id: string;
@@ -14,7 +15,7 @@ interface Product {
   name_fa: string;
   name_ps: string;
   price: number;
-  image_url: string | null;
+  images: unknown;
   in_stock: boolean;
 }
 
@@ -22,6 +23,7 @@ export function ProductCard({ product }: { product: Product }) {
   const { lang, tr } = useLang();
   const { add } = useCart();
   const name = pickLang(product, "name", lang);
+  const image = mainImage(product.images);
 
   return (
     <Card className="group flex flex-col overflow-hidden border transition-all hover:shadow-[var(--shadow-soft)]">
@@ -31,9 +33,9 @@ export function ProductCard({ product }: { product: Product }) {
         className="block aspect-square w-full overflow-hidden bg-white"
         aria-label={name}
       >
-        {product.image_url ? (
+        {image ? (
           <img
-            src={product.image_url}
+            src={image}
             alt={name}
             loading="lazy"
             decoding="async"
@@ -64,7 +66,7 @@ export function ProductCard({ product }: { product: Product }) {
                 name_fa: product.name_fa,
                 name_ps: product.name_ps,
                 price: Number(product.price),
-                image_url: product.image_url,
+                image_url: image,
               });
               toast.success(tr("addToCart"));
             }}

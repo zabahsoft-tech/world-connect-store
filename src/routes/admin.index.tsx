@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/chart";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { mainImage } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
@@ -127,7 +128,7 @@ function AdminDashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, slug, name_en, image_url, price")
+        .select("id, slug, name_en, images, price")
         .eq("in_stock", false)
         .order("updated_at", { ascending: false })
         .limit(5);
@@ -396,11 +397,14 @@ function AdminDashboard() {
           <ul className="space-y-2">
             {lowStock.data?.map((p) => (
               <li key={p.id} className="flex items-center gap-3 rounded-lg border p-3 text-sm">
-                {p.image_url ? (
-                  <img src={p.image_url} alt="" className="h-10 w-10 rounded object-cover" />
-                ) : (
-                  <div className="h-10 w-10 rounded bg-muted" />
-                )}
+                {(() => {
+                  const img = mainImage(p.images);
+                  return img ? (
+                    <img src={img} alt="" className="h-10 w-10 rounded object-cover" />
+                  ) : (
+                    <div className="h-10 w-10 rounded bg-muted" />
+                  );
+                })()}
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">{p.name_en}</p>
                   <p className="text-xs text-muted-foreground tabular-nums">{Number(p.price).toFixed(2)}</p>
