@@ -14,6 +14,7 @@ import {
 } from "@/lib/seo";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { CalendarDays, User, ArrowRight, Tag, Newspaper, Rss } from "lucide-react";
 
 interface BlogListItem {
   id: string;
@@ -110,97 +111,224 @@ function BlogIndex() {
   const allTags = Array.from(tagSet).sort();
 
   const filtered = tag ? posts.filter((p: BlogListItem) => p.tags?.includes(tag)) : posts;
+  const featured = !tag && filtered.length > 0 ? filtered[0] : null;
+  const rest = featured ? filtered.slice(1) : filtered;
 
   return (
     <SiteLayout>
-      <section className="container mx-auto px-4 py-10 md:py-14">
-        <header className="mb-8 max-w-3xl">
-          <h1 className="text-3xl font-bold md:text-4xl">{tr("blog")}</h1>
-          <p className="mt-2 text-muted-foreground">{tr("latestPosts")}</p>
+      {/* Hero header */}
+      <section className="relative overflow-hidden border-b bg-gradient-to-br from-primary/10 via-background to-background">
+        <div
+          className="absolute inset-0 -z-10 opacity-40"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 20% 20%, hsl(var(--primary) / 0.15), transparent 40%), radial-gradient(circle at 80% 0%, hsl(var(--primary) / 0.1), transparent 50%)",
+          }}
+          aria-hidden
+        />
+        <div className="container mx-auto px-4 py-14 md:py-20">
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border bg-background/60 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
+              <Newspaper className="h-3.5 w-3.5" />
+              {tr("blog")}
+            </div>
+            <h1 className="text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
+              {tr("latestPosts")}
+            </h1>
+            <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground md:text-lg">
+              {tr("blog")} — {tr("latestPosts")}
+            </p>
 
-          {allTags.length > 0 && (
-            <div className="mt-5 flex flex-wrap items-center gap-2">
+            <div className="mt-6 flex items-center justify-center gap-3">
+              <a
+                href="/rss.xml"
+                className="inline-flex items-center gap-1.5 rounded-full border bg-background/60 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                <Rss className="h-3.5 w-3.5" />
+                RSS
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="container mx-auto px-4 py-10 md:py-14">
+        {/* Tag filter bar */}
+        {allTags.length > 0 && (
+          <div className="mb-10 flex flex-wrap items-center gap-2">
+            <span className="me-1 inline-flex items-center gap-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <Tag className="h-3.5 w-3.5" />
+              {tr("filterAll") /* fallback */}
+            </span>
+            <Link
+              to="/blog"
+              search={{ tag: undefined }}
+              className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
+                !tag
+                  ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                  : "bg-background hover:border-primary/40 hover:bg-accent"
+              }`}
+            >
+              {tr("allPosts")}
+            </Link>
+            {allTags.map((t) => (
               <Link
+                key={t}
                 to="/blog"
-                search={{ tag: undefined }}
-                className={`rounded-full border px-3 py-1 text-xs transition-colors ${
-                  !tag ? "border-primary bg-primary text-primary-foreground" : "hover:bg-accent"
+                search={{ tag: t }}
+                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
+                  tag === t
+                    ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                    : "bg-background hover:border-primary/40 hover:bg-accent"
                 }`}
               >
-                {tr("allPosts")}
+                #{t}
               </Link>
-              {allTags.map((t) => (
-                <Link
-                  key={t}
-                  to="/blog"
-                  search={{ tag: t }}
-                  className={`rounded-full border px-3 py-1 text-xs transition-colors ${
-                    tag === t ? "border-primary bg-primary text-primary-foreground" : "hover:bg-accent"
-                  }`}
-                >
-                  #{t}
-                </Link>
-              ))}
-            </div>
-          )}
-        </header>
+            ))}
+          </div>
+        )}
 
         {filtered.length === 0 ? (
-          <div className="rounded-lg border border-dashed py-20 text-center text-muted-foreground">
-            {tr("noPostsYet")}
+          <div className="rounded-2xl border border-dashed py-24 text-center">
+            <Newspaper className="mx-auto mb-4 h-12 w-12 text-muted-foreground/40" />
+            <p className="text-muted-foreground">{tr("noPostsYet")}</p>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((p: BlogListItem) => {
-              const title = pickLang(p, "title", lang) || p.slug;
-              const excerpt = pickLang(p, "excerpt", lang);
-              const date = formatDate(p.published_at || p.created_at, lang);
-              return (
-                <Card key={p.id} className="group overflow-hidden transition-shadow hover:shadow-md">
-                  <Link
-                    to="/blog/$slug"
-                    params={{ slug: p.slug }}
-                    className="block"
-                    aria-label={title}
-                  >
-                    <div className="aspect-[16/9] w-full overflow-hidden bg-muted">
-                      {p.cover_image ? (
-                        <img
-                          src={p.cover_image}
-                          alt={title}
-                          loading="lazy"
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-                          {tr("blog")}
+          <>
+            {/* Featured post */}
+            {featured && (
+              <Link
+                to="/blog/$slug"
+                params={{ slug: featured.slug }}
+                className="group mb-12 block overflow-hidden rounded-2xl border bg-card shadow-sm transition-all hover:shadow-xl"
+                aria-label={pickLang(featured, "title", lang) || featured.slug}
+              >
+                <div className="grid gap-0 md:grid-cols-2">
+                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted md:aspect-auto md:h-full md:min-h-[320px]">
+                    {featured.cover_image ? (
+                      <img
+                        src={featured.cover_image}
+                        alt={pickLang(featured, "title", lang) || featured.slug}
+                        loading="eager"
+                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                        <Newspaper className="h-12 w-12 opacity-30" />
+                      </div>
+                    )}
+                    <div className="absolute left-4 top-4">
+                      <Badge className="bg-primary text-primary-foreground shadow-md">
+                        {tr("featured")}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="flex flex-col justify-center gap-4 p-6 md:p-10">
+                    <div className="flex flex-wrap gap-1.5">
+                      {featured.tags?.slice(0, 4).map((t: string) => (
+                        <Badge key={t} variant="secondary" className="text-[10px]">
+                          #{t}
+                        </Badge>
+                      ))}
+                    </div>
+                    <h2 className="text-2xl font-bold leading-tight tracking-tight transition-colors group-hover:text-primary md:text-3xl lg:text-4xl">
+                      {pickLang(featured, "title", lang) || featured.slug}
+                    </h2>
+                    {pickLang(featured, "excerpt", lang) && (
+                      <p className="line-clamp-3 text-base text-muted-foreground">
+                        {pickLang(featured, "excerpt", lang)}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                      {featured.author_name && (
+                        <span className="inline-flex items-center gap-1.5">
+                          <User className="h-3.5 w-3.5" />
+                          {featured.author_name}
+                        </span>
+                      )}
+                      <span className="inline-flex items-center gap-1.5">
+                        <CalendarDays className="h-3.5 w-3.5" />
+                        {formatDate(featured.published_at || featured.created_at, lang)}
+                      </span>
+                    </div>
+                    <div className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
+                      {tr("readMore")}
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            )}
+
+            {/* Grid of posts */}
+            {rest.length > 0 && (
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {rest.map((p: BlogListItem) => {
+                  const title = pickLang(p, "title", lang) || p.slug;
+                  const excerpt = pickLang(p, "excerpt", lang);
+                  const date = formatDate(p.published_at || p.created_at, lang);
+                  return (
+                    <Card
+                      key={p.id}
+                      className="group flex flex-col overflow-hidden border bg-card transition-all hover:-translate-y-1 hover:shadow-lg"
+                    >
+                      <Link
+                        to="/blog/$slug"
+                        params={{ slug: p.slug }}
+                        className="flex flex-1 flex-col"
+                        aria-label={title}
+                      >
+                        <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted">
+                          {p.cover_image ? (
+                            <img
+                              src={p.cover_image}
+                              alt={title}
+                              loading="lazy"
+                              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                              <Newspaper className="h-10 w-10 opacity-30" />
+                            </div>
+                          )}
+                          {p.tags && p.tags.length > 0 && (
+                            <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
+                              <Badge
+                                variant="secondary"
+                                className="bg-background/90 text-[10px] backdrop-blur"
+                              >
+                                #{p.tags[0]}
+                              </Badge>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    <div className="space-y-2 p-4">
-                      <div className="flex flex-wrap gap-1.5">
-                        {p.tags?.slice(0, 3).map((t: string) => (
-                          <Badge key={t} variant="secondary" className="text-[10px]">
-                            {t}
-                          </Badge>
-                        ))}
-                      </div>
-                      <h2 className="line-clamp-2 text-lg font-semibold leading-snug group-hover:text-primary">
-                        {title}
-                      </h2>
-                      {excerpt && (
-                        <p className="line-clamp-3 text-sm text-muted-foreground">{excerpt}</p>
-                      )}
-                      <div className="flex items-center justify-between pt-1 text-xs text-muted-foreground">
-                        <span>{date}</span>
-                        <span className="font-medium text-primary">{tr("readMore")} →</span>
-                      </div>
-                    </div>
-                  </Link>
-                </Card>
-              );
-            })}
-          </div>
+                        <div className="flex flex-1 flex-col gap-3 p-5">
+                          <h2 className="line-clamp-2 text-lg font-semibold leading-snug tracking-tight transition-colors group-hover:text-primary">
+                            {title}
+                          </h2>
+                          {excerpt && (
+                            <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+                              {excerpt}
+                            </p>
+                          )}
+                          <div className="mt-auto flex items-center justify-between border-t pt-3 text-xs text-muted-foreground">
+                            <span className="inline-flex items-center gap-1.5">
+                              <CalendarDays className="h-3.5 w-3.5" />
+                              {date}
+                            </span>
+                            <span className="inline-flex items-center gap-1 font-semibold text-primary">
+                              {tr("readMore")}
+                              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
       </section>
     </SiteLayout>
