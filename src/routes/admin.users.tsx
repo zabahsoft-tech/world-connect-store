@@ -15,7 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { listUsers, setAdminRole, type AdminUserRow } from "@/lib/users.functions";
 import { supabase } from "@/integrations/supabase/client";
 
-async function authHeaders() {
+async function authHeaders(): Promise<Record<string, string>> {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
   return token ? { Authorization: `Bearer ${token}` } : {};
