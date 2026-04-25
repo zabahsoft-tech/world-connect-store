@@ -29,6 +29,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { GalleryUpload } from "@/components/GalleryUpload";
 import { MediaUpload } from "@/components/MediaUpload";
 import { RichTextEditor } from "@/components/RichTextEditor";
+import { mainImage, productImages } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/products")({
   component: AdminProducts,
@@ -331,16 +332,14 @@ function AdminProducts() {
         description_fa: f.description_fa || null,
         description_ps: f.description_ps || null,
         price: Number(f.price) || 0,
-        image_url: f.gallery[0] || null,
-        gallery: f.gallery as unknown as never,
+        images: f.gallery as unknown as never,
         video_url: f.video_url || null,
-        attributes: cleanAttrs as unknown as never,
-        variants: cleanVariants as unknown as never,
-        specifications: cleanSpecs as unknown as never,
         category_id: f.category_id || null,
         in_stock: f.in_stock,
         featured: f.featured,
       };
+      // Suppress unused-warning for legacy local-only fields that aren't persisted anymore
+      void cleanAttrs; void cleanVariants; void cleanSpecs;
       if (f.id) {
         const { error } = await supabase.from("products").update(payload).eq("id", f.id);
         if (error) throw error;
@@ -379,14 +378,10 @@ function AdminProducts() {
   };
 
   const openEdit = (p: typeof products.data extends (infer T)[] | null | undefined ? T : never) => {
-    const galleryArr: string[] = Array.isArray(p.gallery) ? (p.gallery as string[]) : [];
-    // if image_url exists but isn't in gallery, prepend it
-    const merged = p.image_url && !galleryArr.includes(p.image_url) ? [p.image_url, ...galleryArr] : galleryArr;
-    const attrsRaw = (Array.isArray(p.attributes) ? p.attributes : []) as Partial<AttributeRow>[];
-    const variantsRaw = (Array.isArray(p.variants) ? p.variants : []) as Array<Partial<VariantRow> & { price?: number | string | null }>;
-    const specsRaw = (Array.isArray((p as { specifications?: unknown }).specifications)
-      ? ((p as { specifications: unknown[] }).specifications as Partial<SpecRow>[])
-      : []);
+    const merged = productImages(p.images);
+    const attrsRaw: Partial<AttributeRow>[] = [];
+    const variantsRaw: Array<Partial<VariantRow> & { price?: number | string | null }> = [];
+    const specsRaw: Partial<SpecRow>[] = [];
     setEditing({
       id: p.id, slug: p.slug,
       name_en: p.name_en, name_fa: p.name_fa, name_ps: p.name_ps,
@@ -833,13 +828,16 @@ function AdminProducts() {
             {!products.isLoading && filtered.map((p) => (
               <TableRow key={p.id}>
                 <TableCell>
-                  {p.image_url ? (
-                    <img src={p.image_url} className="h-10 w-10 rounded object-cover" alt="" />
-                  ) : (
+                  {(() => {
+                    const img = mainImage(p.images);
+                    return img ? (
+                      <img src={img} className="h-10 w-10 rounded object-cover" alt="" />
+                    ) : (
                     <div className="flex h-10 w-10 items-center justify-center rounded bg-muted">
                       <ImageOff className="h-4 w-4 text-muted-foreground" />
                     </div>
-                  )}
+                    );
+                  })()}
                 </TableCell>
                 <TableCell>
                   <div className="font-medium">{p.name_en}</div>
