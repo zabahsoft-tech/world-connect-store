@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/chart";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { mainImage } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
