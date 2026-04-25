@@ -158,10 +158,28 @@ function ContactPage() {
     label: string;
     value: string;
     wide?: boolean;
+    iconClassName?: string;
+    tileClassName?: string;
   };
   const infoTiles: InfoTile[] = [];
-  if (wa) infoTiles.push({ href: `https://wa.me/${wa.replace(/[^\d]/g, "")}`, icon: WhatsAppIcon, label: "WhatsApp", value: wa });
-  if (wa2) infoTiles.push({ href: `https://wa.me/${wa2.replace(/[^\d]/g, "")}`, icon: WhatsAppIcon, label: "WhatsApp 2", value: wa2 });
+  if (wa)
+    infoTiles.push({
+      href: `https://wa.me/${wa.replace(/[^\d]/g, "")}`,
+      icon: WhatsAppIcon,
+      label: "WhatsApp",
+      value: wa,
+      iconClassName: "h-4.5 w-4.5 text-[#25D366]",
+      tileClassName: "bg-[#25D366]/10 text-[#25D366]",
+    });
+  if (wa2)
+    infoTiles.push({
+      href: `https://wa.me/${wa2.replace(/[^\d]/g, "")}`,
+      icon: WhatsAppIcon,
+      label: "WhatsApp 2",
+      value: wa2,
+      iconClassName: "h-4.5 w-4.5 text-[#25D366]",
+      tileClassName: "bg-[#25D366]/10 text-[#25D366]",
+    });
   if (s?.phone) infoTiles.push({ href: `tel:${s.phone}`, icon: Phone, label: tr("phone"), value: s.phone });
   if (s?.email) infoTiles.push({ href: `mailto:${s.email}`, icon: Mail, label: tr("email"), value: s.email });
   if (s?.address) infoTiles.push({ icon: MapPin, label: "Address", value: s.address, wide: true });
@@ -285,8 +303,10 @@ function ContactPage() {
                   const Icon = t.icon;
                   const inner = (
                     <div className="flex h-full items-start gap-3 rounded-xl border bg-card p-3.5 shadow-[var(--shadow-soft)] transition-all group-hover:border-primary/40 group-hover:shadow-md">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
-                        <Icon className="h-4.5 w-4.5" />
+                      <div
+                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${t.tileClassName ?? "bg-primary-soft text-primary"}`}
+                      >
+                        <Icon className={t.iconClassName ?? "h-4.5 w-4.5"} />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
