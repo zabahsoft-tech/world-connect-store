@@ -158,6 +158,77 @@ export type Database = {
         }
         Relationships: []
       }
+      filter_groups: {
+        Row: {
+          created_at: string
+          id: string
+          name_en: string
+          name_fa: string
+          name_ps: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name_en: string
+          name_fa: string
+          name_ps: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name_en?: string
+          name_fa?: string
+          name_ps?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      filter_options: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          name_en: string
+          name_fa: string
+          name_ps: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          name_en: string
+          name_fa: string
+          name_ps: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          name_en?: string
+          name_fa?: string
+          name_ps?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filter_options_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "filter_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hero_slides: {
         Row: {
           active: boolean
@@ -320,71 +391,92 @@ export type Database = {
         }
         Relationships: []
       }
+      product_filter_options: {
+        Row: {
+          created_at: string
+          option_id: string
+          product_id: string
+        }
+        Insert: {
+          created_at?: string
+          option_id: string
+          product_id: string
+        }
+        Update: {
+          created_at?: string
+          option_id?: string
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_filter_options_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "filter_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_filter_options_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
-          attributes: Json
           category_id: string | null
           created_at: string
           description_en: string | null
           description_fa: string | null
           description_ps: string | null
           featured: boolean
-          gallery: Json
           id: string
-          image_url: string | null
+          images: Json
           in_stock: boolean
           name_en: string
           name_fa: string
           name_ps: string
           price: number
           slug: string
-          specifications: Json
           updated_at: string
-          variants: Json
           video_url: string | null
         }
         Insert: {
-          attributes?: Json
           category_id?: string | null
           created_at?: string
           description_en?: string | null
           description_fa?: string | null
           description_ps?: string | null
           featured?: boolean
-          gallery?: Json
           id?: string
-          image_url?: string | null
+          images?: Json
           in_stock?: boolean
           name_en: string
           name_fa: string
           name_ps: string
           price?: number
           slug: string
-          specifications?: Json
           updated_at?: string
-          variants?: Json
           video_url?: string | null
         }
         Update: {
-          attributes?: Json
           category_id?: string | null
           created_at?: string
           description_en?: string | null
           description_fa?: string | null
           description_ps?: string | null
           featured?: boolean
-          gallery?: Json
           id?: string
-          image_url?: string | null
+          images?: Json
           in_stock?: boolean
           name_en?: string
           name_fa?: string
           name_ps?: string
           price?: number
           slug?: string
-          specifications?: Json
           updated_at?: string
-          variants?: Json
           video_url?: string | null
         }
         Relationships: [
