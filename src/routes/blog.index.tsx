@@ -37,7 +37,7 @@ interface BlogListItem {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sb = supabase as any;
 
-export const Route = createFileRoute("/blog")({
+export const Route = createFileRoute("/blog/")({
   validateSearch: (search: Record<string, unknown>): { tag?: string } => {
     const tag = typeof search.tag === "string" ? search.tag : undefined;
     return tag ? { tag } : {};
