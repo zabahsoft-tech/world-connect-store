@@ -262,10 +262,10 @@ export function buildHreflangLinks(path: string) {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
   const links: Array<Record<string, string>> = [
     { rel: "canonical", href: `${SITE_URL}${cleanPath}` },
-    { rel: "alternate", hreflang: "x-default", href: `${SITE_URL}${cleanPath}` },
+    { rel: "alternate", hrefLang: "x-default", href: `${SITE_URL}${cleanPath}` },
   ];
   (Object.entries(HREFLANG_MAP) as [Lang, string][]).forEach(([, code]) => {
-    links.push({ rel: "alternate", hreflang: code, href: `${SITE_URL}${cleanPath}` });
+    links.push({ rel: "alternate", hrefLang: code, href: `${SITE_URL}${cleanPath}` });
   });
   return links;
 }
