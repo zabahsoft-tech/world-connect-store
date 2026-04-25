@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { buildOrderMessage, openWhatsApp } from "@/lib/whatsapp";
-import { MessageCircle } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 
 const schema = z.object({
   customer_name: z.string().trim().min(2).max(100),
@@ -142,8 +142,13 @@ function CheckoutPage() {
                 <Label htmlFor="notes">{tr("notes")}</Label>
                 <Textarea id="notes" rows={3} {...form.register("notes")} />
               </div>
-              <Button type="submit" size="lg" disabled={submitting} className="w-full gap-2">
-                <MessageCircle className="h-5 w-5" />
+              <Button
+                type="submit"
+                size="lg"
+                disabled={submitting}
+                className="w-full gap-2 bg-[#25D366] text-white hover:bg-[#1EBE5D]"
+              >
+                <WhatsAppIcon className="h-5 w-5" />
                 {submitting ? "..." : tr("placeOrder")}
               </Button>
             </form>
