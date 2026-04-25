@@ -242,6 +242,14 @@ function ProductPage() {
             <p className="mt-2 text-3xl font-bold text-primary">{effectivePrice.toFixed(2)}</p>
           )}
 
+          {desc && (
+            <SafeHtml
+              html={desc}
+              className="prose prose-sm mt-6 max-w-none text-muted-foreground prose-headings:text-foreground prose-strong:text-foreground prose-a:text-primary prose-table:border prose-th:border prose-th:bg-muted prose-th:p-2 prose-td:border prose-td:p-2"
+              dir={lang === "en" ? "ltr" : "rtl"}
+            />
+          )}
+
           <div className="mt-8 space-y-4">
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium">{tr("quantity")}:</span>
@@ -275,14 +283,6 @@ function ProductPage() {
               </Button>
             </div>
           </div>
-
-          {desc && (
-            <SafeHtml
-              html={desc}
-              className="prose prose-sm mt-8 max-w-none text-muted-foreground prose-headings:text-foreground prose-strong:text-foreground prose-a:text-primary prose-table:border prose-th:border prose-th:bg-muted prose-th:p-2 prose-td:border prose-td:p-2"
-              dir={lang === "en" ? "ltr" : "rtl"}
-            />
-          )}
         </div>
       </section>
     </SiteLayout>
