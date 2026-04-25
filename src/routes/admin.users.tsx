@@ -13,6 +13,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { listUsers, setAdminRole, type AdminUserRow } from "@/lib/users.functions";
+import { supabase } from "@/integrations/supabase/client";
+
+async function authHeaders(): Promise<Record<string, string>> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 export const Route = createFileRoute("/admin/users")({
   component: AdminUsers,
@@ -27,14 +34,14 @@ function AdminUsers() {
   const usersQ = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
-      const res = await listUsers();
+      const res = await listUsers({ headers: await authHeaders() });
       return res.users;
     },
   });
 
   const toggleAdmin = useMutation({
     mutationFn: async (vars: { userId: string; isAdmin: boolean }) => {
-      await setAdminRole({ data: vars });
+      await setAdminRole({ data: vars, headers: await authHeaders() });
     },
     onSuccess: () => {
       toast.success("Updated");
