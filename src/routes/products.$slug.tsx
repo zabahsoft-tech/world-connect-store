@@ -266,21 +266,21 @@ function ProductPage() {
     <SiteLayout>
       <section className="container mx-auto grid gap-8 px-4 py-8 md:grid-cols-2">
         <div className="space-y-3">
-          <div className="aspect-square overflow-hidden rounded-2xl bg-white">
+          <div className="aspect-square overflow-hidden rounded-2xl bg-white p-4 md:p-6">
             {isVideoSlot && videoEmbed ? (
               videoEmbed.type === "file" ? (
-                <video src={videoEmbed.src} controls className="h-full w-full object-contain" />
+                <video src={videoEmbed.src} controls className="h-full w-full rounded-lg object-contain" />
               ) : (
                 <iframe
                   src={videoEmbed.src}
                   title={name}
-                  className="h-full w-full"
+                  className="h-full w-full rounded-lg"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                 />
               )
             ) : allImages[activeIdx] ? (
-              <img src={allImages[activeIdx]} alt={name} className="h-full w-full object-cover" />
+              <img src={allImages[activeIdx]} alt={name} className="h-full w-full object-contain" />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-muted-foreground">No image</div>
             )}
