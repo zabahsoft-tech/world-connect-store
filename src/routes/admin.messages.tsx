@@ -3,7 +3,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
-import { Mail, MessageCircle, Trash2, Archive, ArchiveRestore, Eye, EyeOff, Inbox } from "lucide-react";
+import { Mail, Trash2, Archive, ArchiveRestore, Eye, EyeOff, Inbox } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -181,8 +182,13 @@ function AdminMessages() {
 
                 <div className="flex flex-wrap gap-2 pt-2">
                   {view.phone && (
-                    <Button size="sm" variant="outline" onClick={() => openWhatsApp(view.phone!)}>
-                      <MessageCircle className="mr-1.5 h-4 w-4" />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-[#25D366] text-[#25D366] hover:bg-[#25D366] hover:text-white"
+                      onClick={() => openWhatsApp(view.phone!)}
+                    >
+                      <WhatsAppIcon className="mr-1.5 h-4 w-4" />
                       WhatsApp
                     </Button>
                   )}

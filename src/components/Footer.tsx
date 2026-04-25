@@ -1,6 +1,7 @@
 import { useLang } from "@/contexts/LangContext";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import type { ComponentType } from "react";
 import {
   Facebook,
   Instagram,
@@ -14,8 +15,8 @@ import {
   ChevronRight,
   ShoppingBag,
   Truck,
-  MessageCircle,
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { pickLang } from "@/lib/i18n";
 
@@ -57,10 +58,20 @@ export function Footer() {
   ];
   const visibleSocials = socials.filter((x) => x.url && x.url.trim());
 
-  const trustItems = [
+  const trustItems: {
+    icon: ComponentType<{ className?: string }>;
+    label: string;
+    iconClassName?: string;
+    tileClassName?: string;
+  }[] = [
     { icon: ShoppingBag, label: tr("easyOrderingDesc") },
     { icon: Truck, label: tr("fastDeliveryDesc") },
-    { icon: MessageCircle, label: tr("whatsappSupportDesc") },
+    {
+      icon: WhatsAppIcon,
+      label: tr("whatsappSupportDesc"),
+      iconClassName: "h-4 w-4 text-[#25D366]",
+      tileClassName: "bg-[#25D366]/10 text-[#25D366]",
+    },
   ];
 
   const linkClass =
@@ -212,10 +223,12 @@ export function Footer() {
         {/* Trust strip */}
         <div className="container mx-auto px-4 pb-6">
           <div className="grid grid-cols-2 gap-3 rounded-xl border bg-background/60 p-4 md:grid-cols-3">
-            {trustItems.map(({ icon: Icon, label }) => (
+            {trustItems.map(({ icon: Icon, label, iconClassName, tileClassName }) => (
               <div key={label} className="flex items-center gap-2.5 text-sm">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <Icon className="h-4 w-4" />
+                <div
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${tileClassName ?? "bg-primary/10 text-primary"}`}
+                >
+                  <Icon className={iconClassName ?? "h-4 w-4"} />
                 </div>
                 <span className="text-muted-foreground">{label}</span>
               </div>
