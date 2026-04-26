@@ -433,14 +433,14 @@ function ContactPage() {
                   </div>
 
                   {/* Floating info card */}
-                  {(storeName || s?.address) && (
+                  {(storeName || address) && (
                     <div className="absolute bottom-3 start-3 max-w-[75%] rounded-xl border bg-background/95 p-3 shadow-md backdrop-blur">
                       {storeName && (
                         <p className="truncate text-xs font-semibold">{storeName}</p>
                       )}
-                      {s?.address && (
+                      {address && (
                         <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">
-                          {s.address}
+                          {address}
                         </p>
                       )}
                       {directionsHref && (
@@ -457,7 +457,7 @@ function ContactPage() {
                     </div>
                   )}
 
-                  {!s?.address && !storeName && (
+                  {!address && !storeName && (
                     <div className="absolute bottom-3 start-3 end-3 rounded-lg bg-background/90 p-2.5 text-center text-[11px] text-muted-foreground ring-1 ring-border backdrop-blur">
                       Add a Google Maps embed URL in settings to display a real map.
                     </div>
