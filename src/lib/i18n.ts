@@ -13,6 +13,7 @@ type Dict = Record<string, { en: string; fa: string; ps: string }>;
 export const t: Dict = {
   home: { en: "Home", fa: "خانه", ps: "کور" },
   shop: { en: "Shop", fa: "فروشگاه", ps: "پلورنځی" },
+  products: { en: "Products", fa: "محصولات", ps: "توکي" },
   categories: { en: "Categories", fa: "دسته‌بندی‌ها", ps: "کټګورۍ" },
   cart: { en: "Cart", fa: "سبد خرید", ps: "ټوکرۍ" },
   checkout: { en: "Checkout", fa: "تسویه حساب", ps: "پیرود بشپړول" },
