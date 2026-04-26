@@ -182,12 +182,17 @@ function ContactPage() {
     });
   if (s?.phone) infoTiles.push({ href: `tel:${s.phone}`, icon: Phone, label: tr("phone"), value: s.phone });
   if (s?.email) infoTiles.push({ href: `mailto:${s.email}`, icon: Mail, label: tr("email"), value: s.email });
-  if (s?.address) infoTiles.push({ icon: MapPin, label: "Address", value: s.address, wide: true });
+  const address = s
+    ? (lang === "en"
+        ? s.address
+        : (lang === "fa" ? s.address_fa : s.address_ps) || s.address)
+    : null;
+  if (address) infoTiles.push({ icon: MapPin, label: "Address", value: address, wide: true });
   if (s?.business_hours) infoTiles.push({ icon: Clock, label: "Hours", value: s.business_hours, wide: true });
 
   const storeName = s ? pickLang(s, "store_name", lang) : "";
-  const directionsHref = s?.address
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address)}`
+  const directionsHref = address
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
     : null;
   // Accept any Google Maps URL the user pastes and convert it to an embeddable iframe URL.
   // - /maps/embed?... → use as-is (official embed)
@@ -207,7 +212,7 @@ function ContactPage() {
     }
     return null;
   };
-  const embedUrl = buildEmbedUrl(s?.google_maps_embed_url, s?.address);
+  const embedUrl = buildEmbedUrl(s?.google_maps_embed_url, address);
   const hasEmbed = !!embedUrl;
   const replyHelper = s?.business_hours
     ? `We usually reply during ${s.business_hours}.`
