@@ -293,7 +293,7 @@ function ProductPage() {
           </div>
         </div>
       </section>
-      <SpecificationsTable specs={p.specifications} lang={lang} title={tr("specifications")} />
+      <SpecificationsTable specs={(p as { specifications?: unknown }).specifications} lang={lang} title={tr("specifications")} />
     </SiteLayout>
   );
 }
