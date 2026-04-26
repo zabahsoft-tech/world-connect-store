@@ -7,10 +7,18 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
 import { useCart } from "@/contexts/CartContext";
-import { pickLang } from "@/lib/i18n";
+import { pickLang, type Lang } from "@/lib/i18n";
 import { SiteLayout } from "@/components/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
 import { productImages } from "@/lib/utils";
 
 import { buildQuickOrderMessage, openWhatsApp } from "@/lib/whatsapp";
