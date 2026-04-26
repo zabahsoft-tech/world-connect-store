@@ -89,6 +89,8 @@ function AdminSettings() {
         store_name_ps: d.store_name_ps ?? "",
         email: d.email ?? "",
         address: d.address ?? "",
+        address_fa: d.address_fa ?? "",
+        address_ps: d.address_ps ?? "",
         google_maps_embed_url: d.google_maps_embed_url ?? "",
         about_en: d.about_en ?? "",
         about_fa: d.about_fa ?? "",
@@ -124,6 +126,8 @@ function AdminSettings() {
         store_name_ps: f.store_name_ps,
         email: nullify(f.email),
         address: nullify(f.address),
+        address_fa: nullify(f.address_fa),
+        address_ps: nullify(f.address_ps),
         google_maps_embed_url: nullify(f.google_maps_embed_url),
         about_en: nullify(f.about_en),
         about_fa: nullify(f.about_fa),
@@ -230,7 +234,14 @@ function AdminSettings() {
               </div>
               <div><Label className="text-xs">Phone</Label><Input value={form.phone} onChange={(e) => set("phone", e.target.value)} /></div>
               <div><Label className="text-xs">Email</Label><Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} /></div>
-              <div className="md:col-span-2"><Label className="text-xs">Address</Label><Input value={form.address} onChange={(e) => set("address", e.target.value)} /></div>
+              <div className="md:col-span-2">
+                <Label className="text-xs">Address</Label>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                  <div><Label className="text-xs text-muted-foreground">EN</Label><Input value={form.address} onChange={(e) => set("address", e.target.value)} /></div>
+                  <div><Label className="text-xs text-muted-foreground">FA</Label><Input dir="rtl" value={form.address_fa} onChange={(e) => set("address_fa", e.target.value)} /></div>
+                  <div><Label className="text-xs text-muted-foreground">PS</Label><Input dir="rtl" value={form.address_ps} onChange={(e) => set("address_ps", e.target.value)} /></div>
+                </div>
+              </div>
               <div className="md:col-span-2">
                 <Label className="text-xs">Business hours</Label>
                 <Input value={form.business_hours} onChange={(e) => set("business_hours", e.target.value)} placeholder="Mon-Fri 9am - 6pm" />
