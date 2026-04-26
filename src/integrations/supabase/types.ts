@@ -495,6 +495,8 @@ export type Database = {
           about_fa: string | null
           about_ps: string | null
           address: string | null
+          address_fa: string | null
+          address_ps: string | null
           business_hours: string | null
           email: string | null
           facebook_url: string | null
@@ -526,6 +528,8 @@ export type Database = {
           about_fa?: string | null
           about_ps?: string | null
           address?: string | null
+          address_fa?: string | null
+          address_ps?: string | null
           business_hours?: string | null
           email?: string | null
           facebook_url?: string | null
@@ -557,6 +561,8 @@ export type Database = {
           about_fa?: string | null
           about_ps?: string | null
           address?: string | null
+          address_fa?: string | null
+          address_ps?: string | null
           business_hours?: string | null
           email?: string | null
           facebook_url?: string | null

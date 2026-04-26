@@ -49,6 +49,12 @@ export function Footer() {
   const footerText = s ? pickLang(s, "footer_text", lang) : "";
   const tagline = footerText || tr("heroSubtitle");
 
+  const address = s
+    ? (lang === "en"
+        ? s.address
+        : (lang === "fa" ? s.address_fa : s.address_ps) || s.address)
+    : null;
+
   const socials: { url: string | null | undefined; icon: typeof Facebook; label: string }[] = [
     { url: s?.facebook_url, icon: Facebook, label: "Facebook" },
     { url: s?.instagram_url, icon: Instagram, label: "Instagram" },
@@ -204,10 +210,10 @@ export function Footer() {
                   </a>
                 </li>
               )}
-              {s?.address && (
+              {address && (
                 <li className="flex items-start gap-2">
                   <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-primary/70" />
-                  <span>{s.address}</span>
+                  <span>{address}</span>
                 </li>
               )}
               {s?.business_hours && (

@@ -182,12 +182,17 @@ function ContactPage() {
     });
   if (s?.phone) infoTiles.push({ href: `tel:${s.phone}`, icon: Phone, label: tr("phone"), value: s.phone });
   if (s?.email) infoTiles.push({ href: `mailto:${s.email}`, icon: Mail, label: tr("email"), value: s.email });
-  if (s?.address) infoTiles.push({ icon: MapPin, label: "Address", value: s.address, wide: true });
+  const address = s
+    ? (lang === "en"
+        ? s.address
+        : (lang === "fa" ? s.address_fa : s.address_ps) || s.address)
+    : null;
+  if (address) infoTiles.push({ icon: MapPin, label: "Address", value: address, wide: true });
   if (s?.business_hours) infoTiles.push({ icon: Clock, label: "Hours", value: s.business_hours, wide: true });
 
   const storeName = s ? pickLang(s, "store_name", lang) : "";
-  const directionsHref = s?.address
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address)}`
+  const directionsHref = address
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
     : null;
   // Accept any Google Maps URL the user pastes and convert it to an embeddable iframe URL.
   // - /maps/embed?... → use as-is (official embed)
@@ -207,7 +212,7 @@ function ContactPage() {
     }
     return null;
   };
-  const embedUrl = buildEmbedUrl(s?.google_maps_embed_url, s?.address);
+  const embedUrl = buildEmbedUrl(s?.google_maps_embed_url, address);
   const hasEmbed = !!embedUrl;
   const replyHelper = s?.business_hours
     ? `We usually reply during ${s.business_hours}.`
@@ -428,14 +433,14 @@ function ContactPage() {
                   </div>
 
                   {/* Floating info card */}
-                  {(storeName || s?.address) && (
+                  {(storeName || address) && (
                     <div className="absolute bottom-3 start-3 max-w-[75%] rounded-xl border bg-background/95 p-3 shadow-md backdrop-blur">
                       {storeName && (
                         <p className="truncate text-xs font-semibold">{storeName}</p>
                       )}
-                      {s?.address && (
+                      {address && (
                         <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">
-                          {s.address}
+                          {address}
                         </p>
                       )}
                       {directionsHref && (
@@ -452,7 +457,7 @@ function ContactPage() {
                     </div>
                   )}
 
-                  {!s?.address && !storeName && (
+                  {!address && !storeName && (
                     <div className="absolute bottom-3 start-3 end-3 rounded-lg bg-background/90 p-2.5 text-center text-[11px] text-muted-foreground ring-1 ring-border backdrop-blur">
                       Add a Google Maps embed URL in settings to display a real map.
                     </div>
