@@ -240,10 +240,10 @@ export function Footer() {
         <div className="border-t bg-background/40">
           <div className="container mx-auto flex flex-col items-center justify-between gap-2 px-4 py-4 text-xs text-muted-foreground md:flex-row">
             <p className="text-center md:text-start">
-              © {new Date().getFullYear()} {storeName}. All rights reserved.
+              © {new Date().getFullYear()} {storeName}. {tr("allRightsReserved")}
             </p>
             <p className="text-center md:text-end">
-              Developed by{" "}
+              {tr("developedBy")}{" "}
               <a
                 href="https://zabashoft.com"
                 target="_blank"
