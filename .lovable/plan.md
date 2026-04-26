@@ -1,47 +1,56 @@
+## Goal
+Show the per-product **Specifications** (already editable in admin) on the public product detail page (`/products/:slug`), placed at the bottom — **below** the gallery/WhatsApp action area.
 
+## Where it goes
+In `src/routes/products.$slug.tsx`, after the existing two-column `<section>` (gallery + buy/WhatsApp panel) ends, add a new full-width `<section>` containing the Specifications table. So the order on the page becomes:
 
-## Add image upload to the rich text editor (used by Pages)
+1. Gallery + title + price + qty + **Add to cart / Quick Order (WhatsApp)** (unchanged)
+2. **Specifications** (new, full width below)
 
-Add image insertion to `RichTextEditor` so admins can embed images inside page content (and any other place the editor is used). Images are uploaded to the existing `site-assets` Supabase bucket using the same path/code as `ImageUpload`, then inserted into the editor at the cursor.
+If a product has no specifications, the section is not rendered at all (no empty heading).
 
-### Changes
+## Data
+The product already has `p.specifications` (JSONB) as an array of `SpecRow` items with two kinds of entries:
+- `type: "section"` → renders as a section heading row spanning the table
+- `type: "row"` → renders as a normal `label | value | extras…` row, with optional `group_*` (left "category" cell that can span multiple consecutive rows when identical) and optional `value_header_*` + `extras[]` for multi-column value tables
 
-**1. Add Tiptap image extension dependency**
-- Run `bun add @tiptap/extension-image@^3.22.4` (matches the version of the other `@tiptap/*` packages already installed).
+Localization uses the same `pickLang` helper already in the file, with EN→FA→PS fallbacks (mirroring admin behavior) so legacy rows that only filled English still display.
 
-**2. `src/components/RichTextEditor.tsx` — add Image extension + toolbar button**
-- Import `Image` from `@tiptap/extension-image` and add it to the `extensions` array, configured with `inline: false`, `allowBase64: false`, and an `HTMLAttributes` class so embedded images get sensible styling: `class: "rounded-md max-w-full h-auto"`.
-- Import `ImageIcon` (lucide) and `Loader2` for the upload spinner.
-- Import `supabase` from `@/integrations/supabase/client` and `toast` from `sonner`.
-- Add a hidden `<input type="file" accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml" />` ref + an `uploading` state.
-- Add an `uploadImage(file)` helper mirroring `ImageUpload.handleFile`:
-  - 5 MB limit (toast on overflow).
-  - Upload to `site-assets` bucket at path `editor/{Date.now()}-{rand}.{ext}`.
-  - Get public URL and call `editor.chain().focus().setImage({ src: url, alt: file.name }).run()`.
-  - Toast success / failure.
-- Add a new toolbar `ToolBtn` next to the Link buttons:
-  - Icon: `ImageIcon` (or `Loader2` spinner while uploading).
-  - Title: "Insert image".
-  - Click: opens the hidden file input.
-  - Disabled while uploading.
-- Add a new prop (optional) `imageFolder?: string` defaulted to `"editor"` so callers can route uploads into a different subfolder if they want — `admin.pages.tsx` will pass `imageFolder="pages/content"`.
+## Implementation steps
 
-**3. `src/routes/admin.pages.tsx` — pass folder**
-- Pass `imageFolder="pages/content"` to each of the three `<RichTextEditor>` instances (EN/FA/PS) so embedded page images live under `site-assets/pages/content/`.
+1. **Add a small renderer component** (in the same file, kept local since it's product-page-specific) named `SpecificationsTable`:
+   - Props: `specs: unknown` (raw `p.specifications`) and `lang: Lang`.
+   - Normalize/parse: coerce to array, filter out fully-empty rows, and skip rendering entirely if nothing remains.
+   - Build a table using existing `@/components/ui/table` primitives (`Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`).
+   - Column model:
+     - If any row has a non-empty `group_*`, include a leading "Group" column that uses `rowSpan` to merge consecutive identical group cells (matching the visual grouping in admin).
+     - Always: a "Label" column and a "Value" column.
+     - If any row has `extras` with content, add additional columns; use the row's `value_header_*` / `extras[].header_*` for the `<TableHead>` labels (taking the first non-empty header found across rows).
+   - Section rows (`type: "section"`) render as a single full-width `<TableRow>` with one `<TableCell colSpan={totalCols}>` styled as a heading (`bg-muted font-semibold`).
+   - Direction: set `dir={lang === "en" ? "ltr" : "rtl"}` on the wrapping container so FA/PS render right-to-left like the description.
 
-**4. `src/components/SafeHtml.tsx` — confirm images are kept**
-- DOMPurify with `USE_PROFILES: { html: true }` keeps `<img>` with `src/alt/width/height` by default, so no change needed. Public-page rendering (`/p/$slug`, `/about`, `/contact`) will display embedded images correctly through the existing `SafeHtml`.
+2. **Add an i18n heading** — already present: `tr("specifications")` exists in `src/lib/i18n.ts` (EN: "Specifications", FA: "مشخصات", PS: "ځانګړتیاوې"). Use it as the section title above the table.
 
-### Notes / out of scope
+3. **Wire it into `ProductPage`** in `src/routes/products.$slug.tsx`:
+   - After the closing `</section>` of the existing grid, add:
+     ```tsx
+     <SpecificationsTable specs={p.specifications} lang={lang} />
+     ```
+   - Inside the component, render nothing if no usable rows; otherwise render a `<section className="container mx-auto px-4 pb-12">` with an `<h2>` using `tr("specifications")` and the table inside a rounded bordered card (`rounded-2xl border bg-card overflow-hidden`).
 
-- Uses the existing `site-assets` bucket — assumes it is already public and writable for admins (it is, since `ImageUpload` already uses it for hero images).
-- No drag-and-drop or paste-from-clipboard image upload in this pass — only the toolbar button. Easy to add later by attaching `editor.view.props.handlePaste` / `handleDrop` to the same `uploadImage` helper.
-- No image resize/alignment controls — Tiptap renders images at natural width capped to `max-w-full`. Can be added later with `tiptap-extension-resize-image` if needed.
-- No alt-text prompt — alt defaults to the original filename. Can be promoted to a `window.prompt` later if desired.
+4. **Styling**:
+   - Use existing Tailwind tokens only (`bg-muted`, `text-muted-foreground`, `border`, `rounded-2xl`) so it matches the rest of the site (no new CSS).
+   - Make the table horizontally scrollable on small screens — `Table` already wraps in `overflow-auto`, so wide spec tables won't break mobile.
+   - Vertical alignment `align-top` on cells so multi-line values look clean.
 
-### Files touched
+## Files to edit
+- `src/routes/products.$slug.tsx` — add `SpecificationsTable` component + render it under the existing section.
 
-- `package.json` (via `bun add @tiptap/extension-image`)
-- `src/components/RichTextEditor.tsx`
-- `src/routes/admin.pages.tsx`
+## Files NOT changed
+- No DB migration (column already exists).
+- No admin changes (editor already works).
+- `src/lib/i18n.ts` — `specifications` key already exists; no edit needed.
 
+## Out of scope (ask if you want these too)
+- Adding specifications to SEO JSON-LD (`additionalProperty`). I can wire that in if you want richer Google product results — say the word.
+- Showing specifications inside the description tab/area instead of below it.
