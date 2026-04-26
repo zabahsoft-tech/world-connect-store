@@ -293,6 +293,171 @@ function ProductPage() {
           </div>
         </div>
       </section>
+      <SpecificationsTable specs={p.specifications} lang={lang} title={tr("specifications")} />
     </SiteLayout>
+  );
+}
+
+// ---------- Specifications ----------
+
+interface SpecExtra {
+  header_en?: string;
+  header_fa?: string;
+  header_ps?: string;
+  value_en?: string;
+  value_fa?: string;
+  value_ps?: string;
+}
+
+interface SpecRowData {
+  type?: "row" | "section";
+  title_en?: string;
+  title_fa?: string;
+  title_ps?: string;
+  group_en?: string;
+  group_fa?: string;
+  group_ps?: string;
+  label_en?: string;
+  label_fa?: string;
+  label_ps?: string;
+  value_en?: string;
+  value_fa?: string;
+  value_ps?: string;
+  value_header_en?: string;
+  value_header_fa?: string;
+  value_header_ps?: string;
+  extras?: SpecExtra[];
+}
+
+function pick3(en?: string, fa?: string, ps?: string, lang?: Lang): string {
+  const e = (en ?? "").trim();
+  const f = (fa ?? "").trim();
+  const p = (ps ?? "").trim();
+  if (lang === "fa") return f || e || p;
+  if (lang === "ps") return p || e || f;
+  return e || f || p;
+}
+
+function SpecificationsTable({
+  specs,
+  lang,
+  title,
+}: {
+  specs: unknown;
+  lang: Lang;
+  title: string;
+}) {
+  if (!Array.isArray(specs)) return null;
+  const rows = (specs as SpecRowData[]).filter((s) => {
+    if (!s || typeof s !== "object") return false;
+    if ((s.type ?? "row") === "section") {
+      return Boolean(pick3(s.title_en, s.title_fa, s.title_ps, lang));
+    }
+    const hasLabel = Boolean(pick3(s.label_en, s.label_fa, s.label_ps, lang));
+    const hasValue = Boolean(pick3(s.value_en, s.value_fa, s.value_ps, lang));
+    const hasExtras = (s.extras ?? []).some((e) => Boolean(pick3(e.value_en, e.value_fa, e.value_ps, lang)));
+    return hasLabel || hasValue || hasExtras;
+  });
+  if (rows.length === 0) return null;
+
+  const dataRows = rows.filter((s) => (s.type ?? "row") === "row");
+  const hasGroup = dataRows.some((s) => Boolean(pick3(s.group_en, s.group_fa, s.group_ps, lang)));
+  const extrasCount = dataRows.reduce((max, s) => Math.max(max, s.extras?.length ?? 0), 0);
+
+  // First row that has any header content (for column headers).
+  const headerRow = dataRows.find((s) => {
+    const vh = pick3(s.value_header_en, s.value_header_fa, s.value_header_ps, lang);
+    const eh = (s.extras ?? []).some((e) => pick3(e.header_en, e.header_fa, e.header_ps, lang));
+    return Boolean(vh) || eh;
+  });
+  const valueHeader = headerRow
+    ? pick3(headerRow.value_header_en, headerRow.value_header_fa, headerRow.value_header_ps, lang)
+    : "";
+  const extraHeaders: string[] = Array.from({ length: extrasCount }, (_, i) =>
+    headerRow ? pick3(headerRow.extras?.[i]?.header_en, headerRow.extras?.[i]?.header_fa, headerRow.extras?.[i]?.header_ps, lang) : "",
+  );
+  const showHeaderRow = Boolean(valueHeader) || extraHeaders.some((h) => h.length > 0);
+
+  const totalCols = (hasGroup ? 1 : 0) + 1 /* label */ + 1 /* value */ + extrasCount;
+
+  // Pre-compute group rowSpan info.
+  const groupSpanByIndex = new Map<number, number>();
+  if (hasGroup) {
+    let i = 0;
+    while (i < rows.length) {
+      if ((rows[i].type ?? "row") !== "row") {
+        i += 1;
+        continue;
+      }
+      const g = pick3(rows[i].group_en, rows[i].group_fa, rows[i].group_ps, lang);
+      let j = i + 1;
+      while (
+        j < rows.length &&
+        (rows[j].type ?? "row") === "row" &&
+        pick3(rows[j].group_en, rows[j].group_fa, rows[j].group_ps, lang) === g
+      ) {
+        j += 1;
+      }
+      groupSpanByIndex.set(i, j - i);
+      i = j;
+    }
+  }
+
+  return (
+    <section className="container mx-auto px-4 pb-12">
+      <h2 className="mb-3 text-2xl font-semibold">{title}</h2>
+      <div className="overflow-hidden rounded-2xl border bg-card" dir={lang === "en" ? "ltr" : "rtl"}>
+        <Table>
+          {showHeaderRow && (
+            <TableHeader>
+              <TableRow>
+                {hasGroup && <TableHead />}
+                <TableHead />
+                <TableHead>{valueHeader}</TableHead>
+                {extraHeaders.map((h, i) => (
+                  <TableHead key={i}>{h}</TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+          )}
+          <TableBody>
+            {rows.map((s, i) => {
+              if ((s.type ?? "row") === "section") {
+                return (
+                  <TableRow key={i} className="bg-muted/60 hover:bg-muted/60">
+                    <TableCell colSpan={totalCols} className="py-3 align-top text-sm font-semibold">
+                      {pick3(s.title_en, s.title_fa, s.title_ps, lang)}
+                    </TableCell>
+                  </TableRow>
+                );
+              }
+              const span = groupSpanByIndex.get(i);
+              const groupText = pick3(s.group_en, s.group_fa, s.group_ps, lang);
+              const label = pick3(s.label_en, s.label_fa, s.label_ps, lang);
+              const value = pick3(s.value_en, s.value_fa, s.value_ps, lang);
+              return (
+                <TableRow key={i}>
+                  {hasGroup && span !== undefined && (
+                    <TableCell
+                      rowSpan={span}
+                      className="w-1/5 align-top bg-muted/30 font-medium text-foreground"
+                    >
+                      {groupText}
+                    </TableCell>
+                  )}
+                  <TableCell className="align-top font-medium text-muted-foreground">{label}</TableCell>
+                  <TableCell className="align-top">{value}</TableCell>
+                  {Array.from({ length: extrasCount }, (_, k) => (
+                    <TableCell key={k} className="align-top">
+                      {pick3(s.extras?.[k]?.value_en, s.extras?.[k]?.value_fa, s.extras?.[k]?.value_ps, lang)}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    </section>
   );
 }
