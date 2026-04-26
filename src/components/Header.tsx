@@ -62,7 +62,7 @@ export function Header() {
 
   const baseLinks = [
     { to: "/", label: tr("home") },
-    { to: "/shop", label: tr("shop") },
+    { to: "/shop", label: tr("products") },
     { to: "/categories", label: tr("categories") },
     { to: "/blog", label: tr("blog") },
     { to: "/about", label: tr("about") },
