@@ -114,6 +114,8 @@ export const t: Dict = {
   excerpt: { en: "Excerpt", fa: "خلاصه", ps: "لنډیز" },
   coverImage: { en: "Cover image", fa: "تصویر کاور", ps: "پوښ انځور" },
   import: { en: "Import", fa: "وارد کردن", ps: "واردول" },
+  allRightsReserved: { en: "All rights reserved.", fa: "تمامی حقوق محفوظ است.", ps: "ټول حقونه خوندي دي." },
+  developedBy: { en: "Developed by", fa: "توسعه‌یافته توسط", ps: "جوړونکی" },
 };
 
 export function tr(key: keyof typeof t, lang: Lang): string {
