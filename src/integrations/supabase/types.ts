@@ -440,6 +440,7 @@ export type Database = {
           name_ps: string
           price: number
           slug: string
+          specifications: Json
           updated_at: string
           video_url: string | null
         }
@@ -458,6 +459,7 @@ export type Database = {
           name_ps: string
           price?: number
           slug: string
+          specifications?: Json
           updated_at?: string
           video_url?: string | null
         }
@@ -476,6 +478,7 @@ export type Database = {
           name_ps?: string
           price?: number
           slug?: string
+          specifications?: Json
           updated_at?: string
           video_url?: string | null
         }
