@@ -337,9 +337,10 @@ function AdminProducts() {
         category_id: f.category_id || null,
         in_stock: f.in_stock,
         featured: f.featured,
+        specifications: cleanSpecs as unknown as never,
       };
       // Suppress unused-warning for legacy local-only fields that aren't persisted anymore
-      void cleanAttrs; void cleanVariants; void cleanSpecs;
+      void cleanAttrs; void cleanVariants;
       if (f.id) {
         const { error } = await supabase.from("products").update(payload).eq("id", f.id);
         if (error) throw error;
@@ -381,7 +382,11 @@ function AdminProducts() {
     const merged = productImages(p.images);
     const attrsRaw: Partial<AttributeRow>[] = [];
     const variantsRaw: Array<Partial<VariantRow> & { price?: number | string | null }> = [];
-    const specsRaw: Partial<SpecRow>[] = [];
+    const specsRaw: Partial<SpecRow>[] = Array.isArray(
+      (p as { specifications?: unknown }).specifications,
+    )
+      ? ((p as { specifications: Partial<SpecRow>[] }).specifications)
+      : [];
     setEditing({
       id: p.id, slug: p.slug,
       name_en: p.name_en, name_fa: p.name_fa, name_ps: p.name_ps,
