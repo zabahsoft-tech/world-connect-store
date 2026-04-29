@@ -251,12 +251,12 @@ export function Footer() {
             <p className="text-center md:text-end">
               {tr("developedBy")}{" "}
               <a
-                href="https://zabashoft.com"
+                href="https://zabahsoft.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold text-primary hover:underline"
               >
-                zabashoft.com
+                zabahsoft.com
               </a>
             </p>
           </div>
