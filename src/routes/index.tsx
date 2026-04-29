@@ -130,27 +130,30 @@ function HomePage() {
             <div className="relative z-10 flex h-full items-center">
               <div className="w-full px-6 md:px-12 lg:px-16">
                 <div className="max-w-2xl text-white">
-                  <span className="mb-4 inline-flex w-fit items-center rounded-full bg-primary/95 px-3 py-1 text-xs font-semibold text-primary-foreground backdrop-blur">
-                    ✨ {tr("featured")}
-                  </span>
-                  <h1 className="text-4xl font-bold leading-tight drop-shadow-lg md:text-5xl lg:text-6xl">
-                    {pickLang(current, "title", lang) || tr("heroTitle")}
-                  </h1>
-                  <p className="mt-4 max-w-xl text-base text-white/90 drop-shadow md:text-lg">
-                    {pickLang(current, "subtitle", lang) || tr("heroSubtitle")}
-                  </p>
-                  <div className="mt-8 flex flex-wrap gap-3">
-                    <Link to={current.cta_link || "/shop"}>
-                      <Button size="lg" className="gap-2 rounded-full">
-                        {pickLang(current, "cta_label", lang) || tr("shopNow")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-                      </Button>
-                    </Link>
-                    <Link to="/categories">
-                      <Button size="lg" variant="outline" className="rounded-full border-white/70 bg-white/10 text-white backdrop-blur hover:bg-white hover:text-foreground">
-                        {tr("browseCategories")}
-                      </Button>
-                    </Link>
-                  </div>
+                  {pickLang(current, "title", lang) && (
+                    <span className="mb-4 inline-flex w-fit items-center rounded-full bg-primary/95 px-3 py-1 text-xs font-semibold text-primary-foreground backdrop-blur">
+                      ✨ {tr("featured")}
+                    </span>
+                  )}
+                  {pickLang(current, "title", lang) && (
+                    <h1 className="text-4xl font-bold leading-tight drop-shadow-lg md:text-5xl lg:text-6xl">
+                      {pickLang(current, "title", lang)}
+                    </h1>
+                  )}
+                  {pickLang(current, "subtitle", lang) && (
+                    <p className="mt-4 max-w-xl text-base text-white/90 drop-shadow md:text-lg">
+                      {pickLang(current, "subtitle", lang)}
+                    </p>
+                  )}
+                  {pickLang(current, "cta_label", lang) && current.cta_link && (
+                    <div className="mt-8 flex flex-wrap gap-3">
+                      <Link to={current.cta_link}>
+                        <Button size="lg" className="gap-2 rounded-full">
+                          {pickLang(current, "cta_label", lang)} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
