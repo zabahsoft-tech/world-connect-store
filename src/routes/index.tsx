@@ -226,7 +226,7 @@ function HomePage() {
                       />
                     )}
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent px-0 py-0" />
                   <span className="absolute bottom-3 start-3 text-sm font-semibold text-white drop-shadow">
                     {pickLang(c, "name", lang)}
                   </span>
