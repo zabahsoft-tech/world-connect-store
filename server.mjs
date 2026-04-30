@@ -130,13 +130,15 @@ async function tryServeStatic(req, res) {
     const type = MIME[ext] || "application/octet-stream";
     // Hashed Vite assets live under /assets/* — long cache. Everything else, no-store-ish.
     const isHashed = (req.url || "").startsWith("/assets/");
-    res.writeHead(200, {
+    const staticHeaders = {
       "Content-Type": type,
       "Content-Length": s.size,
       "Cache-Control": isHashed
         ? "public, max-age=31536000, immutable"
         : "public, max-age=3600",
-    });
+    };
+    applySecurityHeaders(staticHeaders);
+    res.writeHead(200, staticHeaders);
     if (req.method === "HEAD") return res.end(), true;
     res.end(await readFile(filePath));
     return true;
