@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthLayout } from "@/components/AuthLayout";
+import { setSessionPersistence } from "@/lib/auth-cookie-mirror";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,6 +37,9 @@ function LoginPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Apply the user's "Remember me" choice BEFORE signing in so the auth
+    // cookie is written with (or without) Max-Age on the first mirror.
+    setSessionPersistence(remember);
     setBusy(true);
     const { error } = await signIn(email, password);
     setBusy(false);
