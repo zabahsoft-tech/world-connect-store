@@ -411,11 +411,11 @@ function SpecificationsTable({
           {showHeaderRow && (
             <TableHeader>
               <TableRow>
-                {hasGroup && <TableHead />}
-                <TableHead />
-                <TableHead>{valueHeader}</TableHead>
+                {hasGroup && <TableHead className="text-center" />}
+                <TableHead className="text-center" />
+                <TableHead className="text-center">{valueHeader}</TableHead>
                 {extraHeaders.map((h, i) => (
-                  <TableHead key={i}>{h}</TableHead>
+                  <TableHead key={i} className="text-center">{h}</TableHead>
                 ))}
               </TableRow>
             </TableHeader>
@@ -425,7 +425,7 @@ function SpecificationsTable({
               if ((s.type ?? "row") === "section") {
                 return (
                   <TableRow key={i} className="bg-muted/60 hover:bg-muted/60">
-                    <TableCell colSpan={totalCols} className="py-3 align-top text-sm font-semibold">
+                    <TableCell colSpan={totalCols} className="py-3 align-middle text-center text-sm font-semibold">
                       {pick3(s.title_en, s.title_fa, s.title_ps, lang)}
                     </TableCell>
                   </TableRow>
@@ -440,15 +440,15 @@ function SpecificationsTable({
                   {hasGroup && span !== undefined && (
                     <TableCell
                       rowSpan={span}
-                      className="w-1/5 align-top bg-muted/30 font-medium text-foreground"
+                      className="w-1/5 align-middle text-center bg-muted/30 font-medium text-foreground"
                     >
                       {groupText}
                     </TableCell>
                   )}
-                  <TableCell className="align-top font-medium text-muted-foreground">{label}</TableCell>
-                  <TableCell className="align-top">{value}</TableCell>
+                  <TableCell className="align-middle text-center font-medium text-muted-foreground">{label}</TableCell>
+                  <TableCell className="align-middle text-center">{value}</TableCell>
                   {Array.from({ length: extrasCount }, (_, k) => (
-                    <TableCell key={k} className="align-top">
+                    <TableCell key={k} className="align-middle text-center">
                       {pick3(s.extras?.[k]?.value_en, s.extras?.[k]?.value_fa, s.extras?.[k]?.value_ps, lang)}
                     </TableCell>
                   ))}
