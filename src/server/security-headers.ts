@@ -44,8 +44,8 @@ const HEADERS: Record<string, string> = {
 export const securityHeadersMiddleware = createMiddleware().server(async ({ next }) => {
   const result = await next();
   // result.response is a Web Response; mutate its headers when present.
-  const response = (result as unknown as { response?: Response }).response;
-  if (response && typeof response.headers?.set === "function") {
+  const response = (result as { response?: Response }).response;
+  if (response && response.headers) {
     for (const [k, v] of Object.entries(HEADERS)) {
       if (!response.headers.has(k)) response.headers.set(k, v);
     }
