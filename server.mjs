@@ -77,6 +77,40 @@ const MIME = {
   ".xml": "application/xml; charset=utf-8",
 };
 
+const SUPABASE_HOST = "https://kqfdaqggrxflrticxisu.supabase.co";
+const R2_HOST = "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev";
+const SECURITY_HEADERS = {
+  "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+  "x-content-type-options": "nosniff",
+  "x-frame-options": "DENY",
+  "referrer-policy": "strict-origin-when-cross-origin",
+  "permissions-policy":
+    "camera=(), microphone=(), geolocation=(), interest-cohort=(), payment=(self)",
+  "cross-origin-opener-policy": "same-origin",
+  "content-security-policy": [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+    "object-src 'none'",
+    `img-src 'self' data: blob: https: ${R2_HOST} ${SUPABASE_HOST}`,
+    "font-src 'self' data: https://fonts.gstatic.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "script-src 'self' 'unsafe-inline'",
+    `connect-src 'self' ${SUPABASE_HOST} wss://kqfdaqggrxflrticxisu.supabase.co ${R2_HOST} https://api.lovable.dev`,
+    "worker-src 'self' blob:",
+    "manifest-src 'self'",
+    "upgrade-insecure-requests",
+  ].join("; "),
+};
+
+function applySecurityHeaders(headers) {
+  for (const [k, v] of Object.entries(SECURITY_HEADERS)) {
+    if (!headers[k] && !headers[k.toLowerCase()]) headers[k] = v;
+  }
+  return headers;
+}
+
 function safeJoin(root, urlPath) {
   // Strip query/hash and decode safely.
   const cleaned = decodeURIComponent(urlPath.split("?")[0].split("#")[0]);
@@ -143,6 +177,10 @@ async function writeFetchResponse(res, fetchRes) {
   fetchRes.headers.forEach((value, key) => {
     headers[key] = value;
   });
+  // Defense-in-depth: ensure cross-browser security headers are always set
+  // even if the SSR pipeline forgot them. The TanStack middleware sets these
+  // first; we only fill in any missing ones here.
+  applySecurityHeaders(headers);
   res.writeHead(fetchRes.status, fetchRes.statusText || undefined, headers);
   if (!fetchRes.body) return res.end();
   const reader = fetchRes.body.getReader();
