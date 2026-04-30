@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
 import { pickLang } from "@/lib/i18n";
 import { SiteLayout } from "@/components/SiteLayout";
+import { SafeHtml } from "@/components/SafeHtml";
 import { ErrorState } from "@/components/ErrorState";
 import {
   buildMeta,

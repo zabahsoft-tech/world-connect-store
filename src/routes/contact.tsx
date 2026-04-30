@@ -25,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
 import { pickLang } from "@/lib/i18n";
 import { SiteLayout } from "@/components/SiteLayout";
+import { SafeHtml } from "@/components/SafeHtml";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";

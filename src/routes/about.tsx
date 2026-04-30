@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
 import { pickLang } from "@/lib/i18n";
 import { SiteLayout } from "@/components/SiteLayout";
+import { SafeHtml } from "@/components/SafeHtml";
 import { buildMeta, buildHreflangLinks, getPageSeo, SITE_URL } from "@/lib/seo";
 
 export const Route = createFileRoute("/about")({
