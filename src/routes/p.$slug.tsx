@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
 import { pickLang } from "@/lib/i18n";
 import { SiteLayout } from "@/components/SiteLayout";
+import { SafeHtml } from "@/components/SafeHtml";
 import { ErrorState } from "@/components/ErrorState";
 import { buildMeta, buildHreflangLinks, SITE_URL } from "@/lib/seo";
 
@@ -88,9 +89,9 @@ function PublicPage() {
           <div className="rounded-2xl border bg-card/90 p-6 shadow-card backdrop-blur-sm md:p-12">
             <h1 className="mb-8 text-4xl font-bold tracking-tight md:text-5xl">{title}</h1>
             {content ? (
-              <div
+              <SafeHtml
+                html={content}
                 className="prose prose-lg max-w-none prose-headings:font-semibold prose-a:text-primary prose-img:rounded-lg"
-                dangerouslySetInnerHTML={{ __html: content }}
               />
             ) : (
               <p className="text-muted-foreground">No content yet.</p>

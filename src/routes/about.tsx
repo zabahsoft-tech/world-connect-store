@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
 import { pickLang } from "@/lib/i18n";
 import { SiteLayout } from "@/components/SiteLayout";
+import { SafeHtml } from "@/components/SafeHtml";
 import { buildMeta, buildHreflangLinks, getPageSeo, SITE_URL } from "@/lib/seo";
 
 export const Route = createFileRoute("/about")({
@@ -89,9 +90,9 @@ function AboutPage() {
             )}
             {content ? (
               isHtml ? (
-                <div
+                <SafeHtml
+                  html={content}
                   className="prose prose-lg max-w-none prose-headings:font-semibold prose-a:text-primary prose-img:rounded-lg"
-                  dangerouslySetInnerHTML={{ __html: content }}
                 />
               ) : (
                 <p className="whitespace-pre-line text-lg leading-relaxed text-muted-foreground">{content}</p>
