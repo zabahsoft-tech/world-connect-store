@@ -88,9 +88,9 @@ function PublicPage() {
           <div className="rounded-2xl border bg-card/90 p-6 shadow-card backdrop-blur-sm md:p-12">
             <h1 className="mb-8 text-4xl font-bold tracking-tight md:text-5xl">{title}</h1>
             {content ? (
-              <div
+              <SafeHtml
+                html={content}
                 className="prose prose-lg max-w-none prose-headings:font-semibold prose-a:text-primary prose-img:rounded-lg"
-                dangerouslySetInnerHTML={{ __html: content }}
               />
             ) : (
               <p className="text-muted-foreground">No content yet.</p>

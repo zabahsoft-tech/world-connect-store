@@ -89,9 +89,9 @@ function AboutPage() {
             )}
             {content ? (
               isHtml ? (
-                <div
+                <SafeHtml
+                  html={content}
                   className="prose prose-lg max-w-none prose-headings:font-semibold prose-a:text-primary prose-img:rounded-lg"
-                  dangerouslySetInnerHTML={{ __html: content }}
                 />
               ) : (
                 <p className="whitespace-pre-line text-lg leading-relaxed text-muted-foreground">{content}</p>

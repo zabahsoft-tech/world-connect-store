@@ -242,9 +242,9 @@ function ContactPage() {
         </header>
 
         {pageContent && (
-          <div
+          <SafeHtml
+            html={pageContent}
             className="prose mb-6 max-w-none prose-headings:font-semibold prose-a:text-primary"
-            dangerouslySetInnerHTML={{ __html: pageContent }}
           />
         )}
 

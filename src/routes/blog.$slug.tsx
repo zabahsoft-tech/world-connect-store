@@ -343,9 +343,9 @@ function BlogPost() {
                     Translation not available in your selected language — showing the original version.
                   </div>
                 )}
-                <div
+                <SafeHtml
+                  html={content}
                   className="prose prose-lg max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed prose-a:text-primary prose-img:rounded-lg prose-img:shadow-md prose-blockquote:border-primary"
-                  dangerouslySetInnerHTML={{ __html: content }}
                 />
               </>
             ) : (
