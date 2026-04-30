@@ -1,56 +1,66 @@
-## Goal
-Show the per-product **Specifications** (already editable in admin) on the public product detail page (`/products/:slug`), placed at the bottom — **below** the gallery/WhatsApp action area.
+# Cross-browser security hardening with cookies
 
-## Where it goes
-In `src/routes/products.$slug.tsx`, after the existing two-column `<section>` (gallery + buy/WhatsApp panel) ends, add a new full-width `<section>` containing the Specifications table. So the order on the page becomes:
+Today, the auth session and cart live in `localStorage`. That breaks in Safari Private Mode, in browsers with strict tracking prevention, and exposes the auth token to any XSS. We'll move both to cookies and add site-wide security response headers.
 
-1. Gallery + title + price + qty + **Add to cart / Quick Order (WhatsApp)** (unchanged)
-2. **Specifications** (new, full width below)
+## What changes for users
 
-If a product has no specifications, the section is not rendered at all (no empty heading).
+- Login keeps working in every browser, including Safari Private and locked-down enterprise browsers.
+- "Remember me" on the login page controls whether your session survives closing the browser.
+- The cart stays with you the same way (and now also when localStorage is blocked).
+- The site tells browsers to enforce HTTPS, block clickjacking, and stop content sniffing.
 
-## Data
-The product already has `p.specifications` (JSONB) as an array of `SpecRow` items with two kinds of entries:
-- `type: "section"` → renders as a section heading row spanning the table
-- `type: "row"` → renders as a normal `label | value | extras…` row, with optional `group_*` (left "category" cell that can span multiple consecutive rows when identical) and optional `value_header_*` + `extras[]` for multi-column value tables
+## 1. Auth session → httpOnly cookies (SSR-aware)
 
-Localization uses the same `pickLang` helper already in the file, with EN→FA→PS fallbacks (mirroring admin behavior) so legacy rows that only filled English still display.
+- Switch `src/integrations/supabase/client.ts` to use `@supabase/ssr`'s `createBrowserClient`, configured with a custom cookie storage adapter (read/write `document.cookie`) instead of `localStorage`. Cookies set client-side will be `Secure`, `SameSite=Lax`, `Path=/`.
+- Add a server helper `src/integrations/supabase/server-cookies.ts` that builds a `createServerClient` bound to the current TanStack request via `getCookie` / `setCookie` from `@tanstack/react-start/server`. This lets SSR loaders and server functions read the session from cookies and refresh tokens when needed.
+- Update `src/integrations/supabase/auth-middleware.ts` to:
+  - Read the access token from the `sb-<ref>-auth-token` cookie when no `Authorization` header is present (so SSR + same-origin calls Just Work without bearer-token plumbing).
+  - Keep the existing bearer-token path as a fallback for explicit calls.
+- "Remember me" handling in `src/routes/login.tsx`: when checked, set persistent cookie `Max-Age` (e.g. 30 days). When unchecked, omit `Max-Age` so the cookie is a session cookie and dies with the browser. Wire this through a tiny `setSessionPersistence(remember: boolean)` helper that the cookie storage adapter reads.
+- `src/contexts/AuthContext.tsx` keeps its current API (`signIn`, `signUp`, `signOut`, `onAuthStateChange`) — only the underlying storage changes, so no component edits are needed.
 
-## Implementation steps
+## 2. Cart → signed cookie (with safe fallback)
 
-1. **Add a small renderer component** (in the same file, kept local since it's product-page-specific) named `SpecificationsTable`:
-   - Props: `specs: unknown` (raw `p.specifications`) and `lang: Lang`.
-   - Normalize/parse: coerce to array, filter out fully-empty rows, and skip rendering entirely if nothing remains.
-   - Build a table using existing `@/components/ui/table` primitives (`Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`).
-   - Column model:
-     - If any row has a non-empty `group_*`, include a leading "Group" column that uses `rowSpan` to merge consecutive identical group cells (matching the visual grouping in admin).
-     - Always: a "Label" column and a "Value" column.
-     - If any row has `extras` with content, add additional columns; use the row's `value_header_*` / `extras[].header_*` for the `<TableHead>` labels (taking the first non-empty header found across rows).
-   - Section rows (`type: "section"`) render as a single full-width `<TableRow>` with one `<TableCell colSpan={totalCols}>` styled as a heading (`bg-muted font-semibold`).
-   - Direction: set `dir={lang === "en" ? "ltr" : "rtl"}` on the wrapping container so FA/PS render right-to-left like the description.
+- Replace `localStorage` usage in `src/contexts/CartContext.tsx` with a cookie-backed store:
+  - Client: read/write `app_cart` cookie (`Secure`, `SameSite=Lax`, `Max-Age` ~30 days, `Path=/`).
+  - SSR: hydrate initial cart from the cookie via the request, so the cart count in the header is correct on first paint (no flicker).
+  - If the serialized cart would exceed ~3.5 KB (cookie size limits), fall back to keeping just IDs + quantities in the cookie and re-hydrating product details from the API on load.
+- No schema changes — cart stays client-owned.
 
-2. **Add an i18n heading** — already present: `tr("specifications")` exists in `src/lib/i18n.ts` (EN: "Specifications", FA: "مشخصات", PS: "ځانګړتیاوې"). Use it as the section title above the table.
+## 3. Site-wide security headers
 
-3. **Wire it into `ProductPage`** in `src/routes/products.$slug.tsx`:
-   - After the closing `</section>` of the existing grid, add:
-     ```tsx
-     <SpecificationsTable specs={p.specifications} lang={lang} />
-     ```
-   - Inside the component, render nothing if no usable rows; otherwise render a `<section className="container mx-auto px-4 pb-12">` with an `<h2>` using `tr("specifications")` and the table inside a rounded bordered card (`rounded-2xl border bg-card overflow-hidden`).
+Add headers in two layers so they apply both on Lovable hosting and the cPanel/Node deploy:
 
-4. **Styling**:
-   - Use existing Tailwind tokens only (`bg-muted`, `text-muted-foreground`, `border`, `rounded-2xl`) so it matches the rest of the site (no new CSS).
-   - Make the table horizontally scrollable on small screens — `Table` already wraps in `overflow-auto`, so wide spec tables won't break mobile.
-   - Vertical alignment `align-top` on cells so multi-line values look clean.
+- New request middleware `src/server/security-headers.ts` registered in `src/start.ts` (create if missing) — sets headers on every SSR + server-route response:
+  - `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`
+  - `Content-Security-Policy` (report-only first, then enforce) tailored to: self, Supabase URL, R2 image CDN, Google Fonts, inline styles needed by Tailwind/JSON-LD scripts.
+  - `X-Content-Type-Options: nosniff`
+  - `X-Frame-Options: DENY`
+  - `Referrer-Policy: strict-origin-when-cross-origin`
+  - `Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()`
+  - `Cross-Origin-Opener-Policy: same-origin`
+- Mirror the same headers in `public/.htaccess` (cPanel static deploy) and in `server.mjs`'s `writeFetchResponse` so the Node host also enforces them.
 
-## Files to edit
-- `src/routes/products.$slug.tsx` — add `SpecificationsTable` component + render it under the existing section.
+## 4. Browser compatibility notes
 
-## Files NOT changed
-- No DB migration (column already exists).
-- No admin changes (editor already works).
-- `src/lib/i18n.ts` — `specifications` key already exists; no edit needed.
+- Cookies use `SameSite=Lax` (works in all evergreen browsers and Safari ≥13).
+- `Secure` is required by modern Chrome/Safari for `SameSite=None`; we use `Lax` so it's fine on `localhost` HTTP during dev too.
+- HSTS is only honored once over HTTPS — preview/published domains are already HTTPS.
+- Fallback: if `document.cookie` writes fail (very locked-down embedded browsers), the auth client falls through to in-memory storage so the current tab still works.
 
-## Out of scope (ask if you want these too)
-- Adding specifications to SEO JSON-LD (`additionalProperty`). I can wire that in if you want richer Google product results — say the word.
-- Showing specifications inside the description tab/area instead of below it.
+## 5. Cleanup & verification
+
+- One-time migration on first load: if old `app_cart` exists in `localStorage`, copy it into the cookie and delete the localStorage entry.
+- Manual QA in preview:
+  - Sign in, refresh, close+reopen tab → still signed in (with Remember me).
+  - Sign in without Remember me, close browser, reopen → signed out.
+  - Add to cart, refresh → cart preserved.
+  - DevTools → Application → Cookies shows `Secure`, `HttpOnly` (where applicable), `SameSite=Lax`.
+  - DevTools → Network → response headers show CSP, HSTS, X-Frame-Options.
+
+## Technical notes
+
+- Add dependency: `@supabase/ssr` (small, official, supports cookie-based sessions for SSR frameworks).
+- The browser-side Supabase access token cookie cannot be `HttpOnly` because the JS client must read it to call PostgREST. We mitigate by: (a) setting `Secure` + `SameSite=Lax`, (b) keeping `dangerouslySetInnerHTML` sanitized via `SafeHtml` (already done), (c) adding a strict CSP. The refresh token cookie WILL be `HttpOnly` and only touched server-side via the SSR client.
+- No DB migrations and no changes to RLS — purely transport/storage layer.
+- Files expected to change: `src/integrations/supabase/client.ts`, `src/integrations/supabase/auth-middleware.ts`, new `src/integrations/supabase/server-cookies.ts`, `src/contexts/CartContext.tsx`, `src/routes/login.tsx`, new `src/server/security-headers.ts`, new `src/start.ts`, `server.mjs`, `public/.htaccess`.

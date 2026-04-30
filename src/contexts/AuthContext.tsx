@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { installAuthCookieMirror } from "@/lib/auth-cookie-mirror";
 
 interface AuthContextValue {
   user: User | null;
@@ -23,6 +24,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Install the localStorage → cookie mirror BEFORE any Supabase auth call
+    // so the very first getSession() can hydrate from the cookie when
+    // localStorage is unavailable (e.g. Safari Private Mode).
+    installAuthCookieMirror();
+
     const checkRole = async (uid: string | undefined) => {
       if (!uid) {
         setIsAdmin(false);
