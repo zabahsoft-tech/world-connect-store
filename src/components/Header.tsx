@@ -64,6 +64,7 @@ export function Header() {
     { to: "/", label: tr("home") },
     { to: "/shop", label: tr("products") },
     { to: "/categories", label: tr("categories") },
+    { to: "/diesel-burners", label: tr("dieselNav") },
     { to: "/blog", label: tr("blog") },
     { to: "/about", label: tr("about") },
     { to: "/contact", label: tr("contact") },
