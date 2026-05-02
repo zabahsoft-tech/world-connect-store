@@ -117,6 +117,95 @@ export const t: Dict = {
   import: { en: "Import", fa: "وارد کردن", ps: "واردول" },
   allRightsReserved: { en: "All rights reserved.", fa: "تمامی حقوق محفوظ است.", ps: "ټول حقونه خوندي دي." },
   developedBy: { en: "Developed by", fa: "توسعه‌یافته توسط", ps: "جوړونکی" },
+  // Diesel burner request form
+  dieselTitle: {
+    en: "Iranian Diesel Oil Burner Request",
+    fa: "درخواست مشعل گازوئیلی ایرانی",
+    ps: "د ایراني ډیزل تیلو مشعل غوښتنه",
+  },
+  dieselSubtitle: {
+    en: "Tell us your requirements and our team will contact you with a tailored quote.",
+    fa: "نیازمندی‌های خود را بگویید تا تیم ما با پیشنهاد مناسب با شما تماس بگیرد.",
+    ps: "خپلې اړتیاوې ووایاست، زموږ ټیم به ځانګړې وړاندیز سره درسره اړیکه ونیسي.",
+  },
+  dieselBadge: {
+    en: "Request a quote",
+    fa: "درخواست قیمت",
+    ps: "د بیې غوښتنه",
+  },
+  dieselBurnerModel: {
+    en: "Burner model / capacity",
+    fa: "مدل مشعل / ظرفیت",
+    ps: "د مشعل ماډل / ظرفیت",
+  },
+  dieselBurnerModelPh: {
+    en: "e.g. Iran Radiator PDE 1, 200,000 kcal/h",
+    fa: "مثال: ایران رادیاتور PDE 1، ۲۰۰٬۰۰۰ کیلوکالری در ساعت",
+    ps: "بېلګه: ایران رادیاتور PDE 1، ۲۰۰٬۰۰۰ کیلوکالري/ساعت",
+  },
+  dieselQuantity: {
+    en: "Quantity",
+    fa: "تعداد",
+    ps: "شمېر",
+  },
+  dieselApplication: {
+    en: "Application / use case",
+    fa: "کاربرد",
+    ps: "کارونه",
+  },
+  dieselApplicationPh: {
+    en: "e.g. Boiler heating, industrial oven, greenhouse",
+    fa: "مثال: گرمایش دیگ، کوره صنعتی، گلخانه",
+    ps: "بېلګه: د بویلر تودول، صنعتي تنور، شنه‌خونه",
+  },
+  dieselFuelType: {
+    en: "Fuel type",
+    fa: "نوع سوخت",
+    ps: "د سون توکی ډول",
+  },
+  dieselFuelDiesel: { en: "Diesel (Gasoil)", fa: "گازوئیل", ps: "ډیزل (ګازویل)" },
+  dieselFuelHeavy: { en: "Heavy oil (Mazut)", fa: "نفت کوره (مازوت)", ps: "درنه تېل (مازوت)" },
+  dieselFuelDual: { en: "Dual fuel", fa: "دوگانه‌سوز", ps: "دوه ګونه سون" },
+  dieselCountry: {
+    en: "Destination country / city",
+    fa: "کشور / شهر مقصد",
+    ps: "د موخې هېواد / ښار",
+  },
+  dieselCompany: {
+    en: "Company name (optional)",
+    fa: "نام شرکت (اختیاری)",
+    ps: "د شرکت نوم (اختیاري)",
+  },
+  dieselNotes: {
+    en: "Additional notes",
+    fa: "توضیحات اضافی",
+    ps: "اضافي یادښتونه",
+  },
+  dieselNotesPh: {
+    en: "Voltage, fuel pressure, installation needs, delivery timeline...",
+    fa: "ولتاژ، فشار سوخت، نیازهای نصب، زمان تحویل...",
+    ps: "ولټاژ، د سون فشار، د نصب اړتیاوې، د رسولو وخت...",
+  },
+  dieselSubmit: {
+    en: "Submit request",
+    fa: "ارسال درخواست",
+    ps: "غوښتنه ولېږئ",
+  },
+  dieselSent: {
+    en: "Request sent! We will contact you soon.",
+    fa: "درخواست ارسال شد! به‌زودی با شما تماس می‌گیریم.",
+    ps: "غوښتنه ولېږل شوه! ډېر ژر به درسره اړیکه ونیسو.",
+  },
+  dieselError: {
+    en: "Failed to submit request. Please try again.",
+    fa: "ارسال درخواست ناموفق بود. لطفاً دوباره تلاش کنید.",
+    ps: "د غوښتنې لېږل ناکام شول. مهرباني وکړئ بیا هڅه وکړئ.",
+  },
+  dieselNav: {
+    en: "Diesel burners",
+    fa: "مشعل گازوئیلی",
+    ps: "ډیزل مشعلونه",
+  },
 };
 
 export function tr(key: keyof typeof t, lang: Lang): string {
