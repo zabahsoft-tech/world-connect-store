@@ -103,12 +103,12 @@ function HomePage() {
 
   return (
     <SiteLayout>
-      {/* Hero slider — card style, with breathing space */}
-      <section className="container mx-auto px-4 pt-6 md:pt-8">
+      {/* Hero slider — full-width edge-to-edge */}
+      <section className="w-full">
         {slidesQuery.isLoading ? (
-          <div className="h-[60vh] min-h-[440px] w-full animate-pulse rounded-3xl bg-muted md:h-[70vh] md:max-h-[640px]" />
+          <div className="h-[60vh] min-h-[440px] w-full animate-pulse bg-muted md:h-[70vh] md:max-h-[640px]" />
         ) : slideCount > 0 && current ? (
-          <div className="relative h-[60vh] min-h-[440px] w-full overflow-hidden rounded-3xl border shadow-[var(--shadow-card)] md:h-[70vh] md:max-h-[640px]">
+          <div className="relative h-[60vh] min-h-[440px] w-full overflow-hidden md:h-[70vh] md:max-h-[640px]">
             {SLIDES.map((s, i) => (
               <div
                 key={s.id}
