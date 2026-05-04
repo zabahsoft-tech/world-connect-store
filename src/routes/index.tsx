@@ -128,7 +128,7 @@ function HomePage() {
             ))}
 
             <div className="relative z-10 flex h-full items-center">
-              <div className="w-full px-6 md:px-12 lg:px-16">
+              <div className="container mx-auto w-full px-6 md:px-12 lg:px-16">
                 <div className="max-w-2xl text-white">
                   {pickLang(current, "title", lang) && (
                     <span className="mb-4 inline-flex w-fit items-center rounded-full bg-primary/95 px-3 py-1 text-xs font-semibold text-primary-foreground backdrop-blur">
