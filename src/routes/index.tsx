@@ -108,7 +108,7 @@ function HomePage() {
         {slidesQuery.isLoading ? (
           <div className="h-[55vh] min-h-[360px] w-full animate-pulse bg-muted sm:h-[60vh] sm:min-h-[440px] md:h-[70vh] md:max-h-[640px]" />
         ) : slideCount > 0 && current ? (
-          <div className="relative h-[55vh] min-h-[360px] w-full overflow-hidden sm:h-[60vh] sm:min-h-[440px] md:h-[70vh] md:max-h-[640px]">
+          <div className="relative h-[55vh] min-h-[360px] w-full overflow-hidden bg-black sm:h-[60vh] sm:min-h-[440px] md:h-[70vh] md:max-h-[640px]">
             {SLIDES.map((s, i) => (
               <div
                 key={s.id}
@@ -121,7 +121,7 @@ function HomePage() {
                   loading={i === 0 ? "eager" : "lazy"}
                   decoding="async"
                   {...(i === 0 ? { fetchPriority: "high" as const } : {})}
-                  className="absolute inset-0 block h-full w-full object-cover object-center"
+                  className="absolute inset-0 block h-full w-full object-contain object-center"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent" />
               </div>
