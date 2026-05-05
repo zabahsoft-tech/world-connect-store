@@ -103,12 +103,12 @@ function HomePage() {
 
   return (
     <SiteLayout>
-      {/* Hero slider — full-width edge-to-edge */}
-      <section className="w-full">
+      {/* Hero slider — card style, with breathing space */}
+      <section className="container mx-auto px-4 pt-6 md:pt-8">
         {slidesQuery.isLoading ? (
-          <div className="h-[55vh] min-h-[360px] w-full animate-pulse bg-muted sm:h-[60vh] sm:min-h-[440px] md:h-[70vh] md:max-h-[640px]" />
+          <div className="h-[60vh] min-h-[440px] w-full animate-pulse rounded-3xl bg-muted md:h-[70vh] md:max-h-[640px]" />
         ) : slideCount > 0 && current ? (
-          <div className="relative h-[55vh] min-h-[360px] w-full overflow-hidden bg-black sm:h-[60vh] sm:min-h-[440px] md:h-[70vh] md:max-h-[640px]">
+          <div className="relative h-[60vh] min-h-[440px] w-full overflow-hidden rounded-3xl border shadow-[var(--shadow-card)] md:h-[70vh] md:max-h-[640px]">
             {SLIDES.map((s, i) => (
               <div
                 key={s.id}
@@ -121,14 +121,14 @@ function HomePage() {
                   loading={i === 0 ? "eager" : "lazy"}
                   decoding="async"
                   {...(i === 0 ? { fetchPriority: "high" as const } : {})}
-                  className="absolute inset-0 block h-full w-full object-contain object-center"
+                  className="h-full w-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent" />
               </div>
             ))}
 
             <div className="relative z-10 flex h-full items-center">
-              <div className="container mx-auto w-full px-6 md:px-12 lg:px-16">
+              <div className="w-full px-6 md:px-12 lg:px-16">
                 <div className="max-w-2xl text-white">
                   {pickLang(current, "title", lang) && (
                     <span className="mb-4 inline-flex w-fit items-center rounded-full bg-primary/95 px-3 py-1 text-xs font-semibold text-primary-foreground backdrop-blur">
