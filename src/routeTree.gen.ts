@@ -16,7 +16,6 @@ import { Route as RssDotxmlRouteImport } from './routes/rss[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as DieselBurnersRouteImport } from './routes/diesel-burners'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CategoriesRouteImport } from './routes/categories'
@@ -74,11 +73,6 @@ const LoginRoute = LoginRouteImport.update({
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DieselBurnersRoute = DieselBurnersRouteImport.update({
-  id: '/diesel-burners',
-  path: '/diesel-burners',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -205,7 +199,6 @@ export interface FileRoutesByFullPath {
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
-  '/diesel-burners': typeof DieselBurnersRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -237,7 +230,6 @@ export interface FileRoutesByTo {
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
-  '/diesel-burners': typeof DieselBurnersRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -271,7 +263,6 @@ export interface FileRoutesById {
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
-  '/diesel-burners': typeof DieselBurnersRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -306,7 +297,6 @@ export interface FileRouteTypes {
     | '/categories'
     | '/checkout'
     | '/contact'
-    | '/diesel-burners'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -338,7 +328,6 @@ export interface FileRouteTypes {
     | '/categories'
     | '/checkout'
     | '/contact'
-    | '/diesel-burners'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -371,7 +360,6 @@ export interface FileRouteTypes {
     | '/categories'
     | '/checkout'
     | '/contact'
-    | '/diesel-burners'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -405,7 +393,6 @@ export interface RootRouteChildren {
   CategoriesRoute: typeof CategoriesRoute
   CheckoutRoute: typeof CheckoutRoute
   ContactRoute: typeof ContactRoute
-  DieselBurnersRoute: typeof DieselBurnersRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -468,13 +455,6 @@ declare module '@tanstack/react-router' {
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/diesel-burners': {
-      id: '/diesel-burners'
-      path: '/diesel-burners'
-      fullPath: '/diesel-burners'
-      preLoaderRoute: typeof DieselBurnersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -681,7 +661,6 @@ const rootRouteChildren: RootRouteChildren = {
   CategoriesRoute: CategoriesRoute,
   CheckoutRoute: CheckoutRoute,
   ContactRoute: ContactRoute,
-  DieselBurnersRoute: DieselBurnersRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
@@ -697,13 +676,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

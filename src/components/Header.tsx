@@ -64,7 +64,6 @@ export function Header() {
     { to: "/", label: tr("home") },
     { to: "/shop", label: tr("products") },
     { to: "/categories", label: tr("categories") },
-    { to: "/diesel-burners", label: tr("dieselNav") },
     { to: "/blog", label: tr("blog") },
     { to: "/about", label: tr("about") },
     { to: "/contact", label: tr("contact") },
@@ -111,10 +110,10 @@ export function Header() {
             <img
               src={s.logo_url}
               alt={storeName}
-              className="h-14 w-20 rounded-[50%] object-cover ring-2 ring-white/20 transition-transform group-hover:scale-105"
+              className="h-12 w-12 rounded-full object-cover ring-2 ring-white/20 transition-transform group-hover:scale-105"
             />
           ) : (
-            <div className="flex h-14 w-20 items-center justify-center rounded-[50%] bg-white/15 ring-1 ring-white/25 text-primary-foreground text-lg font-bold transition-transform group-hover:scale-105">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/25 text-primary-foreground text-lg font-bold transition-transform group-hover:scale-105">
               {storeName.charAt(0).toUpperCase()}
             </div>
           )}
